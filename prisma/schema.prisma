@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- USER MANAGEMENT AND GLOBAL AUTHORIZATION ---
+
+enum GlobalRole {
+  SYSADMIN
+  MANAGER
+  DEVELOPER
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  passwordHash String
+  globalRole   GlobalRole     @default(DEVELOPER)
+  status       AccountStatus  @default(PENDING)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  projectRoles ProjectRole[]
+  envAccess    EnvironmentAccess[]
+  auditLogs    AuditLog[]
+}
+
+// --- PROJECT MANAGEMENT AND SCOPED AUTHORIZATION ---
+
+model Project {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  repoUrl     String?
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  environments Environment[]
+  members      ProjectRole[]
+}
+
+enum ProjectRoleType {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+model ProjectRole {
+  id        String          @id @default(uuid())
+  userId    String
+  projectId String
+  role      ProjectRoleType @default(VIEWER)
+  createdAt DateTime        @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+}
+
+// --- INFRASTRUCTURE AND EXECUTION ENVIRONMENT ---
+
+enum NodeType {
+  DEVELOPMENT
+  STAGING
+  PRODUCTION
+}
+
+model ExecutionNode {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  ipAddress String
+  nodeType  NodeType
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  environments Environment[]
+}
+
+enum StackType {
+  NEXTJS
+  LARAVEL
+  NODEJS
+}
+
+enum LifeCycleStatus {
+  ACTIVE
+  DELETING
+  DELETED
+}
+
+model Environment {
+  id           String          @id @default(uuid())
+  projectId    String
+  nodeId       String
+  name         String
+  assignedPort Int             @unique
+  stackType    StackType
+  lifecycle    LifeCycleStatus @default(ACTIVE)
+  deletedAt    DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  project     Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  node        ExecutionNode       @relation(fields: [nodeId], references: [id], onDelete: Restrict)
+  deployments Deployment[]
+  accessList  EnvironmentAccess[]
+
+  @@unique([projectId, name])
+}
+
+model EnvironmentAccess {
+  id            String  @id @default(uuid())
+  userId        String
+  environmentId String
+  canDeploy     Boolean @default(false)
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, environmentId])
+}
+
+// --- DEPLOYMENT MANAGEMENT AND LOG ---
+
+enum DeployStatus {
+  PENDING
+  BUILDING
+  SUCCESS
+  FAILED
+}
+
+model Deployment {
+  id            String       @id @default(uuid())
+  environmentId String
+  status        DeployStatus @default(PENDING)
+  logFilePath   String
+  envVariables  Json?
+  commitHash    String?
+  errorMessage  String?      @db.Text
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+}
+
+// --- AUDIT TRAIL ---
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  targetType String
+  targetId   String
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
