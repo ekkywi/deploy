@@ -1,0 +1,71 @@
+import { NextResponse } from "next/server"
+import prisma from '@/lib/prisma'
+import { AccountStatus } from "@prisma/client"
+
+export async function PATCH(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> | { id: string } } 
+) {
+    try {
+        const requesterRole = request.headers.get('x-user-role')
+
+        if (requesterRole !== 'SYSADMIN') {
+            return NextResponse.json(
+                { error: 'Access denied. This action requires Administrator privileges.'},
+                { status: 403 }
+            )
+        }
+
+        const body = await request.json()
+        const { status } = body
+
+        if (!status || !Object.values(AccountStatus).includes(status as AccountStatus)) {
+            return NextResponse.json(
+                { error: 'Invalid status format.'},
+            )
+        }
+
+        const resolvedParams = await params;
+
+        const updatedUser = await prisma.user.update({
+            where: { id: resolvedParams.id },
+            data: { status: status as AccountStatus },
+            select: {
+                id: true,
+                email: true,
+                status: true,
+                globalRole: true,
+            }
+        })
+
+        return NextResponse.json(
+            {
+                message: 'User status updated successfully.',
+                user: updatedUser
+            },
+            { status: 200 }
+        )
+
+    } catch (error: any) {
+        console.error('Update status error:', error)
+
+        if (error.code === 'P2025') {
+            return NextResponse.json(
+                { error: 'User not found.' },
+                { status: 404 }
+            )
+        }
+
+        if (error.code === 'P2023' || error.message?.includes('malformed')) {
+            return NextResponse.json(
+                { error: 'Invalid User ID format. UUID expected.' },
+                { status: 400 }
+            )
+        }
+
+        return NextResponse.json(
+            { error: 'Internal server error.'},
+            { status: 500 }
+        )
+    }
+}

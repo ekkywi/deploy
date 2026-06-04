@@ -6,6 +6,8 @@ The diagram below defines database relationships for the _Deploy_ system. This s
 erDiagram
     USER {
         string id PK
+        string firstnName
+        string lastName "nullable"
         string email UK
         string passwordHash
         string globalRole "SYSADMIN, MANAGER, DEVELOPER"

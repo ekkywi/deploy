@@ -22,6 +22,8 @@ async function main() {
         where: { email: 'admin@office.internal' },
         update: {},
         create: {
+            firstName: 'System',
+            lastName: 'Administrator',
             email: 'admin@office.internal',
             passwordHash: hashedPassword,
             globalRole: GlobalRole.SYSADMIN,

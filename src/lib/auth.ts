@@ -3,6 +3,7 @@ import { GlobalRole } from '@prisma/client'
 
 export interface JwtPayload {
     userId: string
+    firstName: string
     email: string
     role: GlobalRole
 }

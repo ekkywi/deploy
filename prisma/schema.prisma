@@ -22,6 +22,8 @@ enum AccountStatus {
 
 model User {
   id           String         @id @default(uuid())
+  firstName    String
+  lastName     String?
   email        String         @unique
   passwordHash String
   globalRole   GlobalRole     @default(DEVELOPER)
