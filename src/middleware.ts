@@ -4,7 +4,8 @@ import { verifyToken } from "./lib/auth"
 
 // Allowed without token
 const publicRoutes = [
-    '/api/auth/login', '/login'
+    '/api/auth/login', '/login',
+    '/api/auth/register', '/register'
 ]
 
 export async function middleware(request: NextRequest) {
