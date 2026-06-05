@@ -10,26 +10,39 @@ const publicRoutes = [
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
+    const isPublicRoute = publicRoutes.includes(pathname)
 
     if (
         pathname.startsWith('/_next') ||
-        pathname.startsWith('/favicon.ico') ||
-        publicRoutes.includes(pathname)
+        pathname.startsWith('/favicon.ico')
     ) {
         return NextResponse.next()
     }
 
     const token = request.cookies.get('auth_token')?.value
+    let payload = null
 
-    if (!token) {
-        return handleUnauthorized(request)
+    if (token) {
+        payload = await verifyToken(token)
     }
 
-    const payload = await verifyToken(token)
+    if (payload && (pathname === '/login' || pathname === '/register')) {
+        return NextResponse.redirect(new URL('/console', request.url))
+    }
+
+    if (isPublicRoute) {
+        const response = NextResponse.next()
+        if (token && !payload) {
+            response.cookies.delete('auth_token')
+        }
+        return response
+    }
 
     if (!payload) {
         const response = handleUnauthorized(request)
-        response.cookies.delete('auth_token')
+        if (token) {
+            response.cookies.delete('auth_token')
+        }
         return response
     }
 

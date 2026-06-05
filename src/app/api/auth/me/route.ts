@@ -42,7 +42,16 @@ export async function GET(request: Request) {
         }
 
         return NextResponse.json(
-            { user },
+            { 
+              user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.globalRole,
+                status: user.status
+              } 
+            },
             { status: 200 }
         )
     } catch (error) {

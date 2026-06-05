@@ -56,7 +56,7 @@ export default function LoginPage() {
       }
 
       toast.success('Login success, loading session...')
-      router.push('/dashboard')
+      router.push('/console')
       router.refresh()
     } catch (error) {
       console.error('Login error:', error)
