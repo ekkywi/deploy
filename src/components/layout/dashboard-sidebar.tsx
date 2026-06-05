@@ -57,7 +57,7 @@ export function DashboardSidebar() {
             <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
           </svg>
           <span className="text-base tracking-tight group-data-[collapsible=icon]:hidden">
-            Deploy Hub
+            DEPLOY CONSOLE
           </span>
         </div>
       </SidebarHeader>
@@ -96,7 +96,7 @@ export function DashboardSidebar() {
                     isActive={pathname === '/console/admin'}
                     tooltip="User Management"
                   >
-                    <Link href="/console/admin">
+                    <Link href="/console/admin/users">
                       <Users aria-hidden />
                       <span>User Management</span>
                     </Link>

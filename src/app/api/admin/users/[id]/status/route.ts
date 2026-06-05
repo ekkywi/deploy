@@ -22,6 +22,7 @@ export async function PATCH(
         if (!status || !Object.values(AccountStatus).includes(status as AccountStatus)) {
             return NextResponse.json(
                 { error: 'Invalid status format.'},
+                { status: 400 }
             )
         }
 
