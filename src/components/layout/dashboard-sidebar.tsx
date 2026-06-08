@@ -63,7 +63,7 @@ export function DashboardSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className='space-y-1'>
           <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -86,7 +86,7 @@ export function DashboardSidebar() {
         </SidebarGroup>
 
         {user?.role === 'SYSADMIN' && (
-          <SidebarGroup>
+          <SidebarGroup className='space-y-1'>
             <SidebarGroupLabel>Administration</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>

@@ -1,10 +1,28 @@
 'use client'
 
-import { ColumnDef } from '@tanstack/react-table'
+import { ColumnDef, Column } from '@tanstack/react-table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ShieldCheck, Ban, CheckCircle2, Loader2 } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { ShieldCheck, Ban, CheckCircle2, Loader2, ArrowUpDown, Edit2 } from 'lucide-react'
 import { format } from 'date-fns'
+import { cn } from '@/lib/utils'
 
 export type AdminUser = {
   id: string
@@ -16,12 +34,59 @@ export type AdminUser = {
   createdAt: string
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  SYSADMIN: 'System Admin',
+  MANAGER: 'Manager',
+  DEVELOPER: 'Developer',
+}
+
+function getInitials(firstName: string, lastName: string | null) {
+  const first = firstName.charAt(0).toUpperCase()
+  const last = lastName ? lastName.charAt(0).toUpperCase() : ''
+  return `${first}${last}` || first
+}
+
+function SortableHeader<TData>({
+  column,
+  label,
+  align = 'start',
+}: {
+  column: Column<TData, unknown>
+  label: string
+  align?: 'start' | 'offset'
+}) {
+  return (
+    <Button
+      variant="ghost"
+      onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+      className={cn(
+        'h-8 px-0 font-medium uppercase tracking-wide text-xs text-muted-foreground hover:text-foreground',
+        align === 'offset' && 'pl-9'
+      )}
+    >
+      {label}
+      <ArrowUpDown className="ml-2 size-3.5" />
+    </Button>
+  )
+}
+
 const renderStatusBadge = (status: string) => {
   switch (status) {
     case 'ACTIVE':
-      return <Badge className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 border-emerald-200">Active</Badge>
+      return (
+        <Badge className="border-emerald-200 bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25">
+          Active
+        </Badge>
+      )
     case 'PENDING':
-      return <Badge variant="secondary" className="bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 border-amber-200">Pending</Badge>
+      return (
+        <Badge
+          variant="secondary"
+          className="border-amber-200 bg-amber-500/15 text-amber-600 hover:bg-amber-500/25"
+        >
+          Pending
+        </Badge>
+      )
     case 'SUSPENDED':
       return <Badge variant="destructive">Suspended</Badge>
     default:
@@ -29,39 +94,84 @@ const renderStatusBadge = (status: string) => {
   }
 }
 
+const renderRoleBadge = (role: string) => {
+  const label = ROLE_LABELS[role] ?? role
+  return (
+    <Badge variant="outline" className="gap-1 font-normal">
+      {role === 'SYSADMIN' && <ShieldCheck className="size-3 text-primary" />}
+      {label}
+    </Badge>
+  )
+}
+
+function ActionIconButton({
+  label,
+  onClick,
+  disabled,
+  isProcessing,
+  className,
+  children,
+}: {
+  label: string
+  onClick?: () => void
+  disabled?: boolean
+  isProcessing?: boolean
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`size-8 ${className ?? ''}`}
+          onClick={onClick}
+          disabled={disabled}
+        >
+          {isProcessing ? <Loader2 className="size-4 animate-spin" /> : children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
 export const getColumns = (
   onAction: (userId: string, newStatus: string) => void,
+  onEdit: (user: AdminUser) => void,
   processingId: string | null
 ): ColumnDef<AdminUser>[] => [
   {
-    id: 'name', 
-    accessorFn: (row) => `${row.firstName} ${row.lastName || ''}`.trim(),
-    header: 'Fullname',
+    id: 'user',
+    accessorFn: (row) =>
+      `${row.firstName} ${row.lastName || ''} ${row.email}`.trim(),
+    header: ({ column }) => (
+      <SortableHeader column={column} label="User" align="offset" />
+    ),
     cell: ({ row }) => {
+      const user = row.original
+      const fullName = `${user.firstName} ${user.lastName || ''}`.trim()
+
       return (
-        <span className="font-medium">
-          {row.getValue('name')} 
-        </span>
+        <div className="flex items-center gap-3">
+          <Avatar size="sm">
+            <AvatarFallback className="text-xs font-medium">
+              {getInitials(user.firstName, user.lastName)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="truncate font-medium">{fullName}</p>
+            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+          </div>
+        </div>
       )
     },
   },
   {
-    accessorKey: 'email',
-    header: 'Email',
-    cell: ({ row }) => <span className="text-muted-foreground">{row.getValue('email')}</span>
-  },
-  {
     accessorKey: 'globalRole',
     header: 'Access Level',
-    cell: ({ row }) => {
-      const role = row.getValue('globalRole') as string
-      return (
-        <div className="flex items-center gap-1.5">
-          {role === 'SYSADMIN' && <ShieldCheck className="size-4 text-primary" />}
-          <span className="text-sm">{role}</span>
-        </div>
-      )
-    }
+    cell: ({ row }) => renderRoleBadge(row.getValue('globalRole') as string),
   },
   {
     accessorKey: 'status',
@@ -70,70 +180,158 @@ export const getColumns = (
   },
   {
     accessorKey: 'createdAt',
-    header: 'Registration Date',
+    header: ({ column }) => (
+      <SortableHeader column={column} label="Registered" />
+    ),
     cell: ({ row }) => {
       const dateStr = row.getValue('createdAt') as string
+      const date = new Date(dateStr)
+
       return (
-        <span className="text-muted-foreground text-sm">
-          {format(new Date(dateStr), 'dd MMM yyyy, HH:mm')}
-        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="cursor-default text-sm text-muted-foreground">
+              {format(date, 'dd MMM yyyy')}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{format(date, 'dd MMM yyyy, HH:mm')}</TooltipContent>
+        </Tooltip>
       )
-    }
+    },
   },
   {
     id: 'actions',
-    header: () => <div className="text-right">Aksi</div>,
+    header: () => <div className="text-right">Actions</div>,
     cell: ({ row }) => {
       const user = row.original
       const isProcessing = processingId === user.id
 
       return (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-0.5">
+          <ActionIconButton
+            label="Edit user"
+            onClick={() => onEdit(user)}
+            disabled={isProcessing}
+          >
+            <Edit2 className="size-4" />
+          </ActionIconButton>
+
           {user.status === 'PENDING' && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700"
-              onClick={() => onAction(user.id, 'ACTIVE')}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-              ) : (
-                <CheckCircle2 className="mr-1.5 size-3.5" />
-              )}
-              Approve
-            </Button>
+            <AlertDialog>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="size-4" />
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>Approve account</TooltipContent>
+              </Tooltip>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Approve User Account?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action will activate the <strong>{user.email}</strong>{' '}
+                    account and give them full access to the Control Plane according
+                    to their access level.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onAction(user.id, 'ACTIVE')}>
+                    Yes, Approve
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
-          
+
           {user.status === 'ACTIVE' && user.globalRole !== 'SYSADMIN' && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={() => onAction(user.id, 'SUSPENDED')}
-              disabled={isProcessing}
-            >
-              <Ban className="mr-1.5 size-3.5 text-muted-foreground" />
-              Suspend
-            </Button>
+            <AlertDialog>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      disabled={isProcessing}
+                    >
+                      <Ban className="size-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>Suspend account</TooltipContent>
+              </Tooltip>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Suspend User Account?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    The <strong>{user.email}</strong> account will be immediately
+                    removed from its active session and will not be able to enter the
+                    system until the account is reactivated.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => onAction(user.id, 'SUSPENDED')}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Yes, Suspend
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
 
           {user.status === 'SUSPENDED' && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={() => onAction(user.id, 'ACTIVE')}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <Loader2 className="mr-1.5 size-3.5 animate-spin" />
-              ) : (
-                <CheckCircle2 className="mr-1.5 size-3.5" />
-              )}
-              Reactivate
-            </Button>
+            <AlertDialog>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground hover:text-primary"
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="size-4" />
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>Reactivate account</TooltipContent>
+              </Tooltip>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reactivate Account?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Lift the suspension on the <strong>{user.email}</strong> account.
+                    Users will be able to log back into the system.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onAction(user.id, 'ACTIVE')}>
+                    Reactivate
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
       )

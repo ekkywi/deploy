@@ -72,7 +72,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-xl font-semibold text-primary">Login</CardTitle>
           <CardDescription>
-            Use corporate email to access the dashboard
+            Use email to access the Deploy Console
           </CardDescription>
         </CardHeader>
 
@@ -92,7 +92,7 @@ export default function LoginPage() {
                           aria-hidden
                         />
                         <Input
-                          placeholder="admin@office.internal"
+                          placeholder="name@mail.com"
                           type="email"
                           autoComplete="email"
                           className="h-10 pl-9"
@@ -168,7 +168,7 @@ export default function LoginPage() {
               href="/register"
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
-              Apply for account creation
+              Apply account
             </a>
           </p>
         </CardContent>

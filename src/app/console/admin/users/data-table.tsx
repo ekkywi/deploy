@@ -7,6 +7,8 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   getFilteredRowModel,
+  SortingState,
+  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
 
@@ -18,9 +20,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, Search } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { Search, Users } from 'lucide-react'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -28,47 +38,89 @@ interface DataTableProps<TData, TValue> {
   isLoading?: boolean
 }
 
+function LoadingRows({ colCount }: { colCount: number }) {
+  return (
+    <>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <TableRow key={i}>
+          <TableCell colSpan={colCount} className="px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Skeleton className="size-6 rounded-full" />
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+            </div>
+          </TableCell>
+        </TableRow>
+      ))}
+    </>
+  )
+}
+
 export function DataTable<TData, TValue>({
   columns,
   data,
   isLoading = false,
 }: DataTableProps<TData, TValue>) {
-    const [globalFilter, setGlobalFilter] = React.useState('')
+  const [globalFilter, setGlobalFilter] = React.useState('')
+  const [sorting, setSorting] = React.useState<SortingState>([])
 
-    const table = useReactTable({
-      data,
-      columns,
-      getCoreRowModel: getCoreRowModel(),
-      getPaginationRowModel: getPaginationRowModel(),
-      getFilteredRowModel: getFilteredRowModel(),
-      onGlobalFilterChange: setGlobalFilter,
-      state: {
-        globalFilter,
-      },
-    })
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onGlobalFilterChange: setGlobalFilter,
+    onSortingChange: setSorting,
+    initialState: {
+      pagination: { pageSize: 10 },
+    },
+    state: {
+      globalFilter,
+      sorting,
+    },
+  })
+
+  const filteredCount = table.getFilteredRowModel().rows.length
+  const pageIndex = table.getState().pagination.pageIndex
+  const pageSize = table.getState().pagination.pageSize
+  const pageCount = table.getPageCount()
+  const startRow = filteredCount === 0 ? 0 : pageIndex * pageSize + 1
+  const endRow = Math.min((pageIndex + 1) * pageSize, filteredCount)
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <div className="relative max-w-sm w-full">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search"
-            value={globalFilter ?? ''}
-            onChange={(event) => setGlobalFilter(event.target.value)}
-            className="pl-8"
-          />
-        </div>
-      </div>
+    <TooltipProvider>
+      <Card>
+        <CardHeader className="border-b pb-4">
+          <div className="relative max-w-sm w-full">
+            <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+            <Input
+              placeholder="Search users..."
+              value={globalFilter ?? ''}
+              onChange={(event) => setGlobalFilter(event.target.value)}
+              className="pl-8"
+            />
+          </div>
+        </CardHeader>
 
-      <div className="rounded-md border bg-background">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow
+                  key={headerGroup.id}
+                  className="border-b bg-muted/50 hover:bg-muted/50"
+                >
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className={`px-4 py-3 text-xs uppercase tracking-wide text-muted-foreground ${
+                        header.id === 'actions' ? 'text-right' : ''
+                      }`}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -76,65 +128,84 @@ export function DataTable<TData, TValue>({
                             header.getContext()
                           )}
                     </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  <Loader2 className="mx-auto size-6 animate-spin text-muted-foreground" />
-                </TableCell>
-              </TableRow>
-            ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                  Data not found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <LoadingRows colCount={columns.length} />
+              ) : table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className={`px-4 py-3 ${
+                          cell.column.id === 'actions' ? 'text-right' : ''
+                        }`}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-40 px-4 py-3"
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2 text-center">
+                      <Users className="size-8 text-muted-foreground/50" />
+                      <p className="font-medium text-foreground">
+                        No users found
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Try adjusting your search
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Displaying {table.getRowModel().rows.length} from {table.getFilteredRowModel().rows.length} rows.
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-    </div>
+        <CardFooter className="flex flex-col gap-3 border-t sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            {filteredCount === 0
+              ? 'No users to display'
+              : `Showing ${startRow}–${endRow} of ${filteredCount} users`}
+          </p>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">
+              Page {pageCount === 0 ? 0 : pageIndex + 1} of {pageCount}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </CardFooter>
+      </Card>
+    </TooltipProvider>
   )
 }

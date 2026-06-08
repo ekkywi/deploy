@@ -82,7 +82,7 @@ export default function RegisterPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-xl font-semibold text-primary">Request Access</CardTitle>
           <CardDescription>
-            Register to join the Control Plane. Account requires approval.
+            Register to access Deploy Console.
           </CardDescription>
         </CardHeader>
 
@@ -132,7 +132,7 @@ export default function RegisterPage() {
                     <FormControl>
                       <div className="relative">
                         <Mail className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-primary/70" aria-hidden />
-                        <Input placeholder="name@office.internal" type="email" autoComplete="email" className="h-10 pl-9" {...field} />
+                        <Input placeholder="name@mail.com" type="email" autoComplete="email" className="h-10 pl-9" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -225,7 +225,7 @@ export default function RegisterPage() {
               href="/login"
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
-              Sign in here
+              Sign in
             </a>
           </p>
         </CardContent>
