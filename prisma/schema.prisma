@@ -82,6 +82,7 @@ model ExecutionNode {
   id        String   @id @default(uuid())
   name      String   @unique
   ipAddress String
+  authToken String?
   nodeType  NodeType
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -106,7 +107,8 @@ model Environment {
   projectId    String
   nodeId       String
   name         String
-  assignedPort Int             @unique
+  assignedPort Int
+  domain       String?         @unique             
   stackType    StackType
   lifecycle    LifeCycleStatus @default(ACTIVE)
   deletedAt    DateTime?
@@ -118,6 +120,7 @@ model Environment {
   deployments Deployment[]
   accessList  EnvironmentAccess[]
 
+  @@unique([nodeId, assignedPort])
   @@unique([projectId, name])
 }
 

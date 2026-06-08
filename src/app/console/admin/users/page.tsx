@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { getColumns, AdminUser } from './columns'
 import { DataTable } from './data-table'
 import { UserEditSheet } from './user-edit-sheet'
+import { AddUserDialog } from './add-user-dialog'
 
 function StatChip({
   label,
@@ -111,15 +112,23 @@ export default function AdminUsersPage() {
     [users]
   )
 
+  const handleAddSuccess = (newUser: AdminUser) => {
+    setUsers((prev) => [newUser, ...prev])
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-          User Management
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Account authorization and approval control center.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+            User Management
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Account authorization and approval control center.
+          </p>
+        </div>
+        
+        <AddUserDialog onSuccess={handleAddSuccess} />
       </div>
 
       <div className="flex flex-wrap gap-2">
