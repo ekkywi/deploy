@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { jwtVerify, SignJWT } from 'jose'
-import { GlobalRole } from '@prisma/client'
+import { AccountStatus, GlobalRole } from '@prisma/client'
+import prisma from '@/lib/prisma'
 
 export interface JwtPayload {
     userId: string
@@ -10,6 +11,14 @@ export interface JwtPayload {
 }
 
 export type AuthenticatedSession = JwtPayload
+
+type AuthUserRecord = {
+    id: string
+    email: string
+    firstName: string
+    globalRole: GlobalRole
+    status: AccountStatus
+}
 
 const getJwtSecretKey = () => {
     const secret = process.env.JWT_SECRET
@@ -65,15 +74,25 @@ export const getSessionFromRequest = async (
 }
 
 export const createUnauthorizedResponse = (
-    message = 'Access denied. Invalid or missing token'
+    message = 'Access denied. Invalid or missing token',
+    clearCookie = false
 ) => {
-    return NextResponse.json({ error: message }, { status: 401 })
+    const response = NextResponse.json({ error: message }, { status: 401 })
+    if (clearCookie) {
+        response.cookies.delete('auth_token')
+    }
+    return response
 }
 
 export const createForbiddenResponse = (
-    message = 'Forbidden. You do not have sufficient privileges.'
+    message = 'Forbidden. You do not have sufficient privileges.',
+    clearCookie = false
 ) => {
-    return NextResponse.json({ error: message }, { status: 403 })
+    const response = NextResponse.json({ error: message }, { status: 403 })
+    if (clearCookie) {
+        response.cookies.delete('auth_token')
+    }
+    return response
 }
 
 export const createClearedAuthResponse = (response: NextResponse) => {
@@ -82,17 +101,52 @@ export const createClearedAuthResponse = (response: NextResponse) => {
 }
 
 export const requireAuth = async (request: Request) => {
+    const token = getAuthTokenFromRequest(request)
     const session = await getSessionFromRequest(request)
 
     if (!session) {
         return {
             session: null,
-            response: createUnauthorizedResponse(),
+            response: createUnauthorizedResponse(
+                'Access denied. Invalid or missing token',
+                Boolean(token)
+            ),
+        }
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: {
+            id: true,
+            email: true,
+            firstName: true,
+            globalRole: true,
+            status: true,
+        },
+    })
+
+    if (!user) {
+        return {
+            session: null,
+            response: createUnauthorizedResponse(
+                'Access denied. Account no longer exists.',
+                true
+            ),
+        }
+    }
+
+    if (user.status !== AccountStatus.ACTIVE) {
+        return {
+            session: null,
+            response: createForbiddenResponse(
+                'Your account is inactive.',
+                true
+            ),
         }
     }
 
     return {
-        session,
+        session: mapUserToSession(user),
         response: null,
     }
 }
@@ -116,4 +170,13 @@ export const requireRole = async (
     }
 
     return auth
+}
+
+const mapUserToSession = (user: AuthUserRecord): AuthenticatedSession => {
+    return {
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        role: user.globalRole,
+    }
 }

@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server'
 import { GlobalRole, ProjectRoleType } from '@prisma/client'
 import prisma from '@/lib/prisma'
-import { requireAuth } from "@/lib/auth";
+import { requireAuth } from '@/lib/auth'
 
 async function checkProjectAuthorization(
     userId: string,
@@ -55,27 +55,25 @@ export async function PATCH(
         }
 
         const body = await request.json();
-        const { name, description, repoUrl } = body;
+        const payload = parseProjectPayload(body);
 
-        if (name && name.trim().length < 3) {
+        if (!payload.name || payload.name.length < 3) {
             return NextResponse.json(
                 { error: 'Project name must be at least 3 characters long.' },
                 { status: 400 }
             );
         }
 
-        if (repoUrl && !/^https?:\/\/.+/.test(repoUrl)) {
+        if (payload.repoUrl && !isHttpUrl(payload.repoUrl)) {
             return NextResponse.json(
                 { error: 'Repository URL must be a valid HTTP/HTTPS URL.' },
                 { status: 400 }
             );
         }
 
-        const sanitizedName = name ? name.trim() : undefined;
-
-        if (sanitizedName && sanitizedName !== authCheck.project?.name) {
+        if (payload.name !== authCheck.project?.name) {
             const existingProject = await prisma.project.findUnique({
-                where: { name: sanitizedName }
+                where: { name: payload.name }
             });
 
             if (existingProject) {
@@ -89,9 +87,9 @@ export async function PATCH(
         const updatedProject = await prisma.project.update({
             where: { id: projectId },
             data: {
-                ...(sanitizedName && { name: sanitizedName }),
-                ...(description !== undefined && { description: description ? description.trim() : null }),
-                ...(repoUrl !== undefined && { repoUrl: repoUrl ? repoUrl.trim() : null }),
+                name: payload.name,
+                description: payload.description,
+                repoUrl: payload.repoUrl,
             }
         });
 
@@ -142,5 +140,33 @@ export async function DELETE(
     } catch (error) {
         console.error('Delete project error:', error);
         return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
+    }
+}
+
+function parseProjectPayload(body: unknown) {
+    const payload = typeof body === 'object' && body !== null ? body as Record<string, unknown> : {}
+
+    return {
+        name: typeof payload.name === 'string' ? payload.name.trim() : '',
+        description: normalizeOptionalString(payload.description),
+        repoUrl: normalizeOptionalString(payload.repoUrl),
+    }
+}
+
+function normalizeOptionalString(value: unknown) {
+    if (typeof value !== 'string') {
+        return null
+    }
+
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+}
+
+function isHttpUrl(value: string) {
+    try {
+        const url = new URL(value)
+        return url.protocol === 'http:' || url.protocol === 'https:'
+    } catch {
+        return false
     }
 }

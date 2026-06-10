@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { Prisma } from '@prisma/client'
+import { NextResponse } from 'next/server'
+import { Prisma, GlobalRole, ProjectRoleType } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
             deletedAt: null
         }
 
-        if (role !== 'SYSADMIN') {
+        if (role !== GlobalRole.SYSADMIN) {
             whereClause.members = {
                 some: {
                     userId: userId
@@ -40,12 +40,10 @@ export async function GET(request: Request) {
                         }
                     }
                 },
-
                 _count: {
                     select: { environments: true }
                 }
             },
-
             orderBy: {
                 createdAt: 'desc'
             }
@@ -74,28 +72,25 @@ export async function POST(request: Request) {
         }
 
         const { userId } = auth.session
-
         const body = await request.json()
-        const { name, description, repoUrl } = body
-        
-        if (!name || name.trim().length < 3) {
+        const payload = parseProjectPayload(body)
+
+        if (!payload.name || payload.name.length < 3) {
             return NextResponse.json(
                 { error: 'Project name is required and must be at least 3 characters long.' },
                 { status: 400 }
             )
         }
 
-        if (repoUrl && !/^https?:\/\/.+/.test(repoUrl)){
+        if (payload.repoUrl && !isHttpUrl(payload.repoUrl)) {
             return NextResponse.json(
                 { error: 'Repository URL must be a valid HTTP/HTTPS URL.' },
                 { status: 400 }
             )
         }
 
-        const sanitizedName = name.trim()
-
         const existingProject = await prisma.project.findUnique({
-            where: { name: sanitizedName }
+            where: { name: payload.name }
         })
 
         if (existingProject) {
@@ -106,12 +101,11 @@ export async function POST(request: Request) {
         }
 
         const result = await prisma.$transaction(async (tx) => {
-
             const newProject = await tx.project.create({
                 data: {
-                    name: sanitizedName,
-                    description: description ? description.trim() : null,
-                    repoUrl: repoUrl ? repoUrl.trim() : null,
+                    name: payload.name,
+                    description: payload.description,
+                    repoUrl: payload.repoUrl,
                 }
             })
 
@@ -119,11 +113,32 @@ export async function POST(request: Request) {
                 data: {
                     userId: userId,
                     projectId: newProject.id,
-                    role: 'OWNER'
+                    role: ProjectRoleType.OWNER
                 }
             })
 
-            return newProject
+            const completeProject = await tx.project.findUnique({
+                where: { id: newProject.id },
+                include: {
+                    members: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    email: true
+                                }
+                            }
+                        }
+                    },
+                    _count: {
+                        select: { environments: true }
+                    }
+                }
+            })
+
+            return completeProject
         })
 
         return NextResponse.json(
@@ -140,5 +155,33 @@ export async function POST(request: Request) {
             { error: 'Internal server error.'},
             { status: 500 }
         )
+    }
+}
+
+function parseProjectPayload(body: unknown) {
+    const payload = typeof body === 'object' && body !== null ? body as Record<string, unknown> : {}
+
+    return {
+        name: typeof payload.name === 'string' ? payload.name.trim() : '',
+        description: normalizeOptionalString(payload.description),
+        repoUrl: normalizeOptionalString(payload.repoUrl),
+    }
+}
+
+function normalizeOptionalString(value: unknown) {
+    if (typeof value !== 'string') {
+        return null
+    }
+
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : null
+}
+
+function isHttpUrl(value: string) {
+    try {
+        const url = new URL(value)
+        return url.protocol === 'http:' || url.protocol === 'https:'
+    } catch {
+        return false
     }
 }

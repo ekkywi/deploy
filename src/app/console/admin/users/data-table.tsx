@@ -36,6 +36,10 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   isLoading?: boolean
+  searchPlaceholder?: string
+  entityLabel?: string
+  emptyTitle?: string
+  emptyDescription?: string
 }
 
 function LoadingRows({ colCount }: { colCount: number }) {
@@ -62,6 +66,10 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   isLoading = false,
+  searchPlaceholder = 'Search records...',
+  entityLabel = 'records',
+  emptyTitle,
+  emptyDescription,
 }: DataTableProps<TData, TValue>) {
   const [globalFilter, setGlobalFilter] = React.useState('')
   const [sorting, setSorting] = React.useState<SortingState>([])
@@ -98,7 +106,7 @@ export function DataTable<TData, TValue>({
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
             <Input
-              placeholder="Search users..."
+              placeholder={searchPlaceholder}
               value={globalFilter ?? ''}
               onChange={(event) => setGlobalFilter(event.target.value)}
               className="h-10 rounded-full pl-8"
@@ -162,10 +170,10 @@ export function DataTable<TData, TValue>({
                     <div className="flex flex-col items-center justify-center gap-2 text-center">
                       <Users className="size-8 text-muted-foreground/50" />
                       <p className="font-medium text-foreground">
-                        No users found
+                        {emptyTitle ?? `No ${entityLabel} found`}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Try adjusting your search
+                        {emptyDescription ?? 'Try adjusting your search'}
                       </p>
                     </div>
                   </TableCell>
@@ -178,8 +186,8 @@ export function DataTable<TData, TValue>({
         <CardFooter className="flex flex-col gap-3 border-t sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             {filteredCount === 0
-              ? 'No users to display'
-              : `Showing ${startRow}–${endRow} of ${filteredCount} users`}
+              ? `No ${entityLabel} to display`
+              : `Showing ${startRow}-${endRow} of ${filteredCount} ${entityLabel}`}
           </p>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">

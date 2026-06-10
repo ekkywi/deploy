@@ -154,7 +154,14 @@ export default function AdminUsersPage() {
         <StatChip label="Suspended" value={stats.suspended} variant="suspended" />
       </div>
 
-      <DataTable columns={columns} data={users} isLoading={isLoading} />
+      <DataTable
+        columns={columns}
+        data={users}
+        isLoading={isLoading}
+        searchPlaceholder="Search users..."
+        entityLabel="users"
+        emptyTitle="No users found"
+      />
 
       <UserEditSheet 
         user={selectedUser} 

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
-import { Prisma } from '@prisma/client'
+import { AccountStatus, Prisma } from '@prisma/client'
 import bcrypt from 'bcrypt'
 import prisma from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 
 const VALID_ROLES = ['SYSADMIN', 'MANAGER', 'DEVELOPER']
+const VALID_STATUSES = new Set<AccountStatus>(['PENDING', 'ACTIVE', 'SUSPENDED'])
 
 export async function GET(request: Request) {
     try {
@@ -20,8 +21,8 @@ export async function GET(request: Request) {
 
         const whereClause: Prisma.UserWhereInput = {}
 
-        if (statusFilter) {
-            whereClause.status = statusFilter
+        if (statusFilter && VALID_STATUSES.has(statusFilter as AccountStatus)) {
+            whereClause.status = statusFilter as AccountStatus
         }
 
         if (searchQuery) {
