@@ -56,7 +56,7 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
                 throw new Error(data.error || 'Failed to create user.')
             }
 
-            toast.success('User berhasil ditambahkan')
+            toast.success('User created successfully.')
             onSuccess(data.user)
             setOpen(false)
             setFormData({
@@ -86,7 +86,7 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
               <DialogHeader>
                 <DialogTitle>Add New User</DialogTitle>
                 <DialogDescription>
-                  Buat akun baru secara langsung. Pastikan email belum terdaftar.
+                    Create a new account directly. Make sure the email is not registered.
                 </DialogDescription>
               </DialogHeader>
     
@@ -117,7 +117,7 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="john@example.com"
+                    placeholder="john@mail.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required

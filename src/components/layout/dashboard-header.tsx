@@ -22,20 +22,30 @@ export function DashboardHeader() {
   const initials = `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase()
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3">
+      <div className="hidden rounded-full border border-border/60 bg-muted/38 px-3 py-1 text-xs text-muted-foreground sm:inline-flex">
+        {user.role}
+      </div>
       <DropdownMenu>
-        
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative size-8 rounded-full">
-            <Avatar className="size-8">
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+          <Button variant="ghost" className="relative h-10 rounded-full px-1.5">
+            <div className="flex items-center gap-3">
+              <Avatar className="size-8">
+                <AvatarFallback className="bg-muted text-foreground text-xs font-medium">
                 {initials || <User className="size-4" />}
-              </AvatarFallback>
-            </Avatar>
+                </AvatarFallback>
+              </Avatar>
+              <div className="hidden text-left sm:block">
+                <p className="text-sm font-medium leading-none">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">{user.email}</p>
+              </div>
+            </div>
           </Button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuContent className="w-64" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-2">
               <p className="text-sm font-medium leading-none">
@@ -45,7 +55,7 @@ export function DashboardHeader() {
                 {user.email}
               </p>
               <div className="pt-1">
-                <span className="inline-flex items-center rounded-sm bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-primary">
+                <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/38 px-2 py-1 text-[10px] font-semibold tracking-wide text-foreground/90">
                   {user.role}
                 </span>
               </div>
@@ -55,7 +65,8 @@ export function DashboardHeader() {
           
           <DropdownMenuItem 
             onClick={logout} 
-            className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+            variant="destructive"
+            className="cursor-pointer"
           >
             <LogOut className="mr-2 size-4" />
             <span>End Session</span>

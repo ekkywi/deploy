@@ -74,7 +74,8 @@ const renderStatusBadge = (status: string) => {
   switch (status) {
     case 'ACTIVE':
       return (
-        <Badge className="border-emerald-200 bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25">
+        <Badge className="gap-1.5 border-emerald-400/14 bg-emerald-400/10 text-emerald-200 shadow-[0_0_0_1px_rgba(16,185,129,0.02)_inset] hover:bg-emerald-400/14">
+          <span className="size-1.5 rounded-full bg-emerald-300/80" aria-hidden />
           Active
         </Badge>
       )
@@ -82,13 +83,19 @@ const renderStatusBadge = (status: string) => {
       return (
         <Badge
           variant="secondary"
-          className="border-amber-200 bg-amber-500/15 text-amber-600 hover:bg-amber-500/25"
+          className="gap-1.5 border-amber-300/14 bg-amber-300/10 text-amber-100 shadow-[0_0_0_1px_rgba(251,191,36,0.02)_inset] hover:bg-amber-300/14"
         >
+          <span className="size-1.5 rounded-full bg-amber-200/80" aria-hidden />
           Pending
         </Badge>
       )
     case 'SUSPENDED':
-      return <Badge variant="destructive">Suspended</Badge>
+      return (
+        <Badge variant="destructive" className="gap-1.5 border-destructive/14 bg-destructive/10 text-rose-200">
+          <span className="size-1.5 rounded-full bg-rose-300/80" aria-hidden />
+          Suspended
+        </Badge>
+      )
     default:
       return <Badge variant="outline">{status}</Badge>
   }
@@ -97,7 +104,7 @@ const renderStatusBadge = (status: string) => {
 const renderRoleBadge = (role: string) => {
   const label = ROLE_LABELS[role] ?? role
   return (
-    <Badge variant="outline" className="gap-1 font-normal">
+    <Badge variant="outline" className="gap-1 border-border/60 bg-background/55 font-normal text-foreground/88">
       {role === 'SYSADMIN' && <ShieldCheck className="size-3 text-primary" />}
       {label}
     </Badge>

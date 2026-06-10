@@ -1,16 +1,23 @@
 import { NextResponse } from "next/server"
 import prisma from '@/lib/prisma'
+import { createClearedAuthResponse, requireAuth } from '@/lib/auth'
 
 export async function GET(request: Request) {
     try {
-        const userId = request.headers.get('x-user-id')
+        const auth = await requireAuth(request)
 
-        if (!userId) {
-            return NextResponse.json(
-                { error: 'Invalid session.'},
-                { status: 401}
-            )
+        if (auth.response || !auth.session) {
+            if (!auth.response) {
+                return NextResponse.json(
+                    { error: 'Invalid session.'},
+                    { status: 401}
+                )
+            }
+
+            return createClearedAuthResponse(auth.response)
         }
+
+        const { userId } = auth.session
 
         const user = await prisma.user.findUnique({
             where: { id: userId },

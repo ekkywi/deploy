@@ -68,11 +68,14 @@ export default function LoginPage() {
 
   return (
     <AuthShell>
-      <Card className="border-primary/15 shadow-md ring-primary/10">
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl font-semibold text-primary">Login</CardTitle>
+      <Card className="border-border/80 bg-card/95 ring-0">
+        <CardHeader className="border-b text-left">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            Console access
+          </p>
+          <CardTitle className="text-2xl font-medium tracking-tight text-foreground">Sign in</CardTitle>
           <CardDescription>
-            Use email to access the Deploy Console
+            Use your team email to continue into Deploy Console.
           </CardDescription>
         </CardHeader>
 
@@ -127,7 +130,7 @@ export default function LoginPage() {
                         <button
                           type="button"
                           onClick={() => setShowPassword((prev) => !prev)}
-                          className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-0.5 text-primary/60 transition-colors hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                          className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                           aria-label={showPassword ? 'Hide password' : 'Show password'}
                         >
                           {showPassword ? (
@@ -146,7 +149,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 size="lg"
-                className={cn('mt-2 w-full')}
+                className={cn('mt-3 w-full rounded-full')}
                 disabled={isSubmitting}
                 aria-busy={isSubmitting}
               >
@@ -156,7 +159,7 @@ export default function LoginPage() {
                     Verifying...
                   </>
                 ) : (
-                  'Enter System'
+                  'Continue'
                 )}
               </Button>
             </form>
@@ -166,9 +169,9 @@ export default function LoginPage() {
             Don&apos;t have access yet?{' '}
             <a
               href="/register"
-              className="font-medium text-primary underline-offset-4 hover:underline"
+              className="font-medium text-foreground underline-offset-4 hover:underline"
             >
-              Apply account
+              Request access
             </a>
           </p>
         </CardContent>

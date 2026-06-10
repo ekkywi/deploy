@@ -1,26 +1,24 @@
 import { NextResponse } from "next/server"
-import prisma from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import bcrypt from 'bcrypt'
-import { toLowerCase } from "zod"
+import prisma from '@/lib/prisma'
+import { requireRole } from '@/lib/auth'
 
 const VALID_ROLES = ['SYSADMIN', 'MANAGER', 'DEVELOPER']
 
 export async function GET(request: Request) {
     try {
-        const userRole = request.headers.get('x-user-role')
+        const auth = await requireRole(request, 'SYSADMIN')
 
-        if (userRole !== 'SYSADMIN') {
-            return NextResponse.json(
-                { error: 'Forbidden. You do not have sufficient privileges.'},
-                { status: 403 }
-            )
+        if (auth.response) {
+            return auth.response
         }
 
         const { searchParams } = new URL(request.url)
         const statusFilter = searchParams.get('status')
         const searchQuery = searchParams.get('search')
 
-        const whereClause: any = {}
+        const whereClause: Prisma.UserWhereInput = {}
 
         if (statusFilter) {
             whereClause.status = statusFilter
@@ -65,13 +63,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const requesterRole = request.headers.get('x-user-role')
+        const auth = await requireRole(
+            request,
+            'SYSADMIN',
+            'Access denied. This action requires Administrator Privileges.'
+        )
 
-        if (requesterRole !== 'SYSADMIN') {
-            return NextResponse.json(
-                { error: 'Access denied. This action requires Administrator Privileges.'},
-                { status: 403 }
-            )
+        if (auth.response) {
+            return auth.response
         }
 
         const body = await request.json()
@@ -147,7 +146,7 @@ export async function POST(request: Request) {
             },
             { status: 201 }
         )
-    } catch (error: any) {
+    } catch (error) {
         console.error('Create user error:', error)
         return NextResponse.json(
             { error: 'Internal server error.' },

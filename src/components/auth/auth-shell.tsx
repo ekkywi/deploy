@@ -1,45 +1,35 @@
-import { Layers, Rocket, Shield } from 'lucide-react'
+import { ArrowUpRight, Layers, Rocket, Shield } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
 const features = [
   {
     icon: Shield,
-    title: 'Role-based access',
-    description: 'SYSADMIN, MANAGER, and DEVELOPER permissions',
-    iconClass: 'bg-violet-500/25 text-violet-200 ring-violet-400/30',
+    title: 'Role-aware access',
+    description: 'Clear account approval and responsibility boundaries.',
+    iconClass: 'bg-background text-foreground ring-border',
   },
   {
     icon: Rocket,
-    title: 'Multi-environment nodes',
-    description: 'DEV, STAGING, and PROD execution targets',
-    iconClass: 'bg-cyan-500/25 text-cyan-200 ring-cyan-400/30',
+    title: 'Environment delivery',
+    description: 'Coordinate dev, staging, and production execution from one place.',
+    iconClass: 'bg-background text-foreground ring-border',
   },
   {
     icon: Layers,
-    title: 'Centralized metadata',
-    description: 'Projects and deployment records in one place',
-    iconClass: 'bg-amber-500/25 text-amber-200 ring-amber-400/30',
+    title: 'Centralized operations',
+    description: 'Projects, releases, and approvals stay visible to the whole team.',
+    iconClass: 'bg-background text-foreground ring-border',
   },
 ] as const
 
 function DeployLogo({ className }: { className?: string }) {
   return (
-    <div className={cn('flex items-center gap-2 font-medium tracking-tight', className)}>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-6 shrink-0"
-        aria-hidden
-      >
-        <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
-      </svg>
-      <span>DEPLOY</span>
+    <div className={cn('flex items-center gap-3 font-medium tracking-tight', className)}>
+      <span className="inline-flex size-8 items-center justify-center rounded-full bg-foreground text-background">
+        D
+      </span>
+      <span>Deploy</span>
     </div>
   )
 }
@@ -47,24 +37,26 @@ function DeployLogo({ className }: { className?: string }) {
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-[oklch(0.22_0.08_280)] p-10 text-white lg:flex">
+      <div className="relative hidden flex-col justify-between overflow-hidden border-r border-border/80 bg-background p-10 text-white lg:flex">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_10%_0%,oklch(0.55_0.22_264/0.55),transparent_55%),radial-gradient(ellipse_70%_55%_at_90%_100%,oklch(0.5_0.16_200/0.45),transparent_50%),radial-gradient(ellipse_50%_40%_at_70%_20%,oklch(0.55_0.14_320/0.35),transparent_45%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_34%)]"
           aria-hidden
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-600/30 via-indigo-950/40 to-[oklch(0.18_0.06_280)]" aria-hidden />
 
         <div className="relative z-10">
-          <DeployLogo className="text-lg text-violet-100" />
+          <DeployLogo className="text-lg text-white" />
         </div>
 
-        <div className="relative z-10 space-y-8">
-          <div className="space-y-3">
-            <h2 className="text-3xl font-semibold tracking-tight text-balance">
-              Deploy Control Plane
+        <div className="relative z-10 space-y-10">
+          <div className="space-y-4">
+            <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/65">
+              Access workspace
+            </div>
+            <h2 className="max-w-xl text-4xl font-medium tracking-[-0.05em] text-balance">
+              Calm operations for teams shipping across environments.
             </h2>
-            <p className="max-w-md text-sm leading-relaxed text-white/75">
-              Manage projects, execution nodes, and releases from one place.
+            <p className="max-w-md text-sm leading-6 text-white/68">
+              Review releases, keep operators aligned, and maintain a single source of truth for delivery.
             </p>
           </div>
 
@@ -81,23 +73,29 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
                 </span>
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium">{title}</p>
-                  <p className="text-sm text-white/65">{description}</p>
+                  <p className="text-sm text-white/60">{description}</p>
                 </div>
               </li>
             ))}
           </ul>
         </div>
 
-        <p className="relative z-10 text-xs text-white/50">&copy; {new Date().getFullYear()} Deploy</p>
+        <div className="relative z-10 flex items-center justify-between text-xs text-white/50">
+          <p>&copy; {new Date().getFullYear()} Deploy</p>
+          <span className="inline-flex items-center gap-1">
+            Private console
+            <ArrowUpRight className="size-3" aria-hidden />
+          </span>
+        </div>
       </div>
 
       <div className="relative flex flex-col items-center justify-center bg-background p-6 sm:p-8">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,oklch(0.55_0.2_264/0.08),transparent_60%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_26%)]"
           aria-hidden
         />
         <div className="relative mb-8 w-full max-w-sm lg:hidden">
-          <DeployLogo className="justify-center text-lg text-primary" />
+          <DeployLogo className="justify-center text-lg text-foreground" />
         </div>
         <div className="relative w-full max-w-sm">{children}</div>
       </div>

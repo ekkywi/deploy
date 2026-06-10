@@ -46,7 +46,8 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const { confirmPassword, ...apiPayload } = data
+      const { confirmPassword: _confirmPassword, ...apiPayload } = data
+      void _confirmPassword
 
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -78,11 +79,14 @@ export default function RegisterPage() {
 
   return (
     <AuthShell>
-      <Card className="border-primary/15 shadow-md ring-primary/10">
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl font-semibold text-primary">Request Access</CardTitle>
+      <Card className="border-border/80 bg-card/95 ring-0">
+        <CardHeader className="border-b text-left">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            New workspace access
+          </p>
+          <CardTitle className="text-2xl font-medium tracking-tight text-foreground">Request access</CardTitle>
           <CardDescription>
-            Register to access Deploy Console.
+            Create an account request for Deploy Console review.
           </CardDescription>
         </CardHeader>
 
@@ -90,7 +94,7 @@ export default function RegisterPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -99,7 +103,7 @@ export default function RegisterPage() {
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <User className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-primary/70" aria-hidden />
+                          <User className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
                           <Input placeholder="John" className="h-10 pl-9" {...field} />
                         </div>
                       </FormControl>
@@ -131,7 +135,7 @@ export default function RegisterPage() {
                     <FormLabel>Email</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Mail className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-primary/70" aria-hidden />
+                        <Mail className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
                         <Input placeholder="name@mail.com" type="email" autoComplete="email" className="h-10 pl-9" {...field} />
                       </div>
                     </FormControl>
@@ -148,7 +152,7 @@ export default function RegisterPage() {
                     <FormLabel>Password</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-primary/70" aria-hidden />
+                        <Lock className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
                         <Input
                           type={showPassword ? 'text' : 'password'}
                           placeholder="••••••••"
@@ -159,7 +163,7 @@ export default function RegisterPage() {
                         <button
                           type="button"
                           onClick={() => setShowPassword((prev) => !prev)}
-                          className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-0.5 text-primary/60 transition-colors hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                          className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                         >
                           {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                         </button>
@@ -178,7 +182,7 @@ export default function RegisterPage() {
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-primary/70" aria-hidden />
+                        <Lock className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
                         <Input
                           type={showConfirmPassword ? 'text' : 'password'}
                           placeholder="••••••••"
@@ -189,7 +193,7 @@ export default function RegisterPage() {
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword((prev) => !prev)}
-                          className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-0.5 text-primary/60 transition-colors hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                          className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-0.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
                         >
                           {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                         </button>
@@ -203,7 +207,7 @@ export default function RegisterPage() {
               <Button
                 type="submit"
                 size="lg"
-                className={cn('mt-2 w-full')}
+                className={cn('mt-3 w-full rounded-full')}
                 disabled={isSubmitting}
                 aria-busy={isSubmitting}
               >
@@ -213,7 +217,7 @@ export default function RegisterPage() {
                     Submitting Request...
                   </>
                 ) : (
-                  'Apply for Access'
+                  'Submit request'
                 )}
               </Button>
             </form>
@@ -223,7 +227,7 @@ export default function RegisterPage() {
             Already have an active account?{' '}
             <a
               href="/login"
-              className="font-medium text-primary underline-offset-4 hover:underline"
+              className="font-medium text-foreground underline-offset-4 hover:underline"
             >
               Sign in
             </a>

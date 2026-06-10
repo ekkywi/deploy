@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server"
 import prisma from '@/lib/prisma'
 import { AccountStatus } from "@prisma/client"
+import { requireRole } from '@/lib/auth'
 
 export async function PATCH(
     request: Request,
     { params }: { params: Promise<{ id: string }> | { id: string } } 
 ) {
     try {
-        const requesterRole = request.headers.get('x-user-role')
+        const auth = await requireRole(
+            request,
+            'SYSADMIN',
+            'Access denied. This action requires Administrator privileges.'
+        )
 
-        if (requesterRole !== 'SYSADMIN') {
-            return NextResponse.json(
-                { error: 'Access denied. This action requires Administrator privileges.'},
-                { status: 403 }
-            )
+        if (auth.response) {
+            return auth.response
         }
 
         const body = await request.json()
@@ -47,17 +49,18 @@ export async function PATCH(
             { status: 200 }
         )
 
-    } catch (error: any) {
+    } catch (error) {
         console.error('Update status error:', error)
+        const knownError = error as { code?: string; message?: string }
 
-        if (error.code === 'P2025') {
+        if (knownError.code === 'P2025') {
             return NextResponse.json(
                 { error: 'User not found.' },
                 { status: 404 }
             )
         }
 
-        if (error.code === 'P2023' || error.message?.includes('malformed')) {
+        if (knownError.code === 'P2023' || knownError.message?.includes('malformed')) {
             return NextResponse.json(
                 { error: 'Invalid User ID format. UUID expected.' },
                 { status: 400 }

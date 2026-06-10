@@ -95,13 +95,13 @@ export function DataTable<TData, TValue>({
     <TooltipProvider>
       <Card>
         <CardHeader className="border-b pb-4">
-          <div className="relative max-w-sm w-full">
+          <div className="relative w-full max-w-sm">
             <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
             <Input
               placeholder="Search users..."
               value={globalFilter ?? ''}
               onChange={(event) => setGlobalFilter(event.target.value)}
-              className="pl-8"
+              className="h-10 rounded-full pl-8"
             />
           </div>
         </CardHeader>
@@ -112,12 +112,12 @@ export function DataTable<TData, TValue>({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
                   key={headerGroup.id}
-                  className="border-b bg-muted/50 hover:bg-muted/50"
+                  className="border-b bg-muted/30 hover:bg-muted/30"
                 >
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className={`px-4 py-3 text-xs uppercase tracking-wide text-muted-foreground ${
+                      className={`px-4 py-3 ${
                         header.id === 'actions' ? 'text-right' : ''
                       }`}
                     >
