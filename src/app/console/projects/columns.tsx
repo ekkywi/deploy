@@ -1,7 +1,8 @@
 'use client'
 
 import { ColumnDef } from '@tanstack/react-table'
-import { MoreHorizontal, Pencil, Trash2, ExternalLink, ShieldAlert, ShieldCheck } from 'lucide-react'
+import Link from 'next/link'
+import { MoreHorizontal, Pencil, Trash2, ExternalLink, ShieldAlert, ShieldCheck, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -67,7 +68,7 @@ export const getColumns = (
     id: 'myRole',
     header: 'My Access',
     cell: ({ row }) => {
-      const myMembership = row.original.members.find(m => m.userId === currentUserId)
+      const myMembership = row.original.members?.find(m => m.userId === currentUserId)
       
       if (currentUserGlobalRole === 'SYSADMIN') {
         return (
@@ -117,7 +118,7 @@ export const getColumns = (
     id: 'environments',
     header: 'Environments',
     cell: ({ row }) => {
-      const count = row.original._count.environments
+      const count = row.original._count?.environments || 0
       return (
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{count}</Badge>
@@ -146,6 +147,13 @@ export const getColumns = (
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
+
+            <DropdownMenuItem asChild>
+              <Link href={`/console/projects/${project.id}`} className="cursor-pointer font-medium">
+                <Settings className="mr-2 size-4" />
+                Manage Workspace
+              </Link>
+            </DropdownMenuItem>
             
             {canModify ? (
               <>

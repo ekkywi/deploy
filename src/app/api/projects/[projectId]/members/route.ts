@@ -144,11 +144,19 @@ export async function POST(
             )
         }
 
-        const existingRole = await prisma.projectRole.findUnique({
+        const existingRole = await prisma.projectRole.findFirst({
             where: {
-                userId_projectId: { userId: targetUser.id, projectId }
+                userId: targetUser.id,
+                projectId: projectId
             }
         });
+
+        if (existingRole) {
+            return NextResponse.json(
+                { error: 'User is already a member of this project.' }, 
+                { status: 409 }
+            );
+        }
 
         const newMember = await prisma.projectRole.create({
             data: {
