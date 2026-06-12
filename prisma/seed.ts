@@ -16,7 +16,7 @@ const prisma = new PrismaClient({ adapter })
 async function main() {
     console.log("Seeding database...")
 
-    const hashedPassword = await bcrypt.hash("SecurePassword123!", 10)
+    const hashedPassword = await bcrypt.hash("SecurePassword!123", 10)
 
     const admin = await prisma.user.upsert({
         where: { email: 'admin@office.internal' },
@@ -24,7 +24,7 @@ async function main() {
         create: {
             firstName: 'System',
             lastName: 'Administrator',
-            email: 'admin@office.internal',
+            email: 'admin@mail.com',
             passwordHash: hashedPassword,
             globalRole: GlobalRole.SYSADMIN,
             status: AccountStatus.ACTIVE,

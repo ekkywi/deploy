@@ -21,15 +21,15 @@ enum AccountStatus {
 }
 
 model User {
-  id           String         @id @default(uuid())
+  id           String        @id @default(uuid())
   firstName    String
   lastName     String?
-  email        String         @unique
+  email        String        @unique
   passwordHash String
-  globalRole   GlobalRole     @default(DEVELOPER)
-  status       AccountStatus  @default(PENDING)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  globalRole   GlobalRole    @default(DEVELOPER)
+  status       AccountStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   projectRoles ProjectRole[]
   envAccess    EnvironmentAccess[]
@@ -72,22 +72,18 @@ model ProjectRole {
 
 // --- INFRASTRUCTURE AND EXECUTION ENVIRONMENT ---
 
-enum NodeType {
+// PERBAIKAN 1: Memisahkan Fase (Tier) dengan Peran Mesin (NodeType)
+enum EnvironmentTier {
   DEVELOPMENT
   STAGING
   PRODUCTION
 }
 
-model ExecutionNode {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  ipAddress String
-  authToken String?
-  nodeType  NodeType
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-
-  environments Environment[]
+enum NodeType {
+  APPLICATION
+  DATABASE
+  CACHE
+  WORKER
 }
 
 enum StackType {
@@ -103,25 +99,41 @@ enum LifeCycleStatus {
 }
 
 model Environment {
-  id           String          @id @default(uuid())
-  projectId    String
-  nodeId       String
-  name         String
-  assignedPort Int
-  domain       String?         @unique             
-  stackType    StackType
-  lifecycle    LifeCycleStatus @default(ACTIVE)
-  deletedAt    DateTime?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  id          String          @id @default(uuid())
+  projectId   String
+  name        String
+  domain      String?         @unique              
+  stackType   StackType
+  tier        EnvironmentTier @default(DEVELOPMENT)
+  lifecycle   LifeCycleStatus @default(ACTIVE)
+  deletedAt   DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   project     Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  node        ExecutionNode       @relation(fields: [nodeId], references: [id], onDelete: Restrict)
+  // PERBAIKAN 2: Relasi 1-to-Many ke ExecutionNode
+  nodes       ExecutionNode[]     
   deployments Deployment[]
   accessList  EnvironmentAccess[]
 
-  @@unique([nodeId, assignedPort])
   @@unique([projectId, name])
+}
+
+model ExecutionNode {
+  id            String   @id @default(uuid())
+  environmentId String   // <-- Mengikat banyak node ke satu environment
+  name          String   @unique
+  ipAddress     String
+  assignedPort  Int?     // <-- Dipindah dari Environment. (Misal: 3000 untuk App, 5432 untuk DB)
+  authToken     String?
+  nodeType      NodeType @default(APPLICATION)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+
+  // PERBAIKAN 3: Mencegah collision port pada IP mesin LXC/Host yang sama
+  @@unique([ipAddress, assignedPort]) 
 }
 
 model EnvironmentAccess {

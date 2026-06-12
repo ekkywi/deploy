@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuthStore } from '@/store/useAuthStore'
 import { ProjectWithDetails } from '../columns'
 import { MembersTab } from './members-tab'
+import { EnvironmentsTab } from './environments-tab'
 
 type DetailStatProps = {
   label: string
@@ -336,19 +337,12 @@ export default function ProjectWorkspacePage({
         </TabsContent>
 
         <TabsContent value="environments" className="m-0">
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle className="text-lg font-medium">Environments</CardTitle>
-              <CardDescription>
-                Deployment environments and node mappings will appear here.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-5">
-              <div className="rounded-2xl border border-dashed border-border/70 bg-muted/30 p-6 text-sm text-muted-foreground">
-                Environment management is not implemented yet.
-              </div>
-            </CardContent>
-          </Card>
+          <EnvironmentsTab 
+            projectId={project.id}
+            currentUserId={user.id}
+            currentUserGlobalRole={user.role}
+            projectMembers={project.members}
+          />
         </TabsContent>
 
         <TabsContent value="settings" className="m-0">
