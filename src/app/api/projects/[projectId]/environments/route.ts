@@ -32,35 +32,23 @@ export async function GET(
         const environments = await prisma.environment.findMany({
             where: { projectId, deletedAt: null },
             include: {
-                nodes: {
-                    select: {
-                        id: true,
-                        name: true,
-                        ipAddress: true,
-                        assignedPort: true,
-                        nodeType: true,
-                        isActive: true
-                    }
-                },
                 _count: {
                     select: { deployments: true }
                 }
             },
-            orderBy: {
-                createdAt: 'desc'
-            }
+            orderBy: { createdAt: 'desc' }
         });
 
-        return NextResponse.json({ environments }, { status:200 });
-    
-    } catch (error) {
-        console.error('Fetch environment error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error.' },
-            { status: 500 }
-        )
-    }
-}
+                return NextResponse.json({ environments }, { status:200 });
+            
+            } catch (error) {
+                console.error('Fetch environment error:', error);
+                return NextResponse.json(
+                    { error: 'Internal server error.' },
+                    { status: 500 }
+                )
+            }
+        }
 
 export async function POST(
     request: Request,
@@ -131,9 +119,10 @@ export async function POST(
                 tier: tier as EnvironmentTier
             },
             include: {
-                nodes: true,
                 _count: {
-                    select: { deployments: true }
+                    select: {
+                        deployments: true
+                    }
                 }
             }
         });

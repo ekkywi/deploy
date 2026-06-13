@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { Plus, Server, Globe, Activity, Layers, ExternalLink, Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
@@ -37,15 +38,6 @@ import {
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
 
-type EnvironmentNode = {
-  id: string
-  name: string
-  ipAddress: string
-  assignedPort: number | null
-  nodeType: string
-  isActive: boolean
-}
-
 type EnvironmentData = {
   id: string
   name: string
@@ -54,7 +46,6 @@ type EnvironmentData = {
   tier: EnvironmentTier
   lifecycle: string
   createdAt: string
-  nodes: EnvironmentNode[]
   _count: {
     deployments: number
   }
@@ -308,14 +299,25 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
               </CardHeader>
               <CardContent className="pb-4">
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1.5" title="Tech Stack"><Layers className="size-4" /><span className="font-medium">{env.stackType}</span></div>
-                  <div className="flex items-center gap-1.5" title="Attached Nodes"><Server className="size-4" /><span>{env.nodes.length} Nodes</span></div>
-                  <div className="flex items-center gap-1.5" title="Total Deployments"><Activity className="size-4" /><span>{env._count.deployments} Deploys</span></div>
+                  <div className="flex items-center gap-1.5" title="Tech Stack">
+                    <Layers className="size-4" />
+                    <span className="font-medium">{env.stackType}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5" title="Infrastructure">
+                    <Server className="size-4" />
+                    <span>Docker Pool</span>
+                  </div>
+                  <div className="flex items-center gap-1.5" title="Total Deployments">
+                    <Activity className="size-4" />
+                    <span>{env._count.deployments} Deploys</span>
+                  </div>
                 </div>
               </CardContent>
               <CardFooter className="pt-0">
-                <Button variant="secondary" className="w-full" size="sm" onClick={() => toast.info('Environment detail routing will be implemented next.')}>
-                  Manage Nodes & Config
+                <Button variant="secondary" className="w-full" size="sm" asChild>
+                  <Link href={`/console/projects/${projectId}/environments/${env.id}`}>
+                    Open Deployment Dashboard
+                  </Link>
                 </Button>
               </CardFooter>
             </Card>
