@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Activity, GitBranch, PlayCircle } from 'lucide-react'
+import { ArrowLeft, Activity, GitBranch } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { DeployButton } from './deploy-button'
 
 export default async function EnvironmentDashboardPage({
   params,
@@ -58,9 +59,12 @@ export default async function EnvironmentDashboardPage({
               </a>
             </Button>
           )}
-          <Button className="rounded-full bg-primary text-primary-foreground">
-            <PlayCircle className="mr-2 size-4" /> Trigger Deploy
-          </Button>
+          
+          <DeployButton 
+            projectId={projectId} 
+            environmentId={environmentId} 
+            hasRepoUrl={!!environment.project.repoUrl} 
+          />
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Layers, LayoutDashboard, Rocket, Users } from 'lucide-react'
+import { Layers, LayoutDashboard, Rocket, Users, Server } from 'lucide-react'
 import { useAuthStore } from '@/store/useAuthStore'
 
 import {
@@ -24,7 +24,7 @@ const navItems = [
     icon: LayoutDashboard,
   },
   {
-    title: 'Projects & Nodes',
+    title: 'Projects',
     url: '/console/projects',
     icon: Layers,
   },
@@ -85,13 +85,27 @@ export function DashboardSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton 
                     asChild 
-                    isActive={pathname.startsWith('/console/admin')}
+                    isActive={pathname.startsWith('/console/admin/users')}
                     tooltip="User Management"
                     className="h-10 rounded-xl px-3"
                   >
                     <Link href="/console/admin/users">
                       <Users aria-hidden />
                       <span>User Management</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={pathname.startsWith('/console/admin/infrastructure')}
+                    tooltip="Infrastructure"
+                    className="h-10 rounded-xl px-3"
+                  >
+                    <Link href="/console/admin/infrastructure">
+                      <Server aria-hidden />
+                      <span>Infrastructure</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
