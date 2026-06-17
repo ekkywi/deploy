@@ -14,7 +14,8 @@ export async function proxy(request: NextRequest) {
 
     if (
         pathname.startsWith('/_next') ||
-        pathname.startsWith('/favicon.ico')
+        pathname.startsWith('/favicon.ico') ||
+        pathname.startsWith('api/webhooks')
     ) {
         return NextResponse.next()
     }
@@ -70,6 +71,6 @@ function handleUnauthorized(request: NextRequest, clearCookie: boolean) {
 
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico).*)',
+        '/((?!_next/static|_next/image|favicon.ico|api/webhooks).*)',
     ],
 }

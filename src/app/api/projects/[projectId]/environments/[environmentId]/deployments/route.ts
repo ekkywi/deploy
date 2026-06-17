@@ -56,7 +56,10 @@ export async function POST(
 
         const environment = await prisma.environment.findUnique({
             where: { id: environmentId, projectId, deletedAt: null },
-            include: { project: true }
+            include: { 
+                project: true,
+                variables: true
+            }
         });
 
         if (!environment) {
@@ -101,6 +104,7 @@ export async function POST(
             repoUrl: environment.project.repoUrl,
             stackType: environment.stackType,
             environmentName: environment.name,
+            envVars: environment.variables.map(v => ({key: v.key, value: v.value}))
         };
 
         try {

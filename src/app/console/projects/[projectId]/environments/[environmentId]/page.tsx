@@ -1,26 +1,35 @@
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, Activity, GitBranch } from 'lucide-react'
-import prisma from '@/lib/prisma'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { DeployButton } from './deploy-button'
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft, Activity, GitBranch } from 'lucide-react';
+import prisma from '@/lib/prisma';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { AutoRefresh } from '@/components/auto-refresh';
+import { DeployButton } from './deploy-button';
+import { EnvVarsManager } from './env-vars-manager';
 
 export default async function EnvironmentDashboardPage({
   params,
 }: {
   params: Promise<{ projectId: string; environmentId: string }>
 }) {
-  const resolvedParams = await params
-  const { projectId, environmentId } = resolvedParams
+  const resolvedParams = await params;
+  const { projectId, environmentId } = resolvedParams;
 
   const environment = await prisma.environment.findUnique({
     where: { id: environmentId, projectId, deletedAt: null },
     include: {
-      project: { select: { name: true, repoUrl: true } }
+      project: { select: { name: true, repoUrl: true } },
+      variables: true 
     }
-  })
+  });
+
+  const activeDeployment = await prisma.deployment.findFirst({
+    where: { environmentId, status: 'BUILDING' }
+  });
+
+  const isBuilding = !!activeDeployment;
 
   if (!environment) {
     notFound()
@@ -102,6 +111,13 @@ export default async function EnvironmentDashboardPage({
           </CardContent>
         </Card>
       </div>
+
+      <EnvVarsManager 
+        projectId={projectId} 
+        environmentId={environmentId} 
+        initialVars={environment.variables} 
+      />
+      <AutoRefresh isActive={isBuilding} />
     </div>
   )
 }
