@@ -101,6 +101,7 @@ enum StackType {
 
 enum LifeCycleStatus {
   ACTIVE
+  SUSPENDED
   DELETING
   DELETED
 }

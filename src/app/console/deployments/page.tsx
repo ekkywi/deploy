@@ -6,6 +6,10 @@ import { formatDistanceToNow } from 'date-fns'
 import { ConsolePageHeader } from '@/components/layout/console-page-header'
 import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
 import { AutoRefresh } from '@/components/auto-refresh'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { requireAuth } from '@/lib/auth'
+import { GlobalRole } from '@prisma/client'
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -22,7 +26,26 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default async function GlobalDeploymentsPage() {
+  const headersList = await headers()
+  const dummyRequest = new Request('http://localhost', { headers: headersList })
+  const auth = await requireAuth(dummyRequest)
+
+  if (!auth.session) {
+    redirect('/auth/login') 
+  }
+
+  const { userId, role } = auth.session
+
   const deployments = await prisma.deployment.findMany({
+    where: role === GlobalRole.SYSADMIN ? undefined : {
+      environment: {
+        project: {
+          members: {
+            some: { userId: userId }
+          }
+        }
+      }
+    },
     orderBy: { createdAt: 'desc' },
     take: 50,
     include: {
@@ -50,6 +73,7 @@ export default async function GlobalDeploymentsPage() {
       pending: 0,
     }
   )
+  
   const hasLiveDeployments = deployments.some(
     (deployment) => deployment.status === 'PENDING' || deployment.status === 'BUILDING'
   )

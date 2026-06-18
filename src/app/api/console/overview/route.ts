@@ -1,4 +1,4 @@
-import { DeployStatus, LifeCycleStatus } from '@prisma/client'
+import { DeployStatus, LifeCycleStatus, Prisma } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 
@@ -21,6 +21,55 @@ export async function GET(request: Request) {
       )
     }
 
+    const isSysAdmin = auth.session.role === 'SYSADMIN'
+    const accessibleProjectIds = isSysAdmin
+      ? null
+      : (
+          await prisma.projectRole.findMany({
+            where: {
+              userId: auth.session.userId,
+              project: {
+                deletedAt: null,
+              },
+            },
+            select: {
+              projectId: true,
+            },
+          })
+        ).map((membership) => membership.projectId)
+
+    const projectWhere: Prisma.ProjectWhereInput = isSysAdmin
+      ? { deletedAt: null }
+      : {
+          deletedAt: null,
+          id: {
+            in: accessibleProjectIds ?? [],
+          },
+        }
+
+    const environmentWhere: Prisma.EnvironmentWhereInput = isSysAdmin
+      ? {
+          deletedAt: null,
+          lifecycle: { not: LifeCycleStatus.DELETED },
+        }
+      : {
+          deletedAt: null,
+          lifecycle: { not: LifeCycleStatus.DELETED },
+          projectId: {
+            in: accessibleProjectIds ?? [],
+          },
+        }
+
+    const deploymentWhere: Prisma.DeploymentWhereInput = isSysAdmin
+      ? {}
+      : {
+          environment: {
+            projectId: {
+              in: accessibleProjectIds ?? [],
+            },
+          },
+        }
+
     const [
       projectCount,
       environmentCount,
@@ -32,24 +81,25 @@ export async function GET(request: Request) {
       environments,
     ] = await Promise.all([
       prisma.project.count({
-        where: { deletedAt: null },
+        where: projectWhere,
       }),
       prisma.environment.count({
-        where: {
-          deletedAt: null,
-          lifecycle: { not: LifeCycleStatus.DELETED },
-        },
+        where: environmentWhere,
       }),
-      prisma.deployment.count(),
+      prisma.deployment.count({
+        where: deploymentWhere,
+      }),
       prisma.workerNode.count(),
       prisma.workerNode.count({
         where: { isActive: true },
       }),
       prisma.deployment.groupBy({
         by: ['status'],
+        where: deploymentWhere,
         _count: { status: true },
       }),
       prisma.deployment.findMany({
+        where: deploymentWhere,
         orderBy: { createdAt: 'desc' },
         take: 6,
         include: {
@@ -65,10 +115,7 @@ export async function GET(request: Request) {
         },
       }),
       prisma.environment.findMany({
-        where: {
-          deletedAt: null,
-          lifecycle: { not: LifeCycleStatus.DELETED },
-        },
+        where: environmentWhere,
         select: {
           id: true,
           name: true,
@@ -129,8 +176,10 @@ export async function GET(request: Request) {
     if (projectCount === 0) {
       alerts.push({
         tone: 'warning',
-        title: 'No projects yet',
-        description: 'Create the first project to expose environments and release activity.',
+        title: isSysAdmin ? 'No projects yet' : 'No project memberships',
+        description: isSysAdmin
+          ? 'Create the first project to expose environments and release activity.'
+          : 'You are not assigned to any project yet, so project activity is hidden from this overview.',
       })
     }
 

@@ -7,9 +7,28 @@ import { Badge } from '@/components/ui/badge'
 import { ConsolePageHeader } from '@/components/layout/console-page-header'
 import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
 import { AutoRefresh } from '@/components/auto-refresh'
+import { requireAuth } from '@/lib/auth'
+import { GlobalRole } from '@prisma/client'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 
 export default async function EnvironmentsShortcutPage() {
+  const headersList = await headers()
+  const dummyRequest = new Request('http://localhost', { headers: headersList })
+  const auth = await requireAuth(dummyRequest)
+
+  if (!auth.session) {
+    redirect('/auth/login')
+  }
+
+  const { userId, role } = auth.session
+
   const projects = await prisma.project.findMany({
+    where: role === GlobalRole.SYSADMIN ? undefined : {
+      members: {
+        some: { userId: userId }
+      }
+    },
     include: {
       environments: {
         include: {
@@ -50,6 +69,7 @@ export default async function EnvironmentsShortcutPage() {
       withoutDeploy: 0,
     }
   )
+
   const hasLiveDeployments = projects.some((project) =>
     project.environments.some((env) => {
       const lastDeploy = env.deployments[0]

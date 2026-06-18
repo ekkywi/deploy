@@ -9,6 +9,7 @@ import { AutoRefresh } from '@/components/auto-refresh';
 import { DeployButton } from './deploy-button';
 import { EnvVarsManager } from './env-vars-manager';
 import { DeployStatus } from '@prisma/client';
+import { ToggleStateButton } from './toggle-state-button'; 
 
 export default async function EnvironmentDashboardPage({
   params,
@@ -26,15 +27,20 @@ export default async function EnvironmentDashboardPage({
     }
   });
 
+  if (!environment) {
+    notFound()
+  }
+
   const activeDeployment = await prisma.deployment.findFirst({
     where: { environmentId, status: { in: [DeployStatus.PENDING, DeployStatus.BUILDING] } }
   });
 
-  const isBuilding = !!activeDeployment;
+  const lastSuccessDeploy = await prisma.deployment.findFirst({
+    where: { environmentId, status: DeployStatus.SUCCESS }
+  });
 
-  if (!environment) {
-    notFound()
-  }
+  const isBuilding = !!activeDeployment;
+  const hasSuccessfulDeploy = !!lastSuccessDeploy;
 
   return (
     <div className="space-y-6">
@@ -70,10 +76,18 @@ export default async function EnvironmentDashboardPage({
             </Button>
           )}
           
+          <ToggleStateButton 
+            projectId={projectId}
+            environmentId={environmentId}
+            currentLifecycle={environment.lifecycle}
+            hasSuccessfulDeploy={hasSuccessfulDeploy}
+          />
+          
           <DeployButton 
             projectId={projectId} 
             environmentId={environmentId} 
             hasRepoUrl={!!environment.project.repoUrl} 
+            defaultBranch={environment.branchName}
           />
         </div>
       </div>
@@ -107,7 +121,9 @@ export default async function EnvironmentDashboardPage({
             </div>
             <div className="space-y-1">
               <span className="text-muted-foreground">Internal Port</span>
-              <p className="font-medium italic opacity-70">Unassigned</p>
+              <p className="font-medium italic opacity-70">
+                {environment.assignedPort ? environment.assignedPort : 'Unassigned'}
+              </p>
             </div>
           </CardContent>
         </Card>
