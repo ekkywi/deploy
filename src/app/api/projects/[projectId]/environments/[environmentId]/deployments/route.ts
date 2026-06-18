@@ -41,6 +41,13 @@ export async function POST(
         const { projectId, environmentId } = await params;
         const { userId, role: globalRole } = auth.session;
 
+        let body: any = {};
+        try {
+            body = await request.json();
+        } catch (e) {
+        }
+        const requestedBranch = body.branch;
+
         if (globalRole !== GlobalRole.SYSADMIN) {
             const membership = await prisma.projectRole.findUnique({
                 where: { userId_projectId: { userId, projectId } }
@@ -88,11 +95,35 @@ export async function POST(
             );
         }
 
+        let targetPort = environment.assignedPort;
+        const finalBranch = requestedBranch || environment.branchName || 'main';
+
+        if (!targetPort) {
+            const highestPortEnv = await prisma.environment.findFirst({
+                where: { assignedPort: { not: null } },
+                orderBy: { assignedPort: 'desc' }
+            });
+            
+            targetPort = highestPortEnv && highestPortEnv.assignedPort 
+                ? highestPortEnv.assignedPort + 1 
+                : 30000;
+        }
+
+        await prisma.environment.update({
+            where: { id: environmentId },
+            data: { 
+                assignedPort: targetPort,
+                branchName: finalBranch
+            }
+        });
+
         const newDeployment = await prisma.deployment.create({
             data: {
                 environmentId,
                 workerNodeId: availableWorker.id,
                 status: DeployStatus.PENDING,
+                assignedPort: targetPort,
+                commitHash: finalBranch,
                 logFilePath: `/logs/${environmentId}-${Date.now()}.log`,
             }
         });
@@ -101,9 +132,12 @@ export async function POST(
 
         const payload = {
             deploymentId : newDeployment.id,
+            environmentId: environmentId,
             repoUrl: environment.project.repoUrl,
             stackType: environment.stackType,
             environmentName: environment.name,
+            branch: finalBranch,
+            targetPort: targetPort,
             envVars: environment.variables.map(v => ({key: v.key, value: v.value}))
         };
 
@@ -140,7 +174,7 @@ export async function POST(
                 where: { id: newDeployment.id },
                 data: {
                     status: DeployStatus.FAILED,
-                    errorMessage: 'Failed to contact Worker Node: ${agentError.message}'
+                    errorMessage: `Failed to contact Worker Node: ${agentError.message}`
                 }
             });
 

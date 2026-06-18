@@ -106,22 +106,23 @@ enum LifeCycleStatus {
 }
 
 model Environment {
-  id          String              @id @default(uuid())
-  projectId   String
-  name        String
-  domain      String?             @unique              
-  stackType   StackType
-  tier        EnvironmentTier     @default(DEVELOPMENT)
-  branchName  String              @default("main")
-  lifecycle   LifeCycleStatus     @default(ACTIVE)
-  deletedAt   DateTime?
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  id            String                @id @default(uuid())
+  projectId     String
+  name          String
+  domain        String?               @unique              
+  stackType     StackType
+  tier          EnvironmentTier       @default(DEVELOPMENT)
+  branchName    String                @default("main")
+  assignedPort  Int?                  @unique
+  lifecycle     LifeCycleStatus        @default(ACTIVE)
+  deletedAt     DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
 
-  project     Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  deployments Deployment[]
-  accessList  EnvironmentAccess[]
-  variables   EnvironmentVariable[]
+  project       Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  deployments   Deployment[]
+  accessList    EnvironmentAccess[]
+  variables     EnvironmentVariable[]
 
   @@unique([projectId, name])
 }
