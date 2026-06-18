@@ -112,6 +112,7 @@ model Environment {
   domain      String?             @unique              
   stackType   StackType
   tier        EnvironmentTier     @default(DEVELOPMENT)
+  branchName  String              @default("main")
   lifecycle   LifeCycleStatus     @default(ACTIVE)
   deletedAt   DateTime?
   createdAt   DateTime            @default(now())

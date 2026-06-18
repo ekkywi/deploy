@@ -4,7 +4,6 @@ import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
-  CalendarClock,
   ExternalLink,
   LayoutDashboard,
   Server,
@@ -12,11 +11,12 @@ import {
   Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ConsolePageHeader } from '@/components/layout/console-page-header'
+import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
 import { useAuthStore } from '@/store/useAuthStore'
 import { ProjectWithDetails } from '../columns'
 import { MembersTab } from './members-tab'
@@ -31,11 +31,11 @@ type DetailStatProps = {
 function DetailStat({ label, value, hint }: DetailStatProps) {
   return (
     <div className="rounded-2xl border border-border/80 bg-muted/35 p-4">
-      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+      <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
         {label}
       </p>
-      <p className="mt-3 text-sm font-medium text-foreground">{value}</p>
-      {hint && <p className="mt-1 text-sm text-muted-foreground">{hint}</p>}
+      <p className="mt-3 text-[13px] font-medium text-foreground">{value}</p>
+      {hint && <p className="mt-1 text-[13px] leading-5 text-muted-foreground/85">{hint}</p>}
     </div>
   )
 }
@@ -174,52 +174,34 @@ export default function ProjectWorkspacePage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-3">
+      <ConsolePageHeader
+        eyebrow="Project Workspace"
+        title={project.name}
+        description={project.description || 'Workspace metadata, access, and deployment context live here.'}
+        actions={
           <Button
             variant="ghost"
-            className="w-fit rounded-full px-3 text-muted-foreground hover:text-foreground"
+            className="w-full rounded-full px-3 text-[13px] text-muted-foreground hover:text-foreground sm:w-auto"
             onClick={() => router.push('/console/projects')}
           >
             <ArrowLeft className="mr-2 size-4" />
             Back to Projects
           </Button>
+        }
+      />
 
-          <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              Project Workspace
-            </p>
-            <h1 className="text-3xl font-medium tracking-[-0.04em] text-foreground lg:text-4xl">
-              {project.name}
-            </h1>
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-              {project.description ||
-                'Workspace metadata, access, and deployment context live here.'}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="outline" className="rounded-full border-border/60 bg-muted/38 px-3 py-1.5 font-normal text-foreground">
-            <Users className="mr-1.5 size-3.5" />
-            {project.members.length} Members
-          </Badge>
-          <Badge variant="outline" className="rounded-full border-border/60 bg-muted/38 px-3 py-1.5 font-normal text-foreground">
-            <Server className="mr-1.5 size-3.5" />
-            {project._count.environments} Environments
-          </Badge>
-          <Badge variant="outline" className="rounded-full border-border/60 bg-muted/38 px-3 py-1.5 font-normal text-foreground">
-            <CalendarClock className="mr-1.5 size-3.5" />
-            Updated {formatDate(project.updatedAt)}
-          </Badge>
-        </div>
+      <div className="flex flex-wrap gap-2">
+        <ConsoleStatChip label="Members" value={project.members.length} />
+        <ConsoleStatChip label="Environments" value={project._count.environments} />
+        <ConsoleStatChip label="Repository" value={project.repoUrl ? 'Linked' : 'Not linked'} />
+        <ConsoleStatChip label="Updated" value={formatDate(project.updatedAt)} variant="info" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
         <Card>
           <CardHeader className="border-b">
-            <CardTitle className="text-lg font-medium">Workspace snapshot</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Workspace snapshot</CardTitle>
+            <CardDescription className="text-[13px] leading-5">
               High-level metadata for the current project workspace.
             </CardDescription>
           </CardHeader>
@@ -249,8 +231,8 @@ export default function ProjectWorkspacePage({
 
         <Card>
           <CardHeader className="border-b">
-            <CardTitle className="text-lg font-medium">Access summary</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Access summary</CardTitle>
+            <CardDescription className="text-[13px] leading-5">
               Current session context and workspace visibility.
             </CardDescription>
           </CardHeader>
@@ -266,7 +248,7 @@ export default function ProjectWorkspacePage({
               hint="Permissions are evaluated from the active session."
             />
             <div className="sm:col-span-2 rounded-2xl border border-border/80 bg-muted/35 p-4">
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
                 Repository
               </p>
               {project.repoUrl ? (
@@ -274,13 +256,13 @@ export default function ProjectWorkspacePage({
                   href={project.repoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-muted-foreground"
+                  className="mt-3 inline-flex items-center gap-2 text-[13px] font-medium text-foreground transition-colors hover:text-muted-foreground"
                 >
                   <ExternalLink className="size-4" />
                   <span className="truncate">{project.repoUrl.replace(/^https?:\/\//, '')}</span>
                 </a>
               ) : (
-                <p className="mt-3 text-sm text-muted-foreground">
+                <p className="mt-3 text-[13px] leading-5 text-muted-foreground/90">
                   No repository has been linked to this workspace yet.
                 </p>
               )}
@@ -290,7 +272,7 @@ export default function ProjectWorkspacePage({
       </div>
 
       <Tabs defaultValue="members" className="space-y-4">
-        <div className="rounded-[1.5rem] border border-border/70 bg-card/95 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
+        <div className="rounded-[1.5rem] border border-border/70 bg-card/95 p-3.5 sm:p-4">
           <TabsList variant="line" className="w-full justify-start gap-1">
             <TabsTrigger value="overview">
               <LayoutDashboard className="mr-2 size-4" />
@@ -314,8 +296,8 @@ export default function ProjectWorkspacePage({
         <TabsContent value="overview" className="m-0">
           <Card>
             <CardHeader className="border-b">
-              <CardTitle className="text-lg font-medium">Workspace Overview</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Workspace Overview</CardTitle>
+              <CardDescription className="text-[13px] leading-5">
                 Core summary details for this project workspace.
               </CardDescription>
             </CardHeader>
@@ -348,8 +330,8 @@ export default function ProjectWorkspacePage({
         <TabsContent value="settings" className="m-0">
           <Card>
             <CardHeader className="border-b">
-              <CardTitle className="text-lg font-medium">Workspace Settings</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Workspace Settings</CardTitle>
+              <CardDescription className="text-[13px] leading-5">
                 Project settings and operational controls will appear here.
               </CardDescription>
             </CardHeader>

@@ -6,32 +6,8 @@ import { getColumns, AdminUser } from './columns'
 import { DataTable } from './data-table'
 import { UserEditSheet } from './user-edit-sheet'
 import { AddUserDialog } from './add-user-dialog'
-
-function StatChip({
-  label,
-  value,
-  variant = 'default',
-}: {
-  label: string
-  value: number
-  variant?: 'default' | 'pending' | 'active' | 'suspended'
-}) {
-  const variantStyles = {
-    default: 'border-border/60 bg-muted/38 text-foreground',
-    pending: 'border-amber-300/14 bg-amber-300/10 text-amber-100',
-    active: 'border-emerald-400/14 bg-emerald-400/10 text-emerald-200',
-    suspended: 'border-destructive/14 bg-destructive/10 text-rose-200',
-  }
-
-  return (
-    <div
-      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium ${variantStyles[variant]}`}
-    >
-      <span className="font-normal text-muted-foreground">{label}</span>
-      <span>{value}</span>
-    </div>
-  )
-}
+import { ConsolePageHeader } from '@/components/layout/console-page-header'
+import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([])
@@ -131,27 +107,18 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            Administration
-          </p>
-          <h1 className="text-3xl font-medium tracking-[-0.04em] text-foreground">
-            User Management
-          </h1>
-          <p className="text-sm leading-6 text-muted-foreground">
-            Review access requests, active operators, and account status changes.
-          </p>
-        </div>
-        
-        <AddUserDialog onSuccess={handleAddSuccess} />
-      </div>
+      <ConsolePageHeader
+        eyebrow="Administration"
+        title="User Management"
+        description="Review access requests, active operators, and account status changes."
+        actions={<AddUserDialog onSuccess={handleAddSuccess} />}
+      />
 
       <div className="flex flex-wrap gap-2">
-        <StatChip label="Total" value={stats.total} />
-        <StatChip label="Pending" value={stats.pending} variant="pending" />
-        <StatChip label="Active" value={stats.active} variant="active" />
-        <StatChip label="Suspended" value={stats.suspended} variant="suspended" />
+        <ConsoleStatChip label="Total" value={stats.total} />
+        <ConsoleStatChip label="Pending" value={stats.pending} variant="pending" />
+        <ConsoleStatChip label="Active" value={stats.active} variant="active" />
+        <ConsoleStatChip label="Suspended" value={stats.suspended} variant="destructive" />
       </div>
 
       <DataTable

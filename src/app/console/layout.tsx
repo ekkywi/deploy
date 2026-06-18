@@ -16,17 +16,17 @@ export default function DashboardLayout({
           <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-border/80 bg-background/90 px-4 backdrop-blur lg:px-6">
             <SidebarTrigger className="-ml-1" />
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground/80">
                 Deploy Console
               </p>
-              <p className="truncate text-sm text-foreground">Operational workspace</p>
+              <p className="truncate text-xs text-foreground/90">Operational workspace</p>
             </div>
             <DashboardHeader />
           </header>
           <div className="flex-1 overflow-auto">
             <div className="mx-auto flex w-full max-w-7xl flex-1 px-4 py-6 lg:px-6 lg:py-8">
-              <div className="w-full rounded-[1.75rem] border border-border/70 bg-card/95 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
-                <div className="p-5 lg:p-7">{children}</div>
+              <div className="w-full rounded-[1.5rem] border border-border/60 bg-card/90 shadow-[0_16px_40px_rgba(0,0,0,0.24)]">
+                <div className="p-5 lg:p-6">{children}</div>
               </div>
             </div>
           </div>

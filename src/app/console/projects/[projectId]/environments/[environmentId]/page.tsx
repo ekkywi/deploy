@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { AutoRefresh } from '@/components/auto-refresh';
 import { DeployButton } from './deploy-button';
 import { EnvVarsManager } from './env-vars-manager';
+import { DeployStatus } from '@prisma/client';
 
 export default async function EnvironmentDashboardPage({
   params,
@@ -26,7 +27,7 @@ export default async function EnvironmentDashboardPage({
   });
 
   const activeDeployment = await prisma.deployment.findFirst({
-    where: { environmentId, status: 'BUILDING' }
+    where: { environmentId, status: { in: [DeployStatus.PENDING, DeployStatus.BUILDING] } }
   });
 
   const isBuilding = !!activeDeployment;
@@ -86,7 +87,7 @@ export default async function EnvironmentDashboardPage({
           <CardContent className="py-12 text-center text-muted-foreground">
             <Activity className="mx-auto size-12 opacity-20 mb-3" />
             <p>No deployments yet.</p>
-            <p className="text-sm">Click "Trigger Deploy" to start your first build.</p>
+            <p className="text-sm">Click &quot;Trigger Deploy&quot; to start your first build.</p>
           </CardContent>
         </Card>
 

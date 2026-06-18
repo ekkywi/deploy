@@ -300,11 +300,11 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
       {canModify && (
         <Card className="relative z-20 overflow-visible">
           <CardHeader className="border-b">
-            <CardTitle className="flex items-center gap-2 text-lg font-medium">
-              <UserPlus className="size-5" aria-hidden />
+            <CardTitle className="flex items-center gap-2 text-[15px] font-medium tracking-[-0.02em]">
+              <UserPlus className="size-4" aria-hidden />
               Add New Member
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-[13px] leading-5">
               Invite collaborators by email and choose their workspace role.
             </CardDescription>
           </CardHeader>
@@ -376,8 +376,8 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
 
       <Card className="relative z-10">
         <CardHeader className="border-b">
-          <CardTitle className="text-lg font-medium">Project Members</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Project Members</CardTitle>
+          <CardDescription className="text-[13px] leading-5">
             Manage who has access to this project and their permission levels.
           </CardDescription>
         </CardHeader>
@@ -475,9 +475,9 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
                 <TableRow>
                   <TableCell colSpan={3} className="px-4 py-12">
                     <div className="flex flex-col items-center justify-center gap-2 text-center">
-                      <ShieldAlert className="size-8 text-muted-foreground/50" />
-                      <p className="font-medium text-foreground">No members found</p>
-                      <p className="text-sm text-muted-foreground">
+                      <ShieldAlert className="size-7 text-muted-foreground/45" />
+                      <p className="text-[13px] font-medium text-foreground/90">No members found</p>
+                      <p className="text-[13px] leading-5 text-muted-foreground/85">
                         Invite the first collaborator to start this workspace.
                       </p>
                     </div>

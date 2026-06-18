@@ -95,16 +95,42 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
       if (!res.ok) throw new Error('Failed to fetch environments')
       const data = await res.json()
       setEnvironments(data.environments)
-    } catch (error: any) {
-      toast.error(error.message || 'Error loading environments')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Error loading environments')
     } finally {
       setIsLoading(false)
     }
   }, [projectId])
 
   useEffect(() => {
-    fetchEnvironments()
-  }, [fetchEnvironments])
+    let isActive = true
+
+    const loadEnvironments = async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/environments`)
+        if (!res.ok) throw new Error('Failed to fetch environments')
+
+        const data = await res.json()
+        if (isActive) {
+          setEnvironments(data.environments)
+        }
+      } catch (error: unknown) {
+        if (isActive) {
+          toast.error(error instanceof Error ? error.message : 'Error loading environments')
+        }
+      } finally {
+        if (isActive) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    void loadEnvironments()
+
+    return () => {
+      isActive = false
+    }
+  }, [projectId])
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -121,8 +147,8 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
       setIsCreateOpen(false)
       setCreateData({ name: '', domain: '', stackType: StackType.NEXTJS, tier: EnvironmentTier.DEVELOPMENT })
       fetchEnvironments()
-    } catch (error: any) {
-      toast.error(error.message)
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to create environment')
     } finally {
       setIsCreating(false)
     }
@@ -143,8 +169,8 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
       toast.success(data.message)
       setEditingEnv(null)
       fetchEnvironments()
-    } catch (error: any) {
-      toast.error(error.message)
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update environment')
     } finally {
       setIsUpdating(false)
     }
@@ -162,8 +188,8 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
       toast.success(data.message)
       setDeletingEnv(null)
       fetchEnvironments()
-    } catch (error: any) {
-      toast.error(error.message)
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete environment')
     } finally {
       setIsDeleting(false)
     }
@@ -185,14 +211,14 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-medium text-foreground">Deployment Environments</h2>
-          <p className="text-sm text-muted-foreground">Manage logic environments and execution nodes for this project.</p>
+          <h2 className="text-[15px] font-medium tracking-[-0.02em] text-foreground">Deployment Environments</h2>
+          <p className="text-[13px] leading-5 text-muted-foreground/85">Manage logic environments and execution nodes for this project.</p>
         </div>
 
         {canEdit && (
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="rounded-full gap-2">
+              <Button className="rounded-full gap-2 text-[13px]">
                 <Plus className="size-4" /> New Environment
               </Button>
             </DialogTrigger>
@@ -240,9 +266,9 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
 
       {environments.length === 0 ? (
         <Card className="flex flex-col items-center justify-center py-16 border-dashed border-muted-foreground/20">
-          <Layers className="size-12 text-muted-foreground/30 mb-4" />
-          <h3 className="text-lg font-medium">No environments configured</h3>
-          <p className="text-sm text-muted-foreground mt-1 max-w-sm text-center">Create an environment to start mapping your application and database nodes.</p>
+          <Layers className="mb-4 size-8 text-muted-foreground/30" />
+          <h3 className="text-[15px] font-medium tracking-[-0.02em]">No environments configured</h3>
+          <p className="mt-1 max-w-sm text-center text-[13px] leading-5 text-muted-foreground/85">Create an environment to start mapping your application and database nodes.</p>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -251,13 +277,13 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <CardTitle className="text-lg font-medium pr-6">{env.name}</CardTitle>
+                    <CardTitle className="pr-6 text-[15px] font-medium tracking-[-0.02em]">{env.name}</CardTitle>
                     {env.domain ? (
-                      <a href={`https://${env.domain}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      <a href={`https://${env.domain}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-[11px] text-muted-foreground/80 transition-colors hover:text-foreground">
                         <Globe className="mr-1 size-3" /> {env.domain} <ExternalLink className="ml-1 size-2.5 opacity-50" />
                       </a>
                     ) : (
-                      <div className="flex items-center text-xs text-muted-foreground/60">
+                      <div className="flex items-center text-[11px] text-muted-foreground/60">
                         <Globe className="mr-1 size-3" /> No domain routed
                       </div>
                     )}
@@ -265,7 +291,7 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
                   
                   {canEdit && (
                     <div className="absolute top-4 right-4 flex items-center gap-2">
-                      <Badge variant="outline" className={cn('px-2 py-0.5 font-medium uppercase tracking-wider text-[10px]', tierConfig[env.tier].color)}>
+                      <Badge variant="outline" className={cn('px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em]', tierConfig[env.tier].color)}>
                         {tierConfig[env.tier].label}
                       </Badge>
                       <DropdownMenu>
@@ -291,14 +317,14 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
                     </div>
                   )}
                   {!canEdit && (
-                    <Badge variant="outline" className={cn('px-2 py-0.5 font-medium uppercase tracking-wider text-[10px]', tierConfig[env.tier].color)}>
+                    <Badge variant="outline" className={cn('px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em]', tierConfig[env.tier].color)}>
                       {tierConfig[env.tier].label}
                     </Badge>
                   )}
                 </div>
               </CardHeader>
               <CardContent className="pb-4">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-4 text-[13px] text-muted-foreground/85">
                   <div className="flex items-center gap-1.5" title="Tech Stack">
                     <Layers className="size-4" />
                     <span className="font-medium">{env.stackType}</span>
@@ -314,7 +340,7 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
                 </div>
               </CardContent>
               <CardFooter className="pt-0">
-                <Button variant="secondary" className="w-full" size="sm" asChild>
+                <Button variant="secondary" className="w-full text-[13px]" size="sm" asChild>
                   <Link href={`/console/projects/${projectId}/environments/${env.id}`}>
                     Open Deployment Dashboard
                   </Link>

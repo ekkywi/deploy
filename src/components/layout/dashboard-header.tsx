@@ -23,7 +23,7 @@ export function DashboardHeader() {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="hidden rounded-full border border-border/60 bg-muted/38 px-3 py-1 text-xs text-muted-foreground sm:inline-flex">
+      <div className="hidden rounded-full border border-border/60 bg-muted/32 px-3 py-1 text-[11px] text-muted-foreground/80 sm:inline-flex">
         {user.role}
       </div>
       <DropdownMenu>

@@ -5,6 +5,8 @@ import { toast } from 'sonner'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/useAuthStore'
+import { ConsolePageHeader } from '@/components/layout/console-page-header'
+import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
 import { getColumns, ProjectWithDetails } from './columns'
 import { DataTable } from '../admin/users/data-table'
 import { CreateProjectDialog } from './create-project-dialog'
@@ -19,15 +21,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-
-function StatChip({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/38 px-3.5 py-2 text-sm font-medium text-foreground">
-      <span className="font-normal text-muted-foreground">{label}</span>
-      <span>{value}</span>
-    </div>
-  )
-}
 
 export default function ProjectsPage() {
   const { user } = useAuthStore()
@@ -127,28 +120,21 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            Project Administration
-          </p>
-          <h1 className="text-3xl font-medium tracking-[-0.04em] text-foreground">
-            Project Management
-          </h1>
-          <p className="text-sm leading-6 text-muted-foreground">
-            Organize workloads, repositories, and logical environments.
-          </p>
-        </div>
-        
-        <Button onClick={() => setIsCreateOpen(true)} className="w-full sm:w-auto">
-          <Plus className="mr-2 size-4" />
-          Create Project
-        </Button>
-      </div>
+      <ConsolePageHeader
+        eyebrow="Project Administration"
+        title="Project Management"
+        description="Organize workloads, repositories, and logical environments."
+        actions={
+          <Button onClick={() => setIsCreateOpen(true)} className="w-full sm:w-auto">
+            <Plus className="mr-2 size-4" />
+            Create Project
+          </Button>
+        }
+      />
 
       <div className="flex flex-wrap gap-2">
-        <StatChip label="Total Projects" value={stats.total} />
-        <StatChip label="Owned by Me" value={stats.myOwn} />
+        <ConsoleStatChip label="Total Projects" value={stats.total} />
+        <ConsoleStatChip label="Owned by Me" value={stats.myOwn} />
       </div>
 
       <DataTable

@@ -47,12 +47,12 @@ function LoadingRows({ colCount }: { colCount: number }) {
     <>
       {Array.from({ length: 5 }).map((_, i) => (
         <TableRow key={i}>
-          <TableCell colSpan={colCount} className="px-4 py-3">
+          <TableCell colSpan={colCount} className="px-4 py-2.5">
             <div className="flex items-center gap-3">
-              <Skeleton className="size-6 rounded-full" />
+              <Skeleton className="size-5 rounded-full" />
               <div className="flex flex-1 flex-col gap-1.5">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-3 w-48" />
+                <Skeleton className="h-3.5 w-28" />
+                <Skeleton className="h-2.5 w-40" />
               </div>
             </div>
           </TableCell>
@@ -102,14 +102,14 @@ export function DataTable<TData, TValue>({
   return (
     <TooltipProvider>
       <Card>
-        <CardHeader className="border-b pb-4">
+        <CardHeader className="border-b pb-3">
           <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground/80" />
             <Input
               placeholder={searchPlaceholder}
               value={globalFilter ?? ''}
               onChange={(event) => setGlobalFilter(event.target.value)}
-              className="h-10 rounded-full pl-8"
+              className="h-9 rounded-full pl-8 text-sm shadow-none"
             />
           </div>
         </CardHeader>
@@ -149,7 +149,7 @@ export function DataTable<TData, TValue>({
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
-                        className={`px-4 py-3 ${
+                        className={`px-4 py-2.5 text-sm ${
                           cell.column.id === 'actions' ? 'text-right' : ''
                         }`}
                       >
@@ -165,14 +165,14 @@ export function DataTable<TData, TValue>({
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-40 px-4 py-3"
+                    className="h-36 px-4 py-3"
                   >
-                    <div className="flex flex-col items-center justify-center gap-2 text-center">
-                      <Users className="size-8 text-muted-foreground/50" />
-                      <p className="font-medium text-foreground">
+                    <div className="flex flex-col items-center justify-center gap-1.5 text-center">
+                      <Users className="size-7 text-muted-foreground/45" />
+                      <p className="text-sm font-medium text-foreground">
                         {emptyTitle ?? `No ${entityLabel} found`}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {emptyDescription ?? 'Try adjusting your search'}
                       </p>
                     </div>
@@ -183,14 +183,14 @@ export function DataTable<TData, TValue>({
           </Table>
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-3 border-t sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">
+        <CardFooter className="flex flex-col gap-2 border-t py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">
             {filteredCount === 0
               ? `No ${entityLabel} to display`
               : `Showing ${startRow}-${endRow} of ${filteredCount} ${entityLabel}`}
           </p>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               Page {pageCount === 0 ? 0 : pageIndex + 1} of {pageCount}
             </span>
             <div className="flex items-center gap-2">
