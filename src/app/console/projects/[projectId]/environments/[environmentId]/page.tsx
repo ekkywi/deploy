@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Activity, GitBranch } from 'lucide-react';
+import { ArrowLeft, Activity, GitBranch, CheckCircle2, XCircle, Loader2, Clock, Server } from 'lucide-react';
 import prisma from '@/lib/prisma';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,21 @@ import { DeployButton } from './deploy-button';
 import { EnvVarsManager } from './env-vars-manager';
 import { DeployStatus } from '@prisma/client';
 import { ToggleStateButton } from './toggle-state-button'; 
+import { formatDistanceToNow } from 'date-fns';
+
+function StatusBadge({ status }: { status: string }) {
+  switch (status) {
+    case 'SUCCESS':
+      return <Badge className="rounded-full border border-emerald-400/14 bg-emerald-400/8 px-2.5 py-1 text-[10px] font-medium text-emerald-200 hover:bg-emerald-400/12"><CheckCircle2 className="mr-1 size-3" /> Success</Badge>
+    case 'FAILED':
+      return <Badge variant="destructive" className="rounded-full px-2.5 py-1 text-[10px] font-medium"><XCircle className="mr-1 size-3" /> Failed</Badge>
+    case 'BUILDING':
+      return <Badge className="rounded-full border border-sky-400/14 bg-sky-400/8 px-2.5 py-1 text-[10px] font-medium text-sky-100 hover:bg-sky-400/12"><Loader2 className="mr-1 size-3 animate-spin" /> Building</Badge>
+    case 'PENDING':
+    default:
+      return <Badge variant="outline" className="rounded-full border-border/60 px-2.5 py-1 text-[10px] font-medium text-muted-foreground"><Clock className="mr-1 size-3" /> Pending</Badge>
+  }
+}
 
 export default async function EnvironmentDashboardPage({
   params,
@@ -31,12 +46,21 @@ export default async function EnvironmentDashboardPage({
     notFound()
   }
 
-  const activeDeployment = await prisma.deployment.findFirst({
-    where: { environmentId, status: { in: [DeployStatus.PENDING, DeployStatus.BUILDING] } }
+  const deployments = await prisma.deployment.findMany({
+    where: { environmentId },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+    include: {
+      workerNode: { select: { name: true } }
+    }
   });
 
+  const activeDeployment = deployments.find(d => d.status === DeployStatus.PENDING || d.status === DeployStatus.BUILDING);
+  
   const lastSuccessDeploy = await prisma.deployment.findFirst({
-    where: { environmentId, status: DeployStatus.SUCCESS }
+    where: { environmentId, status: DeployStatus.SUCCESS },
+    orderBy: { createdAt: 'desc' },
+    include: { workerNode: true }
   });
 
   const isBuilding = !!activeDeployment;
@@ -98,10 +122,48 @@ export default async function EnvironmentDashboardPage({
             <CardTitle className="text-lg font-medium">Deployment History</CardTitle>
             <CardDescription>Recent builds and execution logs for this environment.</CardDescription>
           </CardHeader>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <Activity className="mx-auto size-12 opacity-20 mb-3" />
-            <p>No deployments yet.</p>
-            <p className="text-sm">Click &quot;Trigger Deploy&quot; to start your first build.</p>
+          <CardContent className="p-0">
+            {deployments.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground">
+                <Activity className="mx-auto size-12 opacity-20 mb-3" />
+                <p>No deployments yet.</p>
+                <p className="text-sm">Click &quot;Trigger Deploy&quot; to start your first build.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border/70">
+                {deployments.map((deploy) => (
+                  <div key={deploy.id} className="flex items-center justify-between p-4 transition-colors hover:bg-muted/30">
+                    <div className="flex items-center gap-4">
+                      <div className="w-28">
+                        <StatusBadge status={deploy.status} />
+                      </div>
+                      <div>
+                        <p className="flex items-center gap-2 text-sm font-medium">
+                          {deploy.commitHash ? `Branch: ${deploy.commitHash}` : 'Triggered Deploy'}
+                        </p>
+                        <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground/80">
+                          <span className="flex items-center gap-1">
+                            <Clock className="size-3" />
+                            {formatDistanceToNow(new Date(deploy.createdAt), { addSuffix: true })}
+                          </span>
+                          {deploy.workerNode && (
+                            <span className="flex items-center gap-1">
+                              <Server className="size-3" />
+                              {deploy.workerNode.name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <Badge variant="secondary" className="rounded-full font-mono text-[10px] font-medium cursor-pointer hover:bg-secondary/80">
+                        View Logs
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -117,11 +179,18 @@ export default async function EnvironmentDashboardPage({
             </div>
             <div className="space-y-1">
               <span className="text-muted-foreground">Worker Node</span>
-              <p className="font-medium italic opacity-70">Waiting for deployment...</p>
+              {lastSuccessDeploy?.workerNode ? (
+                <p className="font-medium flex items-center gap-2">
+                  <Server className="size-3 text-emerald-500" />
+                  {lastSuccessDeploy.workerNode.name}
+                </p>
+              ) : (
+                <p className="font-medium italic opacity-70">Waiting for deployment...</p>
+              )}
             </div>
             <div className="space-y-1">
               <span className="text-muted-foreground">Internal Port</span>
-              <p className="font-medium italic opacity-70">
+              <p className={`font-medium ${!environment.assignedPort ? 'italic opacity-70' : ''}`}>
                 {environment.assignedPort ? environment.assignedPort : 'Unassigned'}
               </p>
             </div>

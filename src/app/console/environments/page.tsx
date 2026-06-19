@@ -8,7 +8,7 @@ import { ConsolePageHeader } from '@/components/layout/console-page-header'
 import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
 import { AutoRefresh } from '@/components/auto-refresh'
 import { requireAuth } from '@/lib/auth'
-import { GlobalRole } from '@prisma/client'
+import { GlobalRole, LifeCycleStatus } from '@prisma/client'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
@@ -31,6 +31,12 @@ export default async function EnvironmentsShortcutPage() {
     },
     include: {
       environments: {
+        where: {
+          deletedAt: null,
+          lifecycle: {
+            not: LifeCycleStatus.DELETED,
+          },
+        },
         include: {
           deployments: {
             orderBy: { createdAt: 'desc' },
