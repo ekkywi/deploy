@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GlobalRole, LifeCycleStatus } from '@prisma/client';
+import { GlobalRole, LifeCycleStatus, EnvironmentTier } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 
@@ -21,7 +21,7 @@ export async function PATCH(
 
         const { workerId } = await params;
         const body = await request.json();
-        const { name, ipAddress, isActive } = body;
+        const { name, ipAddress, isActive, supportedTiers } = body;
 
         const targetNode = await prisma.workerNode.findUnique({
             where: { id: workerId }
@@ -51,12 +51,20 @@ export async function PATCH(
             }
         }
 
+        if (supportedTiers && (!Array.isArray(supportedTiers) || supportedTiers.length === 0 )) {
+            return NextResponse.json(
+                { error: 'At least one supported tier must be selected.' },
+                { status: 400 }
+            );
+        }
+
         const updatedNode = await prisma.workerNode.update({
             where: { id: workerId },
             data: {
                 ...(name && { name: name.trim() }),
                 ...(ipAddress && { ipAddress: ipAddress.trim() }),
-                ...(isActive !== undefined && { isActive })
+                ...(isActive !== undefined && { isActive }),
+                ...(supportedTiers && { supportedTiers: supportedTiers as EnvironmentTier[] })
             }
         });
 

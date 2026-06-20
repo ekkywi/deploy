@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GlobalRole } from "@prisma/client";
+import { GlobalRole, EnvironmentTier } from "@prisma/client";
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
 import { requireAuth } from "@/lib/auth";
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { name, ipAddress } = body;
+        const { name, ipAddress, supportedTiers } = body;
 
         if (!name || name.trim().length < 2) {
             return NextResponse.json(
@@ -65,6 +65,13 @@ export async function POST(request: Request) {
 
         if (!ipAddress || !/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(ipAddress)) {
             return NextResponse.json({ error: 'Valid IPv4 address is required.' }, { status: 400 });
+        }
+
+        if (!supportedTiers || !Array.isArray(supportedTiers) || supportedTiers.length === 0) {
+            return NextResponse.json(
+                { error: 'At least one supported tier must be selected.' },
+                { status: 400 }
+            )
         }
 
         const sanitizedName = name.trim();
@@ -91,7 +98,8 @@ export async function POST(request: Request) {
                 name: sanitizedName,
                 ipAddress: ipAddress,
                 authToken: generatedToken,
-                isActive: true
+                isActive: true,
+                supportedTiers: supportedTiers as EnvironmentTier[]
             }
         });
 

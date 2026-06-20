@@ -74,13 +74,14 @@ model ProjectRole {
 
 // Ini adalah LXC Proxmox Anda yang sudah terinstal Docker
 model WorkerNode {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  ipAddress   String   @unique
-  authToken   String   
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String            @id @default(uuid())
+  name            String            @unique
+  ipAddress       String            @unique
+  authToken       String   
+  isActive        Boolean           @default(true)
+  supportedTiers  EnvironmentTier[] @default([DEVELOPMENT, STAGING, PRODUCTION])
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   deployments Deployment[]
 }
