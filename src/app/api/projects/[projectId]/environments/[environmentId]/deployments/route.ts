@@ -25,7 +25,10 @@ export async function GET(
         return NextResponse.json({ deployments }, { status: 200 });
     } catch (error) {
         console.error('Fetch deployments error:', error);
-        return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
+        return NextResponse.json(
+            { error: 'Internal server error.' },
+            { status: 500 }
+        );
     }
 }
 
@@ -44,8 +47,7 @@ export async function POST(
         let body: any = {};
         try {
             body = await request.json();
-        } catch (e) {
-        }
+        } catch (e) {}
         const requestedBranch = body.branch;
 
         if (globalRole !== GlobalRole.SYSADMIN) {
@@ -63,37 +65,46 @@ export async function POST(
 
         const environment = await prisma.environment.findUnique({
             where: { id: environmentId, projectId, deletedAt: null },
-            include: { 
-                project: true,
-                variables: true
-            }
+            include: { project: true, variables: true }
         });
 
-        if (!environment) {
-            return NextResponse.json(
-                { error: 'Environment not found.' },
-                { status: 404 }
-            )
-        }
-
+        if (!environment) return NextResponse.json(
+            { error: 'Environment not found.' },
+            { status: 404 }
+        );
+        
         if (!environment.project.repoUrl) {
             return NextResponse.json(
                 { error: 'Project repository URL is missing. Cannot deploy.' },
-                { status: 400 }
-            );
+                { status: 400 });
         }
 
-        const availableWorker = await prisma.workerNode.findFirst({
-            where: { isActive: true },
-            orderBy: { createdAt: 'asc' }
+        const candidateWorkers = await prisma.workerNode.findMany({
+            where: { 
+                isActive: true,
+                supportedTiers: {
+                    has: environment.tier
+                }
+            },
+            include: {
+                _count: {
+                    select: {
+                        deployments: {
+                            where: { status: { in: ['SUCCESS', 'BUILDING'] } }
+                        }
+                    }
+                }
+            }
         });
 
-        if (!availableWorker) {
-            return NextResponse.json(
-                { error: 'No active Worker Nodes available. Contact Sysadmin.' },
-                { status: 503 }
-            );
+        if (candidateWorkers.length === 0) {
+            return NextResponse.json({ 
+                error: `No active Worker Nodes available that support the ${environment.tier} tier. Contact Sysadmin.` 
+            }, { status: 503 });
         }
+
+        const selectedWorker = candidateWorkers.sort((a, b) => a._count.deployments - b._count.deployments)[0];
+
 
         let targetPort = environment.assignedPort;
         const finalBranch = requestedBranch || environment.branchName || 'main';
@@ -111,16 +122,14 @@ export async function POST(
 
         await prisma.environment.update({
             where: { id: environmentId },
-            data: { 
-                assignedPort: targetPort,
-                branchName: finalBranch
-            }
+            data: { assignedPort: targetPort, branchName: finalBranch }
         });
 
+        // Catat deployment dengan Worker Node yang terpilih
         const newDeployment = await prisma.deployment.create({
             data: {
                 environmentId,
-                workerNodeId: availableWorker.id,
+                workerNodeId: selectedWorker.id,
                 status: DeployStatus.PENDING,
                 assignedPort: targetPort,
                 commitHash: finalBranch,
@@ -128,7 +137,7 @@ export async function POST(
             }
         });
 
-        const agentUrl = `http://${availableWorker.ipAddress}:4000/api/deploy`;
+        const agentUrl = `http://${selectedWorker.ipAddress}:4000/api/deploy`;
 
         const payload = {
             deploymentId : newDeployment.id,
@@ -146,7 +155,7 @@ export async function POST(
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${availableWorker.authToken}`
+                    'Authorization': `Bearer ${selectedWorker.authToken}`
                 },
                 body: JSON.stringify(payload),
                 signal: AbortSignal.timeout(5000)
@@ -188,7 +197,6 @@ export async function POST(
         console.error('Trigger deployment error:', error);
         return NextResponse.json(
             { error: 'Internal server error.' },
-            { status: 500 }
-        );
+            { status: 500 });
     }
 }
