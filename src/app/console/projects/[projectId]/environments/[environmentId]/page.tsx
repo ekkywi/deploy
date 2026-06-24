@@ -11,6 +11,7 @@ import { EnvVarsManager } from './env-vars-manager';
 import { DeployStatus } from '@prisma/client';
 import { ToggleStateButton } from './toggle-state-button'; 
 import { formatDistanceToNow } from 'date-fns';
+import { DeploymentLogDialog } from '@/components/deployment-log-dialog';
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -156,9 +157,12 @@ export default async function EnvironmentDashboardPage({
                       </div>
                     </div>
                     <div>
-                      <Badge variant="secondary" className="rounded-full font-mono text-[10px] font-medium cursor-pointer hover:bg-secondary/80">
-                        View Logs
-                      </Badge>
+                      <DeploymentLogDialog 
+                        projectId={projectId}
+                        environmentId={environmentId}
+                        deploymentId={deploy.id}
+                        status={deploy.status}
+                      />
                     </div>
                   </div>
                 ))}

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Layers, LayoutDashboard, Rocket, Users, Server, Box } from 'lucide-react'
+import { Layers, LayoutDashboard, Rocket, Users, Server, Box, ShieldAlert } from 'lucide-react'
 import { useAuthStore } from '@/store/useAuthStore'
 
 import {
@@ -114,6 +114,21 @@ export function DashboardSidebar() {
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname.startsWith('/console/admin/system-logs')}
+                    tooltip="System Logs"
+                    className="h-10 rounded-xl px-3 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
+                  >
+                    <Link href="/console/admin/system-logs">
+                      <ShieldAlert aria-hidden className="shrink-0" />
+                      <span>System Logs</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

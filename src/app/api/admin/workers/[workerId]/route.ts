@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { GlobalRole, LifeCycleStatus, EnvironmentTier } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { logAudit } from '@/lib/audit-logger';
 
 export async function PATCH(
     request: Request,
@@ -68,6 +69,14 @@ export async function PATCH(
             }
         });
 
+        logAudit({
+            userId: auth.session.userId,
+            action: 'UPDATE_WORKER_NODE',
+            targetType: 'INFRASTRUCTURE',
+            targetId: workerId,
+            request: request
+        });
+
         return NextResponse.json(
             { message: 'Worker node updated successfully.', worker:updatedNode }
         );
@@ -132,13 +141,12 @@ export async function DELETE(
             where: { id: workerId }
         });
 
-        await prisma.auditLog.create({
-            data: {
-                userId: auth.session.userId,
-                action: 'DELETE_WORKER_NODE',
-                targetType: 'INFRASTRUCTURE',
-                targetId: workerId,
-            }
+        logAudit({
+            userId: auth.session.userId,
+            action: 'DELETE_WORKER_NODE',
+            targetType: 'INFRASTRUCTURE',
+            targetId: workerId,
+            request: request
         });
 
         return NextResponse.json(

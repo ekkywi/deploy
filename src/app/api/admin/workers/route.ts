@@ -3,6 +3,7 @@ import { GlobalRole, EnvironmentTier } from "@prisma/client";
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
 import { requireAuth } from "@/lib/auth";
+import { logAudit } from '@/lib/audit-logger';
 
 export async function GET(request: Request) {
     try {
@@ -101,6 +102,14 @@ export async function POST(request: Request) {
                 isActive: true,
                 supportedTiers: supportedTiers as EnvironmentTier[]
             }
+        });
+
+        logAudit({
+            userId: auth.session.userId,
+            action: 'CREATE_WORKDER_NODE',
+            targetType: 'INFRASTRUCTURE',
+            targetId: newWorker.id,
+            request: request
         });
 
         return NextResponse.json(
