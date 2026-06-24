@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import prisma from '@/lib/prisma'
 import * as bcrypt from 'bcrypt'
 import { signToken } from '@/lib/auth'
+import { logAudit } from '@/lib/audit-logger';
 
 export async function POST(request: Request) {
     try {
@@ -67,6 +68,14 @@ export async function POST(request: Request) {
             sameSite: 'lax',
             path: '/',
             maxAge: 60 * 60 * 8,
+        })
+
+        logAudit({
+            userId: user.id,
+            action: 'USER_LOGIN',
+            targetType: 'USER',
+            targetId: user.id,
+            request: request
         })
 
         return response
