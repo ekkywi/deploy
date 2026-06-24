@@ -10,7 +10,7 @@ export async function PATCH(
     try {
         const auth = await requireAuth(request);
 
-        if (auth.response || !auth.session) return auth.session;
+        if (auth.response || !auth.session) return auth.response;
 
         if (auth.session.role !== GlobalRole.SYSADMIN) {
             return NextResponse.json(

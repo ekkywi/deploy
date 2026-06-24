@@ -10,6 +10,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { requireAuth } from '@/lib/auth'
 import { GlobalRole } from '@prisma/client'
+import { DeploymentLogDialog } from '@/components/deployment-log-dialog'
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -141,11 +142,16 @@ export default async function GlobalDeploymentsPage() {
                       </div>
                     </div>
                   </div>
+                  
                   <div className="text-right">
-                    <Badge variant="secondary" className="rounded-full border border-border/60 bg-muted/35 font-mono text-[10px] font-medium text-foreground/80">
-                      View Logs
-                    </Badge>
+                    <DeploymentLogDialog 
+                      projectId={deploy.environment.projectId}
+                      environmentId={deploy.environmentId}
+                      deploymentId={deploy.id}
+                      status={deploy.status}
+                    />
                   </div>
+
                 </div>
               ))}
             </div>
