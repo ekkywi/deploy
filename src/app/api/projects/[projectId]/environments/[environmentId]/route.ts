@@ -3,6 +3,20 @@ import { GlobalRole, ProjectRoleType, EnvironmentTier, StackType, LifeCycleStatu
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 
+const NODE_VERSION_OPTIONS = ['18', '20', '22', '24'] as const;
+
+function isNodeStack(stackType: unknown) {
+    return stackType === StackType.NEXTJS || stackType === StackType.NODEJS;
+}
+
+function sanitizeNodeVersion(value: unknown, fallback: string) {
+    if (typeof value === 'string' && NODE_VERSION_OPTIONS.includes(value as (typeof NODE_VERSION_OPTIONS)[number])) {
+        return value;
+    }
+
+    return fallback;
+}
+
 export async function PATCH(
     request: Request,
     { params }: { params: Promise<{ projectId: string, environmentId: string }> }
@@ -41,7 +55,7 @@ export async function PATCH(
         }
 
         const body = await request.json();
-        const { name, domain, stackType, tier } = body;
+        const { name, domain, stackType, tier, nodeVersion } = body;
         const sanitizedName = name?.trim();
         const sanitizedDomain = domain ? domain.trim().toLowerCase() : null;
 
@@ -72,13 +86,25 @@ export async function PATCH(
             }
         }
 
+        if (stackType && isNodeStack(stackType) && nodeVersion && !NODE_VERSION_OPTIONS.includes(nodeVersion)) {
+            return NextResponse.json(
+                { error: 'Invalid node version.' },
+                { status: 400 }
+            );
+        }
+
         const updatedEnv = await prisma.environment.update({
             where: { id: environmentId },
             data: {
                 ...(sanitizedName && { name: sanitizedName }),
                 domain: sanitizedDomain,
                 ...(stackType && { stackType: stackType as StackType }),
-                ...(tier && { tier: tier as EnvironmentTier })
+                ...(tier && { tier: tier as EnvironmentTier }),
+                ...(stackType
+                    ? { nodeVersion: isNodeStack(stackType) ? sanitizeNodeVersion(nodeVersion, targetEnv.nodeVersion) : targetEnv.nodeVersion }
+                    : nodeVersion
+                        ? { nodeVersion: sanitizeNodeVersion(nodeVersion, targetEnv.nodeVersion) }
+                        : {})
             }
         });
 
@@ -158,8 +184,9 @@ export async function DELETE(
                 if (!agentResponse.ok) {
                     throw new Error(`Agent responded with ${agentResponse.status}`);
                 }
-            } catch (agentError: any) {
-                console.error('[TEARDOWN WARNING] Agent unreachable or failed:', agentError.message);
+            } catch (agentError: unknown) {
+                const message = agentError instanceof Error ? agentError.message : 'Unknown agent teardown error';
+                console.error('[TEARDOWN WARNING] Agent unreachable or failed:', message);
 
                 await prisma.environment.update({
                     where: { id: environmentId },

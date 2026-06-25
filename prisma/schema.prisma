@@ -113,6 +113,7 @@ model Environment {
   name          String
   domain        String?               @unique              
   stackType     StackType
+  nodeVersion   String                @default("22")
   tier          EnvironmentTier       @default(DEVELOPMENT)
   branchName    String                @default("main")
   assignedPort  Int?                  @unique

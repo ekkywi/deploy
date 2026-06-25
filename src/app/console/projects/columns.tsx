@@ -13,8 +13,22 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { GlobalRole, ProjectRoleType } from '@prisma/client'
 import { cn } from '@/lib/utils'
+
+const GLOBAL_ROLES = {
+  SYSADMIN: 'SYSADMIN',
+  MANAGER: 'MANAGER',
+  DEVELOPER: 'DEVELOPER',
+} as const
+
+const PROJECT_ROLES = {
+  OWNER: 'OWNER',
+  EDITOR: 'EDITOR',
+  VIEWER: 'VIEWER',
+} as const
+
+type GlobalRole = typeof GLOBAL_ROLES[keyof typeof GLOBAL_ROLES]
+type ProjectRoleType = typeof PROJECT_ROLES[keyof typeof PROJECT_ROLES]
 
 export type ProjectMember = {
   userId: string
@@ -70,7 +84,7 @@ export const getColumns = (
     cell: ({ row }) => {
       const myMembership = row.original.members?.find(m => m.userId === currentUserId)
       
-      if (currentUserGlobalRole === 'SYSADMIN') {
+      if (currentUserGlobalRole === GLOBAL_ROLES.SYSADMIN) {
         return (
           <Badge variant="outline" className="gap-1 border-border/60 bg-background/55 font-normal text-foreground/88">
             <ShieldCheck className="size-3 text-primary" />
@@ -132,8 +146,8 @@ export const getColumns = (
     cell: ({ row }) => {
       const project = row.original
       const myMembership = project.members.find(m => m.userId === currentUserId)
-      const isSysadmin = currentUserGlobalRole === 'SYSADMIN'
-      const isOwner = myMembership?.role === 'OWNER'
+      const isSysadmin = currentUserGlobalRole === GLOBAL_ROLES.SYSADMIN
+      const isOwner = myMembership?.role === PROJECT_ROLES.OWNER
       const canModify = isSysadmin || isOwner
 
       return (

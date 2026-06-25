@@ -9,7 +9,6 @@ import {
   Trash2,
   UserPlus,
 } from 'lucide-react'
-import { GlobalRole, ProjectRoleType } from '@prisma/client'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   AlertDialog,
@@ -34,6 +33,21 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+
+const GLOBAL_ROLES = {
+  SYSADMIN: 'SYSADMIN',
+  MANAGER: 'MANAGER',
+  DEVELOPER: 'DEVELOPER',
+} as const
+
+const PROJECT_ROLES = {
+  OWNER: 'OWNER',
+  EDITOR: 'EDITOR',
+  VIEWER: 'VIEWER',
+} as const
+
+type GlobalRole = typeof GLOBAL_ROLES[keyof typeof GLOBAL_ROLES]
+type ProjectRoleType = typeof PROJECT_ROLES[keyof typeof PROJECT_ROLES]
 
 type ProjectMember = {
   userId: string
@@ -88,14 +102,14 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
   const [searchQuery, setSearchQuery] = useState('')
   const [suggestions, setSuggestions] = useState<SuggestedUser[]>([])
   const [isSearching, setIsSearching] = useState(false)
-  const [selectedRole, setSelectedRole] = useState<ProjectRoleType>(ProjectRoleType.VIEWER)
+  const [selectedRole, setSelectedRole] = useState<ProjectRoleType>(PROJECT_ROLES.VIEWER)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [pendingRemoval, setPendingRemoval] = useState<RemovalTarget | null>(null)
   const [isRemoving, setIsRemoving] = useState(false)
 
   const myMembership = members.find((member) => member.userId === currentUserId)
-  const isSysadmin = currentUserGlobalRole === GlobalRole.SYSADMIN
-  const isOwner = myMembership?.role === ProjectRoleType.OWNER
+  const isSysadmin = currentUserGlobalRole === GLOBAL_ROLES.SYSADMIN
+  const isOwner = myMembership?.role === PROJECT_ROLES.OWNER
   const canModify = isSysadmin || isOwner
 
   useEffect(() => {
@@ -356,9 +370,9 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
                 value={selectedRole}
                 onChange={(event) => setSelectedRole(event.target.value as ProjectRoleType)}
               >
-                <option value={ProjectRoleType.VIEWER}>Viewer</option>
-                <option value={ProjectRoleType.EDITOR}>Editor</option>
-                <option value={ProjectRoleType.OWNER}>Owner</option>
+                <option value={PROJECT_ROLES.VIEWER}>Viewer</option>
+                <option value={PROJECT_ROLES.EDITOR}>Editor</option>
+                <option value={PROJECT_ROLES.OWNER}>Owner</option>
               </select>
 
               <Button
@@ -428,16 +442,16 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
                               handleUpdateRole(member.userId, event.target.value as ProjectRoleType)
                             }
                           >
-                            <option value={ProjectRoleType.VIEWER}>Viewer</option>
-                            <option value={ProjectRoleType.EDITOR}>Editor</option>
-                            <option value={ProjectRoleType.OWNER}>Owner</option>
+                            <option value={PROJECT_ROLES.VIEWER}>Viewer</option>
+                            <option value={PROJECT_ROLES.EDITOR}>Editor</option>
+                            <option value={PROJECT_ROLES.OWNER}>Owner</option>
                           </select>
                         ) : (
                           <Badge
                             variant="outline"
                             className={cn('rounded-full px-3 py-1 font-normal', roleBadgeClasses[member.role])}
                           >
-                            {member.role === ProjectRoleType.OWNER && (
+                            {member.role === PROJECT_ROLES.OWNER && (
                               <Shield className="mr-1 size-3" aria-hidden />
                             )}
                             {member.role}

@@ -182,6 +182,12 @@ export default async function EnvironmentDashboardPage({
               <p className="font-medium">{environment.stackType}</p>
             </div>
             <div className="space-y-1">
+              <span className="text-muted-foreground">Node Version</span>
+              <p className="font-medium">
+                {environment.stackType === 'LARAVEL' ? 'Not used' : `Node ${environment.nodeVersion || '22'}`}
+              </p>
+            </div>
+            <div className="space-y-1">
               <span className="text-muted-foreground">Worker Node</span>
               {lastSuccessDeploy?.workerNode ? (
                 <p className="font-medium flex items-center gap-2">

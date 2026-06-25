@@ -152,6 +152,7 @@ export async function POST(
             environmentId: environmentId,
             repoUrl: environment.project.repoUrl,
             stackType: environment.stackType,
+            nodeVersion: environment.nodeVersion,
             environmentName: environment.name,
             branch: finalBranch,
             targetPort: targetPort,

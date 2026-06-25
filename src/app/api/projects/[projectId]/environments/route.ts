@@ -3,6 +3,20 @@ import { GlobalRole, ProjectRoleType, EnvironmentTier, StackType } from '@prisma
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 
+const NODE_VERSION_OPTIONS = ['18', '20', '22', '24'] as const;
+
+function isNodeStack(stackType: unknown) {
+    return stackType === StackType.NEXTJS || stackType === StackType.NODEJS;
+}
+
+function sanitizeNodeVersion(value: unknown) {
+    if (typeof value === 'string' && NODE_VERSION_OPTIONS.includes(value as (typeof NODE_VERSION_OPTIONS)[number])) {
+        return value;
+    }
+
+    return '22';
+}
+
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ projectId: string }> }
@@ -75,7 +89,7 @@ export async function POST(
         }
 
         const body = await request.json();
-        const { name, domain, stackType, tier } = body;
+        const { name, domain, stackType, tier, nodeVersion } = body;
 
         if (!name || name.trim().length < 2) {
             return NextResponse.json({ error: 'Environment name must be at least 2 characters long.' }, { status: 400 });
@@ -87,6 +101,10 @@ export async function POST(
 
         if (!tier || !Object.values(EnvironmentTier).includes(tier)) {
             return NextResponse.json({ error: 'Invalid environment tier.' }, { status: 400 });
+        }
+
+        if (isNodeStack(stackType) && nodeVersion && !NODE_VERSION_OPTIONS.includes(nodeVersion)) {
+            return NextResponse.json({ error: 'Invalid node version.' }, { status: 400 });
         }
 
         const sanitizedName = name.trim();
@@ -116,7 +134,8 @@ export async function POST(
                 name: sanitizedName,
                 domain: sanitizedDomain,
                 stackType: stackType as StackType,
-                tier: tier as EnvironmentTier
+                tier: tier as EnvironmentTier,
+                nodeVersion: sanitizeNodeVersion(nodeVersion)
             },
             include: {
                 _count: {
