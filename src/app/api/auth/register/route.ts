@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import prisma from '@/lib/prisma'
 import * as bcrypt from 'bcrypt'
+import { logAudit } from '@/lib/audit-logger'
 
 export async function POST(request: Request) {
     try {
@@ -50,6 +51,14 @@ export async function POST(request: Request) {
                 status: true,
                 createdAt: true,
             }
+        })
+
+        logAudit({
+            userId: newUser.id,
+            action: 'REGISTER_ACCOUNT',
+            targetType: 'USER',
+            targetId: newUser.id,
+            request: request
         })
 
         return NextResponse.json(

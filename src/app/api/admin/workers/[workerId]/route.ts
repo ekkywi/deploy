@@ -69,13 +69,33 @@ export async function PATCH(
             }
         });
 
-        logAudit({
-            userId: auth.session.userId,
-            action: 'UPDATE_WORKER_NODE',
-            targetType: 'INFRASTRUCTURE',
-            targetId: workerId,
-            request: request
-        });
+        const isDataUpdated =
+            (name !== undefined && name !== targetNode.name) ||
+            (ipAddress !== undefined && ipAddress !== targetNode.ipAddress) ||
+            (supportedTiers !== undefined);
+
+        if (isDataUpdated) {
+            logAudit({
+                userId: auth.session.userId,
+                action: 'UPDATE_WORKER_NODE',
+                targetType: 'INFRASTRUCTURE',
+                targetId: workerId,
+                request: request
+            });
+        }
+
+        if (isActive !== undefined && isActive !== targetNode.isActive) {
+            const lifecycleAction = isActive ? 'ACTIVE_WORKER_NODE' : 'SUSPEND_WORKER_NODE';
+
+            logAudit({
+                userId: auth.session.userId,
+                action: lifecycleAction,
+                targetType: 'INFRASTRUCTURE',
+                targetId: workerId,
+                request: request
+            })
+        }
+
 
         return NextResponse.json(
             { message: 'Worker node updated successfully.', worker:updatedNode }
