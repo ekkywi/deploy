@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { GlobalRole, ProjectRoleType, DeployStatus } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { logAudit } from '@/lib/audit-logger';
 
 export async function GET(
     request: Request,
@@ -125,7 +126,6 @@ export async function POST(
             data: { assignedPort: targetPort, branchName: finalBranch }
         });
 
-        // Catat deployment dengan Worker Node yang terpilih
         const newDeployment = await prisma.deployment.create({
             data: {
                 environmentId,
@@ -135,6 +135,14 @@ export async function POST(
                 commitHash: finalBranch,
                 logFilePath: `/logs/${environmentId}-${Date.now()}.log`,
             }
+        });
+
+        logAudit({
+            userId: auth.session.userId,
+            action: 'TRIGGER_DEPLOYMENT',
+            targetType: 'ENVIRONMENT',
+            targetId: environmentId,
+            request: request
         });
 
         const agentUrl = `http://${selectedWorker.ipAddress}:4000/api/deploy`;

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { GlobalRole, ProjectRoleType } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
+import { logAudit } from '@/lib/audit-logger'
 
 async function checkProjectAuthorization(
     userId: string,
@@ -71,6 +72,8 @@ export async function PATCH(
             );
         }
 
+        const targetProject = authCheck.project!;
+
         if (payload.name !== authCheck.project?.name) {
             const existingProject = await prisma.project.findUnique({
                 where: { name: payload.name }
@@ -92,6 +95,21 @@ export async function PATCH(
                 repoUrl: payload.repoUrl,
             }
         });
+
+        const isDataChanged = 
+            payload.name !== targetProject.name ||
+            payload.description !== targetProject.description ||
+            payload.repoUrl !== targetProject.repoUrl;
+
+        if (isDataChanged) {
+            logAudit({
+                userId,
+                action: 'UPDATE_PROJECT',
+                targetType: 'PROJECT',
+                targetId: projectId,
+                request
+            });
+        }
 
         return NextResponse.json(
             { message: 'Project updated successfully.', project: updatedProject },
@@ -131,6 +149,14 @@ export async function DELETE(
                 name: releasedName
             }
         });
+
+        logAudit({
+            userId,
+            action: 'DELETE_PROJECT',
+            targetType: 'PROJECT',
+            targetId: projectId,
+            request
+        })
 
         return NextResponse.json(
             { message: 'Project deleted successfully and name has been released.' },

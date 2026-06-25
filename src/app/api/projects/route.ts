@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { Prisma, GlobalRole, ProjectRoleType } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
+import { logAudit } from '@/lib/audit-logger'
 
 export async function GET(request: Request) {
     try {
@@ -140,6 +141,16 @@ export async function POST(request: Request) {
 
             return completeProject
         })
+
+        if (result) {
+            logAudit({
+                userId: userId,
+                action: 'CREATE_PROJECT',
+                targetType: 'PROJECT',
+                targetId: result.id,
+                request: request
+            })
+        }
 
         return NextResponse.json(
             {
