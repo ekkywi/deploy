@@ -93,6 +93,14 @@ export async function PATCH(
                 name: payload.name,
                 description: payload.description,
                 repoUrl: payload.repoUrl,
+            },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                repoUrl: true,
+                createdAt: true,
+                updatedAt: true,
             }
         });
 

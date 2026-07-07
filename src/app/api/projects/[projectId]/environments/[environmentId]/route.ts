@@ -60,15 +60,19 @@ export async function PATCH(
         const sanitizedDomain = domain ? domain.trim().toLowerCase() : null;
 
         if (sanitizedName !== targetEnv.name || sanitizedDomain !== targetEnv.domain) {
-            const existingEnv = await prisma.environment.findFirst({
-                where: {
-                    id: { not: environmentId },
-                    OR: [
-                        sanitizedName ? { projectId, name: sanitizedName } : {},
-                        sanitizedDomain ? { domain: sanitizedDomain } : {}
-                    ]
-                }
-            });
+            const duplicateFilters = [
+                ...(sanitizedName ? [{ projectId, name: sanitizedName }] : []),
+                ...(sanitizedDomain ? [{ domain: sanitizedDomain }] : [])
+            ];
+            const existingEnv = duplicateFilters.length > 0
+                ? await prisma.environment.findFirst({
+                    where: {
+                        deletedAt: null,
+                        id: { not: environmentId },
+                        OR: duplicateFilters
+                    }
+                })
+                : null;
 
             if (existingEnv) {
                 if (existingEnv.name === sanitizedName && existingEnv.projectId === projectId) {
@@ -200,11 +204,16 @@ export async function DELETE(
             };
         }
 
+        const timestamp = Date.now();
+        const releasedName = `${environment.name}_deleted_${timestamp}`;
+
         await prisma.environment.update({
             where: { id: environmentId },
             data: { 
                 lifecycle: LifeCycleStatus.DELETED,
                 deletedAt: new Date(),
+                name: releasedName,
+                domain: null,
                 assignedPort: null
             }
         });

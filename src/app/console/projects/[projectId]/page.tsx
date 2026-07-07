@@ -21,12 +21,15 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { ProjectWithDetails } from '../columns'
 import { MembersTab } from './members-tab'
 import { EnvironmentsTab } from './environments-tab'
+import { SettingsTab } from './settings-tab'
 
 type DetailStatProps = {
   label: string
   value: string
   hint?: string
 }
+
+type ProjectTab = 'overview' | 'members' | 'environments' | 'settings'
 
 function DetailStat({ label, value, hint }: DetailStatProps) {
   return (
@@ -115,6 +118,7 @@ export default function ProjectWorkspacePage({
 
   const [project, setProject] = useState<ProjectWithDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<ProjectTab>('members')
 
   useEffect(() => {
     if (!user) {
@@ -271,7 +275,11 @@ export default function ProjectWorkspacePage({
         </Card>
       </div>
 
-      <Tabs defaultValue="members" className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as ProjectTab)}
+        className="space-y-4"
+      >
         <div className="rounded-[1.5rem] border border-border/70 bg-card/95 p-3.5 sm:p-4">
           <TabsList variant="line" className="w-full justify-start gap-1">
             <TabsTrigger value="overview">
@@ -324,23 +332,29 @@ export default function ProjectWorkspacePage({
             currentUserId={user.id}
             currentUserGlobalRole={user.role}
             projectMembers={project.members}
+            onEnvironmentDeleted={() =>
+              setProject((currentProject) =>
+                currentProject
+                  ? {
+                      ...currentProject,
+                      _count: {
+                        ...currentProject._count,
+                        environments: Math.max(currentProject._count.environments - 1, 0),
+                      },
+                    }
+                  : currentProject
+              )
+            }
           />
         </TabsContent>
 
         <TabsContent value="settings" className="m-0">
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Workspace Settings</CardTitle>
-              <CardDescription className="text-[13px] leading-5">
-                Project settings and operational controls will appear here.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-5">
-              <div className="rounded-2xl border border-dashed border-border/70 bg-muted/30 p-6 text-sm text-muted-foreground">
-                Settings controls are not implemented yet.
-              </div>
-            </CardContent>
-          </Card>
+          <SettingsTab
+            projectId={project.id}
+            currentUserId={user.id}
+            currentUserGlobalRole={user.role}
+            projectMembers={project.members}
+          />
         </TabsContent>
       </Tabs>
     </div>

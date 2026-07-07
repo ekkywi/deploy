@@ -8,7 +8,7 @@ import { ConsolePageHeader } from '@/components/layout/console-page-header'
 import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
 import { AutoRefresh } from '@/components/auto-refresh'
 import { requireAuth } from '@/lib/auth'
-import { GlobalRole, LifeCycleStatus } from '@prisma/client'
+import { GlobalRole, LifeCycleStatus, Prisma } from '@prisma/client'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
@@ -22,13 +22,17 @@ export default async function EnvironmentsShortcutPage() {
   }
 
   const { userId, role } = auth.session
+  const projectWhere: Prisma.ProjectWhereInput = role === GlobalRole.SYSADMIN
+    ? { deletedAt: null }
+    : {
+        deletedAt: null,
+        members: {
+          some: { userId: userId }
+        }
+      }
 
   const projects = await prisma.project.findMany({
-    where: role === GlobalRole.SYSADMIN ? undefined : {
-      members: {
-        some: { userId: userId }
-      }
-    },
+    where: projectWhere,
     include: {
       environments: {
         where: {

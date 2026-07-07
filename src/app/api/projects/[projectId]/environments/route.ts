@@ -109,13 +109,15 @@ export async function POST(
 
         const sanitizedName = name.trim();
         const sanitizedDomain = domain ? domain.trim().toLowerCase() : null;
+        const duplicateFilters = [
+            { projectId, name: sanitizedName },
+            ...(sanitizedDomain ? [{ domain: sanitizedDomain }] : [])
+        ];
 
         const existingEnv = await prisma.environment.findFirst({
             where: {
-                OR: [
-                    { projectId, name: sanitizedName },
-                    sanitizedDomain ? { domain: sanitizedDomain } : {}
-                ]
+                deletedAt: null,
+                OR: duplicateFilters
             }
         });
 

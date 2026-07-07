@@ -70,6 +70,7 @@ interface EnvironmentsTabProps {
   currentUserId: string
   currentUserGlobalRole: 'SYSADMIN' | 'MANAGER' | 'DEVELOPER'
   projectMembers: { userId: string; role: 'OWNER' | 'EDITOR' | 'VIEWER' }[]
+  onEnvironmentDeleted?: () => void
 }
 
 type EnvironmentFormData = {
@@ -117,7 +118,13 @@ function getInitialCreateData(): EnvironmentFormData {
   }
 }
 
-export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRole, projectMembers }: EnvironmentsTabProps) {
+export function EnvironmentsTab({
+  projectId,
+  currentUserId,
+  currentUserGlobalRole,
+  projectMembers,
+  onEnvironmentDeleted,
+}: EnvironmentsTabProps) {
   const [environments, setEnvironments] = useState<EnvironmentData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -238,6 +245,7 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
   const handleDelete = async () => {
     if (!deletingEnv) return
     setIsDeleting(true)
+    const deletedEnvironmentId = deletingEnv.id
 
     try {
       const res = await fetch(`/api/projects/${projectId}/environments/${deletingEnv.id}`, {
@@ -247,8 +255,10 @@ export function EnvironmentsTab({ projectId, currentUserId, currentUserGlobalRol
       if (!res.ok) throw new Error(data.error)
 
       toast.success(data.message)
+      setEnvironments((prev) => prev.filter((env) => env.id !== deletedEnvironmentId))
       setDeletingEnv(null)
-      fetchEnvironments()
+      onEnvironmentDeleted?.()
+      await fetchEnvironments()
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to delete environment')
     } finally {

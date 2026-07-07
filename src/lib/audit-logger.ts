@@ -2,7 +2,7 @@ import prisma from '@/lib/prisma';
 import { headers } from 'next/headers';
 
 type AuditLogParams = {
-    userId?: string;
+    userId?: string | null;
     action: string;
     targetType: string;
     targetId: string;
@@ -21,9 +21,14 @@ export async function logAudit(params: AuditLogParams) {
                 'UNKNOWN';
         }
 
+        const isSystemActor = params.userId === 'SYSTEM';
+        const finalUserId = isSystemActor ? null : params.userId;
+        const finalActorName = isSystemActor ? 'System/Webhook' : null;
+
         prisma.auditLog.create({
             data: {
-                userId: params.userId,
+                userId: finalUserId,
+                actorName: finalActorName,
                 action: params.action.toUpperCase(),
                 targetType: params.targetType.toUpperCase(),
                 targetId: params.targetId,
