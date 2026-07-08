@@ -29,6 +29,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { formatEnvironmentDeleteErrorMessage, formatEnvironmentDeleteSuccessMessage } from '../environment-delete-message-utils'
 
 const STACK_TYPES = {
   NEXTJS: 'NEXTJS',
@@ -252,9 +253,11 @@ export function EnvironmentsTab({
         method: 'DELETE',
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      if (!res.ok) {
+        throw new Error(formatEnvironmentDeleteErrorMessage(data))
+      }
 
-      toast.success(data.message)
+      toast.success(formatEnvironmentDeleteSuccessMessage(data))
       setEnvironments((prev) => prev.filter((env) => env.id !== deletedEnvironmentId))
       setDeletingEnv(null)
       onEnvironmentDeleted?.()
@@ -718,8 +721,9 @@ export function EnvironmentsTab({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Environment?</AlertDialogTitle>
             <AlertDialogDescription>
-              You are about to permanently delete <strong>{deletingEnv?.name}</strong>. This action will also
-              terminate all node configurations attached to this environment.
+              You are about to permanently delete <strong>{deletingEnv?.name}</strong>. If its container
+              is still running, stop it first. After that, the environment resources on the worker node
+              will be torn down.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

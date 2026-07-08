@@ -11,6 +11,7 @@ import { getColumns, ProjectWithDetails } from './columns'
 import { DataTable } from '../admin/users/data-table'
 import { CreateProjectDialog } from './create-project-dialog'
 import { EditProjectDialog } from './edit-project-dialog'
+import { formatProjectDeleteErrorMessage, formatProjectDeleteSuccessMessage } from './delete-message-utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -86,9 +87,11 @@ export default function ProjectsPage() {
       })
       
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to delete project')
+      if (!res.ok) {
+        throw new Error(formatProjectDeleteErrorMessage(data))
+      }
 
-      toast.success(data.message)
+      toast.success(formatProjectDeleteSuccessMessage(data))
       setProjectPendingDelete(null)
       
       setProjects((prev) => prev.filter((p) => p.id !== targetProject.id))
@@ -174,8 +177,9 @@ export default function ProjectsPage() {
             <AlertDialogDescription>
               {projectPendingDelete ? (
                 <>
-                  This will permanently delete <strong>{projectPendingDelete.name}</strong>. This action
-                  cannot be undone.
+                  This will permanently delete <strong>{projectPendingDelete.name}</strong> after all
+                  environments inside it are torn down. If any container is still running, delete will be
+                  blocked until it is stopped.
                 </>
               ) : (
                 'This action cannot be undone.'

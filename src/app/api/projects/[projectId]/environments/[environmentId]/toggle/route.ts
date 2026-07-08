@@ -3,6 +3,10 @@ import { GlobalRole, ProjectRoleType, LifeCycleStatus } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 
+export function isRuntimeMutationBlockedByLifecycle(lifecycle: LifeCycleStatus | string | null | undefined) {
+    return lifecycle === LifeCycleStatus.DELETING || lifecycle === LifeCycleStatus.DELETED;
+}
+
 export async function POST(
     request: Request,
     { params }: { params: Promise<{ projectId: string, environmentId: string }> }
@@ -29,6 +33,9 @@ export async function POST(
         });
 
         if (!environment) return NextResponse.json({ error: 'Environment not found.' }, { status: 404 });
+        if (isRuntimeMutationBlockedByLifecycle(environment.lifecycle)) {
+            return NextResponse.json({ error: 'This environment is being deleted and cannot be modified.' }, { status: 409 });
+        }
 
         const lastDeploy = await prisma.deployment.findFirst({
             where: { environmentId, status: 'SUCCESS' },

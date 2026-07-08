@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { GlobalRole, ProjectRoleType, EnvironmentTier, StackType, LifeCycleStatus } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { reconcileDeletingEnvironment, teardownEnvironmentSafely } from '@/lib/services/delete-workflow-service';
 
 const NODE_VERSION_OPTIONS = ['18', '20', '22', '24'] as const;
 
@@ -16,6 +17,18 @@ function sanitizeNodeVersion(value: unknown, fallback: string) {
 
     return fallback;
 }
+
+type DeleteEnvironmentWorkflowDeps = {
+    prisma: typeof prisma;
+    reconcileDeletingEnvironment: typeof reconcileDeletingEnvironment;
+    teardownEnvironmentSafely: typeof teardownEnvironmentSafely;
+};
+
+const defaultDeleteEnvironmentWorkflowDeps: DeleteEnvironmentWorkflowDeps = {
+    prisma,
+    reconcileDeletingEnvironment,
+    teardownEnvironmentSafely,
+};
 
 export async function PATCH(
     request: Request,
@@ -151,90 +164,97 @@ export async function DELETE(
             }
         }
 
-        const environment = await prisma.environment.findUnique({
-            where: { id: environmentId, projectId, deletedAt: null }
-        });
-
-        if (!environment) {
-            return NextResponse.json(
-                { error: 'Environment not found or already deleted.' },
-                { status: 404 }
-            );
-        }
-
-        await prisma.environment.update({
-            where: { id: environmentId },
-            data: { lifecycle: LifeCycleStatus.DELETING }
-        });
-
-        const lastDeploy = await prisma.deployment.findFirst({
-            where: { environmentId, status: 'SUCCESS' },
-            orderBy: { createdAt: 'desc' },
-            include: { workerNode: true }
-        });
-
-        if (lastDeploy && lastDeploy.workerNode) {
-            const worker = lastDeploy.workerNode;
-
-            try {
-                const agentResponse = await fetch(`http://${worker.ipAddress}:4000/api/environment/${environmentId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${worker.authToken}`
-                    },
-                    signal: AbortSignal.timeout(10000)
-                });
-
-                if (!agentResponse.ok) {
-                    throw new Error(`Agent responded with ${agentResponse.status}`);
-                }
-            } catch (agentError: unknown) {
-                const message = agentError instanceof Error ? agentError.message : 'Unknown agent teardown error';
-                console.error('[TEARDOWN WARNING] Agent unreachable or failed:', message);
-
-                await prisma.environment.update({
-                    where: { id: environmentId },
-                    data: { lifecycle: LifeCycleStatus.ACTIVE }
-                });
-
-                return NextResponse.json(
-                    { error: 'Failed to destroy infrastructure on the server. Deletion aborted to prevent orphaned resources.' },
-                    { status: 502 }
-                )
-            };
-        }
-
-        const timestamp = Date.now();
-        const releasedName = `${environment.name}_deleted_${timestamp}`;
-
-        await prisma.environment.update({
-            where: { id: environmentId },
-            data: { 
-                lifecycle: LifeCycleStatus.DELETED,
-                deletedAt: new Date(),
-                name: releasedName,
-                domain: null,
-                assignedPort: null
-            }
-        });
-
-        await prisma.auditLog.create({
-            data: {
-                userId,
-                action: 'DELETE_ENVIRONMENT',
-                targetType: 'ENVIRONMENT',
-                targetId: environmentId,
-            }
-        });
-
-        return NextResponse.json(
-            { message: 'Environment completely destroyed and removed.' }
-        );
+        const result = await deleteEnvironmentWorkflow(projectId, environmentId, userId);
+        return NextResponse.json(result.body, { status: result.status });
     } catch (error) {
         console.error('Environment deletion error:', error);
         return NextResponse.json(
             { error: 'Internal server error.' },
             { status: 500 }
         );
+    }
+}
+
+export async function deleteEnvironmentWorkflow(
+    projectId: string,
+    environmentId: string,
+    userId: string,
+    deps: DeleteEnvironmentWorkflowDeps = defaultDeleteEnvironmentWorkflowDeps
+) {
+    const environment = await deps.prisma.environment.findUnique({
+        where: { id: environmentId, projectId, deletedAt: null },
+        select: {
+            id: true,
+            name: true,
+            lifecycle: true,
+            assignedPort: true,
+            deployments: {
+                where: {
+                    workerNodeId: { not: null },
+                    status: { in: ['SUCCESS', 'BUILDING', 'PENDING'] }
+                },
+                orderBy: { createdAt: 'desc' },
+                take: 1,
+                include: {
+                    workerNode: true
+                }
+            }
+        }
+    });
+
+    if (!environment) {
+        return {
+            status: 404,
+            body: { error: 'Environment not found or already deleted.' },
+        };
+    }
+
+    if (environment.lifecycle === LifeCycleStatus.DELETING) {
+        try {
+            await deps.reconcileDeletingEnvironment(environmentId, userId);
+            return {
+                status: 200,
+                body: {
+                    message: 'Environment deletion was already in progress and has now been finalized.',
+                    lifecycle: LifeCycleStatus.DELETED,
+                    retryable: false,
+                },
+            };
+        } catch (error) {
+            console.error('[TEARDOWN WARNING] Failed to reconcile deleting environment:', error);
+                return {
+                    status: 502,
+                    body: {
+                        error: 'Failed to resume pending environment deletion.',
+                        lifecycle: LifeCycleStatus.DELETING,
+                        retryable: true,
+                    },
+                };
+        }
+    }
+
+    try {
+        const deleteResult = await deps.teardownEnvironmentSafely(environment, userId);
+
+        return {
+            status: 200,
+            body: {
+                message: deleteResult.stopped
+                    ? 'Environment container was stopped and resources were destroyed.'
+                    : 'Environment completely destroyed and removed.',
+                lifecycle: LifeCycleStatus.DELETED,
+                retryable: false,
+            },
+        };
+    } catch (error) {
+        console.error('Environment deletion error:', error);
+            return {
+                status: 502,
+                body: {
+                    error: 'Failed to destroy infrastructure on the server.',
+                    lifecycle: LifeCycleStatus.DELETING,
+                    retryable: true,
+                },
+            };
     }
 }

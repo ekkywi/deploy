@@ -4,6 +4,10 @@ import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import { executeDeploymentService } from '@/lib/services/deployment-service';
 
+export function isDeploymentBlockedByLifecycle(lifecycle: string | null | undefined) {
+    return lifecycle === 'DELETING' || lifecycle === 'DELETED';
+}
+
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ projectId: string, environmentId: string }> }
@@ -61,11 +65,15 @@ export async function POST(
 
         const environment = await prisma.environment.findUnique({
             where: { id: environmentId, deletedAt: null },
-            select: { branchName: true }
+            select: { branchName: true, lifecycle: true }
         });
 
         if (!environment) {
             return NextResponse.json({ error: 'Environment not found.' }, { status: 404 });
+        }
+
+        if (isDeploymentBlockedByLifecycle(environment.lifecycle)) {
+            return NextResponse.json({ error: 'This environment is being deleted and cannot accept new deployments.' }, { status: 409 });
         }
 
         const finalBranch = body.branch || environment.branchName || 'main';
