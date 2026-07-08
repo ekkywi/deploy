@@ -74,6 +74,8 @@ export function DataTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = React.useState('')
   const [sorting, setSorting] = React.useState<SortingState>([])
 
+  // TanStack Table intentionally returns functions; keep this boundary outside React Compiler memoization.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
@@ -102,14 +104,14 @@ export function DataTable<TData, TValue>({
   return (
     <TooltipProvider>
       <Card>
-        <CardHeader className="border-b pb-3">
+        <CardHeader className="border-b bg-muted/[0.08] pb-3">
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground/80" />
             <Input
               placeholder={searchPlaceholder}
               value={globalFilter ?? ''}
               onChange={(event) => setGlobalFilter(event.target.value)}
-              className="h-9 rounded-full pl-8 text-sm shadow-none"
+              className="h-9 pl-8 text-sm shadow-none"
             />
           </div>
         </CardHeader>
@@ -120,7 +122,7 @@ export function DataTable<TData, TValue>({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
                   key={headerGroup.id}
-                  className="border-b bg-muted/30 hover:bg-muted/30"
+                    className="border-b bg-muted/18 hover:bg-muted/18"
                 >
                   {headerGroup.headers.map((header) => (
                     <TableHead
@@ -149,7 +151,7 @@ export function DataTable<TData, TValue>({
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
-                        className={`px-4 py-2.5 text-sm ${
+                        className={`px-4 py-2.5 text-[13px] ${
                           cell.column.id === 'actions' ? 'text-right' : ''
                         }`}
                       >
@@ -183,7 +185,7 @@ export function DataTable<TData, TValue>({
           </Table>
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-2 border-t py-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardFooter className="flex flex-col gap-2 border-t bg-muted/[0.08] py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
             {filteredCount === 0
               ? `No ${entityLabel} to display`

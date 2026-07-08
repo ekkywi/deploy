@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { GlobalRole, LifeCycleStatus, EnvironmentTier } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import { logAudit } from '@/lib/audit-logger';
 
 export async function PATCH(
-    request: Request,
-    { params }: { params: Promise<{ workerId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/admin/workers/[workerId]'>
 ) {
     try {
         const auth = await requireAuth(request);
@@ -20,7 +21,7 @@ export async function PATCH(
             );
         }
 
-        const { workerId } = await params;
+        const { workerId } = await ctx.params;
         const body = await request.json();
         const { name, ipAddress, isActive, supportedTiers } = body;
 
@@ -110,8 +111,8 @@ export async function PATCH(
 }
 
 export async function DELETE(
-    request: Request,
-    { params }: { params: Promise<{ workerId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/admin/workers/[workerId]'>
 ) {
     try {
         const auth = await requireAuth(request);
@@ -125,7 +126,7 @@ export async function DELETE(
             );
         }
 
-        const { workerId } = await params;
+        const { workerId } = await ctx.params;
 
         const targetNode = await prisma.workerNode.findUnique({
             where: { id: workerId }
@@ -173,10 +174,10 @@ export async function DELETE(
             { message: 'Worker Node has been securely removed.' },
         );
     
-    } catch (error: any) {
-        if (error.code === 'P2003') {
+    } catch (error: unknown) {
+        if (typeof error === 'object' && error !== null && 'code' in error && (error as { code?: string }).code === 'P2003') {
             return NextResponse.json(
-                { error: 'Cannot delete this node because it has historical deployment logs attached to it. Please deactivate is instead.' },
+                { error: 'Cannot delete this node because it has historical deployment logs attached to it. Please deactivate it instead.' },
                 { status: 409 }
             );
         }

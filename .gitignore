@@ -12,6 +12,8 @@ node_modules/
 /out/
 /build/
 .tsbuildinfo
+*.tsbuildinfo
+/.next.*/
 
 # =========================================
 # CREDENSTIALS & ENVIRONMENT VARIABLES (KRITIKAL)

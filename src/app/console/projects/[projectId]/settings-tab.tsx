@@ -133,7 +133,7 @@ export function SettingsTab({
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-5">
-          <div className="rounded-2xl border border-border/70 bg-muted/25 p-5">
+          <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">

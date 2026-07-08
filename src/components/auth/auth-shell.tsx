@@ -1,4 +1,4 @@
-import { ArrowUpRight, Layers, Rocket, Shield } from 'lucide-react'
+import { ArrowUpRight, Layers, Rocket, Shield, Triangle } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -26,8 +26,8 @@ const features = [
 function DeployLogo({ className }: { className?: string }) {
   return (
     <div className={cn('flex items-center gap-3 font-medium tracking-tight', className)}>
-      <span className="inline-flex size-8 items-center justify-center rounded-full bg-foreground text-background">
-        D
+      <span className="inline-flex size-8 items-center justify-center rounded-md bg-foreground text-background">
+        <Triangle className="size-4 fill-current" aria-hidden />
       </span>
       <span>Deploy</span>
     </div>
@@ -36,10 +36,10 @@ function DeployLogo({ className }: { className?: string }) {
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="relative hidden flex-col justify-between overflow-hidden border-r border-border/80 bg-background p-10 text-white lg:flex">
+    <div className="grid min-h-svh lg:grid-cols-[1.05fr_0.95fr]">
+      <div className="relative hidden flex-col justify-between overflow-hidden border-r border-border/70 bg-background p-10 text-white lg:flex">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_34%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.055),transparent_20rem)]"
           aria-hidden
         />
 
@@ -49,10 +49,10 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
         <div className="relative z-10 space-y-10">
           <div className="space-y-4">
-            <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/65">
+            <div className="inline-flex rounded-md border border-white/10 bg-white/[0.035] px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-white/58">
               Access workspace
             </div>
-            <h2 className="max-w-xl text-4xl font-medium tracking-[-0.05em] text-balance">
+            <h2 className="max-w-xl text-4xl font-medium tracking-[-0.045em] text-balance">
               Calm operations for teams shipping across environments.
             </h2>
             <p className="max-w-md text-sm leading-6 text-white/68">
@@ -65,7 +65,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
               <li key={title} className="flex gap-3">
                 <span
                   className={cn(
-                    'flex size-9 shrink-0 items-center justify-center rounded-lg ring-1',
+                  'flex size-9 shrink-0 items-center justify-center rounded-md ring-1',
                     iconClass
                   )}
                 >
@@ -91,7 +91,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
       <div className="relative flex flex-col items-center justify-center bg-background p-6 sm:p-8">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_26%)]"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.035),transparent_18rem)]"
           aria-hidden
         />
         <div className="relative mb-8 w-full max-w-sm lg:hidden">

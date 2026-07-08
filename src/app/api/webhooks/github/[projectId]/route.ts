@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
 import { executeDeploymentService } from "@/lib/services/deployment-service";
 
 export async function POST(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/webhooks/github/[projectId]'>
 ) {
     try {
-        const resolvedParams = await params;
-        const { projectId } = resolvedParams;
+        const { projectId } = await ctx.params;
         const signature = request.headers.get('x-hub-signature-256');
         const event = request.headers.get('x-github-event');
 
@@ -49,12 +49,15 @@ export async function POST(
         const rawBody = await request.text();
         const hmac = crypto.createHmac('sha256', project.webhookSecret);
         const expectedSignature = 'sha256=' + hmac.update(rawBody).digest('hex');
+        const signatureBuffer = Buffer.from(signature);
+        const expectedSignatureBuffer = Buffer.from(expectedSignature);
+        const hasComparableSignature = signatureBuffer.length === expectedSignatureBuffer.length;
         const isSignatureValid = crypto.timingSafeEqual(
-            Buffer.from(signature),
-            Buffer.from(expectedSignature)
+            hasComparableSignature ? signatureBuffer : expectedSignatureBuffer,
+            expectedSignatureBuffer
         );
 
-        if (!isSignatureValid) {
+        if (!hasComparableSignature || !isSignatureValid) {
             return NextResponse.json(
                 { error: 'Invalid payload signature.' },
                 { status: 401 }
@@ -72,7 +75,6 @@ export async function POST(
         }
 
         const pushedBranch = branchMatch[1];
-        const commitHash = payload.after;
         const environments = await prisma.environment.findMany({
             where: {
                 projectId: project.id,

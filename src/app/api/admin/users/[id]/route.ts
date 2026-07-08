@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 import prisma from '@/lib/prisma'
 import { requireRole } from '@/lib/auth'
 import { logAudit } from "@/lib/audit-logger"
@@ -6,8 +7,8 @@ import { logAudit } from "@/lib/audit-logger"
 const VALID_ROLES = ['SYSADMIN', 'MANAGER', 'DEVELOPER']
 
 export async function PATCH(
-    request: Request,
-    { params }: { params: Promise<{ id: string }> | {id: string} }
+    request: NextRequest,
+    ctx: RouteContext<'/api/admin/users/[id]'>
 ) {
     try {
         const auth = await requireRole(
@@ -37,10 +38,10 @@ export async function PATCH(
             )
         }
 
-        const resolvedParams = await params
+        const { id } = await ctx.params
 
         const targetUser = await prisma.user.findUnique({
-            where: { id: resolvedParams.id },
+            where: { id },
             select: { firstName: true, lastName: true, globalRole: true }
         })
 
@@ -55,7 +56,7 @@ export async function PATCH(
         const parsedLastName = lastName ? lastName.trim() : null
 
         const updateUser = await prisma.user.update({
-            where: { id: resolvedParams.id },
+            where: { id },
             data: {
                 firstName: parsedFirstName,
                 lastName: parsedLastName,

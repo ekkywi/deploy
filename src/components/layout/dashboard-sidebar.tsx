@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Layers, LayoutDashboard, Rocket, Users, Server, Box, ShieldAlert } from 'lucide-react'
+import { Layers, LayoutDashboard, Rocket, Users, Server, Box, ShieldAlert, Triangle } from 'lucide-react'
 import { useAuthStore } from '@/store/useAuthStore'
 
 import {
@@ -46,19 +46,19 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar collapsible='icon'>
-      <SidebarHeader className="flex h-16 flex-col justify-center border-b border-sidebar-border px-4 group-data-[collapsible=icon]:px-1.5">
+      <SidebarHeader className="flex h-14 flex-col justify-center border-b border-sidebar-border px-3 group-data-[collapsible=icon]:px-1.5">
         <div className="flex items-center gap-3 font-medium text-sidebar-primary group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0">
-          <span className="inline-flex size-8 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">
-            D
+          <span className="inline-flex size-7 items-center justify-center rounded-md border border-white/12 bg-white text-black shadow-[0_1px_0_rgba(255,255,255,0.18)_inset]">
+            <Triangle className="size-3.5 fill-current" aria-hidden />
           </span>
           <span className="group-data-[collapsible=icon]:hidden">
             <span className="block text-[13px] tracking-[-0.02em]">Deploy</span>
-            <span className="block text-[10px] font-normal text-muted-foreground/80">Control plane</span>
+            <span className="block text-[10px] font-normal text-muted-foreground/76">Control plane</span>
           </span>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4">
+      <SidebarContent className="px-2 py-3">
         <SidebarGroup className='space-y-1'>
           <SidebarGroupLabel>Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -69,7 +69,7 @@ export function DashboardSidebar() {
                     asChild
                     isActive={item.url === '/console' ? pathname === item.url : pathname.startsWith(item.url)}
                     tooltip={item.title}
-                    className="h-10 rounded-xl px-3 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
+                    className="h-9 px-2.5 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
                   >
                     <Link href={item.url}>
                       <item.icon aria-hidden className="shrink-0" />
@@ -92,7 +92,7 @@ export function DashboardSidebar() {
                     asChild
                     isActive={pathname.startsWith('/console/admin/users')}
                     tooltip="User Management"
-                    className="h-10 rounded-xl px-3 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
+                    className="h-9 px-2.5 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
                   >
                     <Link href="/console/admin/users">
                       <Users aria-hidden className="shrink-0" />
@@ -106,7 +106,7 @@ export function DashboardSidebar() {
                     asChild
                     isActive={pathname.startsWith('/console/admin/infrastructure')}
                     tooltip="Infrastructure"
-                    className="h-10 rounded-xl px-3 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
+                    className="h-9 px-2.5 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
                   >
                     <Link href="/console/admin/infrastructure">
                       <Server aria-hidden className="shrink-0" />
@@ -120,7 +120,7 @@ export function DashboardSidebar() {
                     asChild
                     isActive={pathname.startsWith('/console/admin/system-logs')}
                     tooltip="System Logs"
-                    className="h-10 rounded-xl px-3 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
+                    className="h-9 px-2.5 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
                   >
                     <Link href="/console/admin/system-logs">
                       <ShieldAlert aria-hidden className="shrink-0" />
@@ -135,9 +135,9 @@ export function DashboardSidebar() {
         )}
 
         <div className="mt-auto px-2 pb-3 pt-6 group-data-[collapsible=icon]:hidden">
-          <div className="rounded-2xl border border-sidebar-border bg-muted/40 p-4">
+          <div className="rounded-lg border border-sidebar-border bg-muted/25 p-3">
             <p className="text-[13px] font-medium text-foreground/90">Focused delivery</p>
-            <p className="mt-1 text-[13px] leading-5 text-muted-foreground/80">
+            <p className="mt-1 text-[12px] leading-5 text-muted-foreground/76">
               Keep approvals, releases, and ownership visible from one operational workspace.
             </p>
           </div>

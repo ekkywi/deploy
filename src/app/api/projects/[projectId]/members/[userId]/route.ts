@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { GlobalRole, ProjectRoleType } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 
 export async function PATCH(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string, userId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/members/[userId]'>
 ) {
     try {
         const auth = await requireAuth(request);
 
         if (auth.response || !auth.session) return auth.response;
 
-        const resolvedParams = await params;
-        const { projectId, userId: targetUserId } = resolvedParams;
+        const { projectId, userId: targetUserId } = await ctx.params;
         const { userId: requesterId, role: globalRole } = auth.session;
 
         if (globalRole !== GlobalRole.SYSADMIN) {
@@ -83,16 +83,15 @@ export async function PATCH(
 }
 
 export async function DELETE(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string, userId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/members/[userId]'>
 ) {
     try {
         const auth = await requireAuth(request);
         
         if (auth.response || !auth.session) return auth.response;
 
-        const resolvedParams = await params;
-        const { projectId, userId: targetUserId } = resolvedParams;
+        const { projectId, userId: targetUserId } = await ctx.params;
         const { userId: requesterId, role: globalRole } = auth.session;
         const isSelfRemoval = requesterId === targetUserId;
 

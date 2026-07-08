@@ -25,7 +25,7 @@ export async function executeDeploymentService(
         });
 
         if (candidateWorkers.length === 0) {
-            throw new Error(`No active Worker Nodes availables that support the ${environment.tier} tier`);
+            throw new Error(`No active worker nodes are available for the ${environment.tier} tier.`);
         }
 
         const selectedWorker = candidateWorkers.sort((a, b) => a._count.deployments - b._count.deployments)[0];
@@ -96,19 +96,20 @@ export async function executeDeploymentService(
 
         return { success: true, deployment: updatedDeployment };
     
-    } catch (error: any) {
-        console.error(`[Deploy Service]`, error.message);
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown deployment error';
+        console.error(`[Deploy Service]`, message);
 
         if (deploymentId) {
             await prisma.deployment.update({
                 where: { id: deploymentId },
                 data: {
                     status: DeployStatus.FAILED,
-                    errorMessage: `Failed: ${error.message}`
+                    errorMessage: `Failed: ${message}`
                 }
             });
         }
 
-        return { success: false, error: error.message };
+        return { success: false, error: message };
     }
 }

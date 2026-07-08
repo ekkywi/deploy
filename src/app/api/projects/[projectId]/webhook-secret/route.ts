@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
@@ -36,14 +37,14 @@ async function canManageWebhookSecret(userId: string, globalRole: GlobalRole, pr
 }
 
 export async function GET(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/webhook-secret'>
 ) {
     try {
         const auth = await requireAuth(request);
         if (auth.response || !auth.session) return auth.response;
 
-        const { projectId } = await params;
+        const { projectId } = await ctx.params;
         const { userId, role: globalRole } = auth.session;
         const authCheck = await canManageWebhookSecret(userId, globalRole, projectId);
 
@@ -64,14 +65,14 @@ export async function GET(
 }
 
 export async function POST(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/webhook-secret'>
 ) {
     try {
         const auth = await requireAuth(request);
         if (auth.response || !auth.session) return auth.response;
 
-        const { projectId } = await params;
+        const { projectId } = await ctx.params;
         const { userId, role: globalRole } = auth.session;
         const authCheck = await canManageWebhookSecret(userId, globalRole, projectId);
 

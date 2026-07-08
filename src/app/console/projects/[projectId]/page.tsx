@@ -33,7 +33,7 @@ type ProjectTab = 'overview' | 'members' | 'environments' | 'settings'
 
 function DetailStat({ label, value, hint }: DetailStatProps) {
   return (
-    <div className="rounded-2xl border border-border/80 bg-muted/35 p-4">
+    <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
       <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
         {label}
       </p>
@@ -56,7 +56,7 @@ function ProjectWorkspaceSkeleton() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-3">
           <Skeleton className="h-6 w-32 rounded-full" />
-          <Skeleton className="h-11 w-full max-w-lg rounded-2xl" />
+          <Skeleton className="h-11 w-full max-w-lg rounded-lg" />
           <Skeleton className="h-5 w-full max-w-xl" />
         </div>
         <div className="flex flex-wrap gap-2">
@@ -73,10 +73,10 @@ function ProjectWorkspaceSkeleton() {
             <Skeleton className="h-4 w-72" />
           </CardHeader>
           <CardContent className="grid gap-4 pt-5 sm:grid-cols-2">
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-24 rounded-2xl" />
+            <Skeleton className="h-24 rounded-lg" />
+            <Skeleton className="h-24 rounded-lg" />
+            <Skeleton className="h-24 rounded-lg" />
+            <Skeleton className="h-24 rounded-lg" />
           </CardContent>
         </Card>
 
@@ -86,8 +86,8 @@ function ProjectWorkspaceSkeleton() {
             <Skeleton className="h-4 w-64" />
           </CardHeader>
           <CardContent className="grid gap-4 pt-5 sm:grid-cols-2">
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-24 rounded-2xl" />
+            <Skeleton className="h-24 rounded-lg" />
+            <Skeleton className="h-24 rounded-lg" />
           </CardContent>
         </Card>
       </div>
@@ -99,7 +99,7 @@ function ProjectWorkspaceSkeleton() {
         </CardHeader>
         <CardContent className="pt-5">
           <Skeleton className="h-10 w-full max-w-[520px] rounded-lg" />
-          <Skeleton className="mt-6 h-64 rounded-2xl" />
+          <Skeleton className="mt-6 h-64 rounded-lg" />
         </CardContent>
       </Card>
     </div>
@@ -185,7 +185,7 @@ export default function ProjectWorkspacePage({
         actions={
           <Button
             variant="ghost"
-            className="w-full rounded-full px-3 text-[13px] text-muted-foreground hover:text-foreground sm:w-auto"
+            className="w-full px-3 text-[13px] text-muted-foreground hover:text-foreground sm:w-auto"
             onClick={() => router.push('/console/projects')}
           >
             <ArrowLeft className="mr-2 size-4" />
@@ -251,7 +251,7 @@ export default function ProjectWorkspacePage({
               value={user.role === 'SYSADMIN' ? 'Full console visibility' : 'Project-scoped visibility'}
               hint="Permissions are evaluated from the active session."
             />
-            <div className="sm:col-span-2 rounded-2xl border border-border/80 bg-muted/35 p-4">
+            <div className="sm:col-span-2 rounded-lg border border-border/70 bg-muted/18 p-4">
               <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
                 Repository
               </p>
@@ -280,7 +280,7 @@ export default function ProjectWorkspacePage({
         onValueChange={(value) => setActiveTab(value as ProjectTab)}
         className="space-y-4"
       >
-        <div className="rounded-[1.5rem] border border-border/70 bg-card/95 p-3.5 sm:p-4">
+        <div className="border-b border-border/70">
           <TabsList variant="line" className="w-full justify-start gap-1">
             <TabsTrigger value="overview">
               <LayoutDashboard className="mr-2 size-4" />

@@ -1,11 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { LifeCycleStatus } from '@prisma/client';
-import { deleteEnvironmentWorkflow } from '@/app/api/projects/[projectId]/environments/[environmentId]/route';
-import { isDeploymentBlockedByLifecycle } from '@/app/api/projects/[projectId]/environments/[environmentId]/deployments/route';
-import { isRuntimeMutationBlockedByLifecycle } from '@/app/api/projects/[projectId]/environments/[environmentId]/toggle/route';
-import { deleteProjectWorkflow } from '@/app/api/projects/[projectId]/route';
+import { deleteEnvironmentWorkflow } from '@/lib/services/environment-delete-workflow';
+import { deleteProjectWorkflow } from '@/lib/services/project-delete-workflow';
+import {
+  isDeploymentBlockedByLifecycle,
+  isRuntimeMutationBlockedByLifecycle,
+} from '@/lib/services/environment-lifecycle';
 import {
   formatEnvironmentDeleteErrorMessage,
   formatEnvironmentDeleteSuccessMessage,

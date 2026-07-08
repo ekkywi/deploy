@@ -23,12 +23,12 @@ export function DashboardHeader() {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="hidden rounded-full border border-border/60 bg-muted/32 px-3 py-1 text-[11px] text-muted-foreground/80 sm:inline-flex">
+      <div className="hidden rounded-md border border-border/60 bg-muted/20 px-2.5 py-1 text-[11px] text-muted-foreground/78 sm:inline-flex">
         {user.role}
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-10 rounded-full px-1.5">
+          <Button variant="ghost" className="relative h-9 px-1.5">
             <div className="flex items-center gap-3">
               <Avatar className="size-8">
                 <AvatarFallback className="bg-muted text-foreground text-xs font-medium">
@@ -55,7 +55,7 @@ export function DashboardHeader() {
                 {user.email}
               </p>
               <div className="pt-1">
-                <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/38 px-2 py-1 text-[10px] font-semibold tracking-wide text-foreground/90">
+                  <span className="inline-flex items-center rounded-md border border-border/60 bg-muted/28 px-2 py-1 text-[10px] font-semibold tracking-wide text-foreground/90">
                   {user.role}
                 </span>
               </div>

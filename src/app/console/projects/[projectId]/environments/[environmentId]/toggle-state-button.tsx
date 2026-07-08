@@ -31,8 +31,8 @@ export function ToggleStateButton({ projectId, environmentId, currentLifecycle, 
       
       toast.success(data.message)
       router.refresh()
-    } catch (error: any) {
-      toast.error(error.message)
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Update failed')
     } finally {
       setIsLoading(false)
     }
@@ -47,7 +47,6 @@ export function ToggleStateButton({ projectId, environmentId, currentLifecycle, 
       onClick={handleToggle} 
       disabled={isLoading} 
       variant={isActive ? "outline" : "default"}
-      className="rounded-full"
     >
       {isLoading ? (
         <Loader2 className="mr-2 size-4 animate-spin" />

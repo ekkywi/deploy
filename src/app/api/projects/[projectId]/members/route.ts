@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { GlobalRole, ProjectRoleType } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 
 export async function GET(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/members'>
 ) {
     try {
         const auth = await requireAuth(request);
 
         if (auth.response || !auth.session) return auth.response;
 
-        const resolvedParams = await params;
-        const { projectId } = resolvedParams;
+        const { projectId } = await ctx.params;
         const { userId, role } = auth.session;
 
         const project = await prisma.project.findFirst({
@@ -73,16 +73,15 @@ export async function GET(
 }
 
 export async function POST(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/members'>
 ) {
     try {
         const auth = await requireAuth(request);
         
         if (auth.response || !auth.session) return auth.response;
 
-        const resolvedParams = await params;
-        const { projectId } = resolvedParams;
+        const { projectId } = await ctx.params;
         const { userId, role: globalRole } = auth.session;
 
         const project = await prisma.project.findFirst({

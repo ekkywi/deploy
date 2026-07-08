@@ -1,22 +1,20 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { GlobalRole, ProjectRoleType } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import { executeDeploymentService } from '@/lib/services/deployment-service';
-
-export function isDeploymentBlockedByLifecycle(lifecycle: string | null | undefined) {
-    return lifecycle === 'DELETING' || lifecycle === 'DELETED';
-}
+import { isDeploymentBlockedByLifecycle } from '@/lib/services/environment-lifecycle';
 
 export async function GET(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string, environmentId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/environments/[environmentId]/deployments'>
 ) {
     try {
         const auth = await requireAuth(request);
         if (auth.response || !auth.session) return auth.response;
 
-        const { environmentId } = await params;
+        const { environmentId } = await ctx.params;
 
         const deployments = await prisma.deployment.findMany({
             where: { environmentId },
@@ -35,14 +33,14 @@ export async function GET(
 }
 
 export async function POST(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string, environmentId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/environments/[environmentId]/deployments'>
 ) {
     try {
         const auth = await requireAuth(request);
         if (auth.response || !auth.session) return auth.response;
 
-        const { projectId, environmentId } = await params;
+        const { projectId, environmentId } = await ctx.params;
         const { userId, role: globalRole } = auth.session;
 
         if (globalRole !== GlobalRole.SYSADMIN) {
@@ -58,10 +56,11 @@ export async function POST(
             }
         }
 
-        let body: any = {};
+        let body: { branch?: unknown } = {};
         try {
             body = await request.json();
-        } catch (e) {}
+        } catch {
+        }
 
         const environment = await prisma.environment.findUnique({
             where: { id: environmentId, deletedAt: null },
@@ -76,7 +75,9 @@ export async function POST(
             return NextResponse.json({ error: 'This environment is being deleted and cannot accept new deployments.' }, { status: 409 });
         }
 
-        const finalBranch = body.branch || environment.branchName || 'main';
+        const finalBranch = typeof body.branch === 'string' && body.branch.trim().length > 0
+            ? body.branch
+            : environment.branchName || 'main';
 
         const result = await executeDeploymentService(
             environmentId,

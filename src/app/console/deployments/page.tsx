@@ -15,14 +15,14 @@ import { DeploymentLogDialog } from '@/components/deployment-log-dialog'
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case 'SUCCESS':
-      return <Badge className="rounded-full border border-emerald-400/14 bg-emerald-400/8 px-2.5 py-1 text-[10px] font-medium text-emerald-200 hover:bg-emerald-400/12"><CheckCircle2 className="mr-1 size-3" /> Success</Badge>
+      return <Badge className="border border-emerald-400/14 bg-emerald-400/8 px-2.5 py-1 text-[10px] font-medium text-emerald-200 hover:bg-emerald-400/12"><CheckCircle2 className="mr-1 size-3" /> Success</Badge>
     case 'FAILED':
-      return <Badge variant="destructive" className="rounded-full px-2.5 py-1 text-[10px] font-medium"><XCircle className="mr-1 size-3" /> Failed</Badge>
+      return <Badge variant="destructive" className="px-2.5 py-1 text-[10px] font-medium"><XCircle className="mr-1 size-3" /> Failed</Badge>
     case 'BUILDING':
-      return <Badge className="rounded-full border border-sky-400/14 bg-sky-400/8 px-2.5 py-1 text-[10px] font-medium text-sky-100 hover:bg-sky-400/12"><Loader2 className="mr-1 size-3 animate-spin" /> Building</Badge>
+      return <Badge className="border border-sky-400/14 bg-sky-400/8 px-2.5 py-1 text-[10px] font-medium text-sky-100 hover:bg-sky-400/12"><Loader2 className="mr-1 size-3 animate-spin" /> Building</Badge>
     case 'PENDING':
     default:
-      return <Badge variant="outline" className="rounded-full border-border/60 px-2.5 py-1 text-[10px] font-medium text-muted-foreground"><Clock className="mr-1 size-3" /> Pending</Badge>
+      return <Badge variant="outline" className="border-border/60 px-2.5 py-1 text-[10px] font-medium text-muted-foreground"><Clock className="mr-1 size-3" /> Pending</Badge>
   }
 }
 
@@ -112,7 +112,7 @@ export default async function GlobalDeploymentsPage() {
           ) : (
             <div className="divide-y divide-border/70">
               {deployments.map((deploy) => (
-                <div key={deploy.id} className="flex items-center justify-between p-3.5 transition-colors hover:bg-muted/30">
+                <div key={deploy.id} className="flex items-center justify-between p-3.5 transition-colors hover:bg-muted/24">
                   <div className="flex items-center gap-3.5">
                     <div className="w-28">
                       <StatusBadge status={deploy.status} />

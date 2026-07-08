@@ -12,8 +12,8 @@ export default function DashboardLayout({
     <AuthGuard>
       <SidebarProvider>
         <DashboardSidebar />
-        <main className="flex w-full flex-1 flex-col overflow-hidden bg-background">
-          <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-4 border-b border-border/80 bg-background/90 px-4 backdrop-blur lg:px-6">
+        <main className="flex min-w-0 w-full flex-1 flex-col overflow-hidden bg-background">
+          <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-4 border-b border-border/70 bg-background/88 px-4 backdrop-blur-xl lg:px-6">
             <SidebarTrigger className="-ml-1" />
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground/80">
@@ -23,11 +23,9 @@ export default function DashboardLayout({
             </div>
             <DashboardHeader />
           </header>
-          <div className="flex-1 overflow-auto">
-            <div className="mx-auto flex w-full max-w-7xl flex-1 px-4 py-6 lg:px-6 lg:py-8">
-              <div className="w-full rounded-[1.5rem] border border-border/60 bg-card/90 shadow-[0_16px_40px_rgba(0,0,0,0.24)]">
-                <div className="p-5 lg:p-6">{children}</div>
-              </div>
+          <div className="min-w-0 flex-1 overflow-auto">
+            <div className="mx-auto flex w-full max-w-[1440px] min-w-0 flex-1 px-4 py-5 sm:px-5 lg:px-8 lg:py-7">
+              <div className="min-w-0 w-full">{children}</div>
             </div>
           </div>
         </main>

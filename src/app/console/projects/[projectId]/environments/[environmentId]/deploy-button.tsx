@@ -39,8 +39,8 @@ export function DeployButton({
       if (data.branches.length > 0 && !data.branches.includes(selectedBranch)) {
         setSelectedBranch(data.branches[0])
       }
-    } catch (error: any) {
-      toast.error(error.message)
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to fetch branches')
     } finally {
       setIsFetching(false)
     }
@@ -77,8 +77,8 @@ export function DeployButton({
       toast.success(data.message || 'Deployment triggered successfully')
       setIsOpen(false)
       router.refresh()
-    } catch (error: any) {
-      toast.error(error.message)
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Deployment failed')
     } finally {
       setIsDeploying(false)
     }
@@ -89,7 +89,7 @@ export function DeployButton({
       <Button 
         onClick={handleOpenModal} 
         disabled={isDeploying || !hasRepoUrl} 
-        className="rounded-full bg-primary text-primary-foreground"
+        className="bg-primary text-primary-foreground"
       >
         {isDeploying ? <Loader2 className="mr-2 size-4 animate-spin" /> : <PlayCircle className="mr-2 size-4" />}
         {isDeploying ? 'Queuing...' : 'Trigger Deploy'}
@@ -97,10 +97,10 @@ export function DeployButton({
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-md rounded-xl border bg-background shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-full max-w-md overflow-hidden rounded-lg border border-border/80 bg-background shadow-[0_18px_60px_rgba(0,0,0,0.36)] animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center border-b p-4">
               <div>
-                <h2 className="text-lg font-semibold tracking-tight">Deploy Environment</h2>
+                <h2 className="text-[15px] font-medium tracking-[-0.02em]">Deploy Environment</h2>
                 <p className="text-sm text-muted-foreground mt-1">Select the git branch you want to deploy.</p>
               </div>
               <Button variant="ghost" size="icon" className="size-8" onClick={() => setIsOpen(false)} disabled={isDeploying}>
@@ -125,7 +125,7 @@ export function DeployButton({
                 <div className="relative">
                   <GitBranch className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <select 
-                    className="w-full appearance-none rounded-md border border-input bg-background pl-9 pr-4 py-2 text-sm shadow-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
+                    className="w-full appearance-none rounded-md border border-input bg-background/70 py-2 pr-4 pl-9 text-sm shadow-none outline-none focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-50"
                     value={selectedBranch}
                     onChange={(e) => setSelectedBranch(e.target.value)}
                     disabled={isFetching || branches.length === 0 || isDeploying}

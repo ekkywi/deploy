@@ -286,11 +286,11 @@ export function EnvironmentsTab({
 
   return (
     <div className="space-y-6">
-      <Card className="border-border/80 bg-gradient-to-br from-card via-card to-muted/20">
+      <Card className="border-border/80 bg-card/80">
         <CardHeader className="gap-4 border-b">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-2">
-              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-border/60 bg-background/55 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/85">
+              <div className="inline-flex w-fit items-center gap-2 rounded-md border border-border/60 bg-background/55 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/82">
                 <Boxes className="size-3.5" />
                 Environment Control Panel
               </div>
@@ -313,7 +313,7 @@ export function EnvironmentsTab({
                 }}
               >
                 <DialogTrigger asChild>
-                  <Button className="rounded-full gap-2 text-[13px] lg:self-start">
+                  <Button className="gap-2 text-[13px] lg:self-start">
                     <Plus className="size-4" /> New Environment
                   </Button>
                 </DialogTrigger>
@@ -346,7 +346,7 @@ export function EnvironmentsTab({
                           />
                         </div>
 
-                        <div className="space-y-4 rounded-2xl border border-border/70 bg-muted/20 p-4">
+                        <div className="space-y-4 rounded-lg border border-border/70 bg-muted/16 p-4">
                           <TierOptionGrid
                             options={tierOptions}
                             selectedValues={[createData.tier]}
@@ -383,10 +383,10 @@ export function EnvironmentsTab({
                             </select>
 
                             {isNodeStack(createData.stackType) && (
-                              <div className="space-y-2 rounded-2xl border border-border/70 bg-background/55 p-4">
+                              <div className="space-y-2 rounded-lg border border-border/70 bg-background/55 p-4">
                                 <div className="flex items-center justify-between gap-3">
                                   <Label className="text-[13px]">Node Version</Label>
-                                  <span className="rounded-full border border-border/60 bg-muted/50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                                  <span className="rounded-md border border-border/60 bg-muted/50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
                                     Node runtime only
                                   </span>
                                 </div>
@@ -439,7 +439,7 @@ export function EnvironmentsTab({
             <ConsoleStatChip label="Node-based" value={summary.nodeBased} />
           </div>
 
-          <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-muted/18 p-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-3 rounded-lg border border-border/70 bg-muted/14 p-4 md:flex-row md:items-center md:justify-between">
             <div className="space-y-1">
               <p className="text-[13px] font-medium text-foreground">Runtime overview</p>
               <p className="text-[12px] leading-5 text-muted-foreground/85">
@@ -457,7 +457,7 @@ export function EnvironmentsTab({
       {environments.length === 0 ? (
         <Card className="border-dashed py-16">
           <CardContent className="flex flex-col items-center justify-center text-center">
-            <div className="mb-4 flex size-14 items-center justify-center rounded-2xl border border-border/70 bg-muted/30">
+            <div className="mb-4 flex size-14 items-center justify-center rounded-lg border border-border/70 bg-muted/20">
               <Layers className="size-7 text-muted-foreground/40" />
             </div>
             <h3 className="text-[15px] font-medium tracking-[-0.02em]">No environments configured yet</h3>
@@ -465,7 +465,7 @@ export function EnvironmentsTab({
               Start by creating the first environment so this project has a clear runtime target and deployment lane.
             </p>
             {canEdit ? (
-              <Button className="mt-5 rounded-full gap-2 text-[13px]" onClick={() => setIsCreateOpen(true)}>
+              <Button className="mt-5 gap-2 text-[13px]" onClick={() => setIsCreateOpen(true)}>
                 <Plus className="size-4" />
                 Create First Environment
               </Button>
@@ -477,7 +477,7 @@ export function EnvironmentsTab({
           {environments.map((env) => (
             <Card
               key={env.id}
-              className="flex flex-col border-border/75 bg-gradient-to-b from-card to-muted/18 transition-all hover:-translate-y-0.5 hover:border-border/90"
+              className="flex flex-col border-border/75 bg-card/80 transition-colors hover:border-border/90"
             >
               <CardHeader className="gap-3 border-b pb-4">
                 <div className="flex items-start justify-between gap-3">
@@ -549,7 +549,7 @@ export function EnvironmentsTab({
 
               <CardContent className="space-y-4 pt-5">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-border/60 bg-background/55 p-3">
+                  <div className="rounded-lg border border-border/60 bg-background/55 p-3">
                     <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground/72">Stack</p>
                     <div className="mt-2 flex items-center gap-2 text-[13px] font-medium text-foreground">
                       <Layers className="size-4 text-muted-foreground" />
@@ -557,7 +557,7 @@ export function EnvironmentsTab({
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-border/60 bg-background/55 p-3">
+                  <div className="rounded-lg border border-border/60 bg-background/55 p-3">
                     <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground/72">
                       {isNodeStack(env.stackType) ? 'Node Version' : 'Runtime'}
                     </p>
@@ -568,7 +568,7 @@ export function EnvironmentsTab({
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border/60 bg-muted/18 p-3">
+                <div className="rounded-lg border border-border/60 bg-muted/14 p-3">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground/72">
@@ -634,7 +634,7 @@ export function EnvironmentsTab({
                   />
                 </div>
 
-                <div className="space-y-4 rounded-2xl border border-border/70 bg-muted/20 p-4">
+                <div className="space-y-4 rounded-lg border border-border/70 bg-muted/16 p-4">
                   <TierOptionGrid
                     options={tierOptions}
                     selectedValues={[editData.tier]}
@@ -671,10 +671,10 @@ export function EnvironmentsTab({
                     </select>
 
                     {isNodeStack(editData.stackType) && (
-                      <div className="space-y-2 rounded-2xl border border-border/70 bg-background/55 p-4">
+                      <div className="space-y-2 rounded-lg border border-border/70 bg-background/55 p-4">
                         <div className="flex items-center justify-between gap-3">
                           <Label className="text-[13px]">Node Version</Label>
-                          <span className="rounded-full border border-border/60 bg-muted/50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                          <span className="rounded-md border border-border/60 bg-muted/50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
                             Node runtime only
                           </span>
                         </div>

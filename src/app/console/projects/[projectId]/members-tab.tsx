@@ -299,10 +299,10 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
             <div className="h-10 animate-pulse rounded-full bg-muted" />
             <div className="h-10 animate-pulse rounded-full bg-muted" />
           </div>
-          <div className="space-y-3 rounded-2xl border border-border/80 bg-muted/25 p-4">
+          <div className="space-y-3 rounded-lg border border-border/70 bg-muted/18 p-4">
             <div className="h-4 w-40 animate-pulse rounded-full bg-muted" />
-            <div className="h-24 animate-pulse rounded-2xl bg-muted" />
-            <div className="h-24 animate-pulse rounded-2xl bg-muted" />
+            <div className="h-24 animate-pulse rounded-lg bg-muted" />
+            <div className="h-24 animate-pulse rounded-lg bg-muted" />
           </div>
         </CardContent>
       </Card>
@@ -329,7 +329,7 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
                   placeholder="Search by name or type email..."
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  className="h-10 rounded-full pr-20"
+                  className="h-10 pr-20"
                 />
                 {isSearching && (
                   <span className="absolute top-1/2 right-4 -translate-y-1/2 text-xs text-muted-foreground">
@@ -338,7 +338,7 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
                 )}
 
                 {(suggestions.length > 0 || (searchQuery.trim().length >= 3 && !isSearching)) && (
-                  <div className="absolute top-full right-0 left-0 z-30 mt-2 overflow-hidden rounded-2xl border border-border/70 bg-popover shadow-[0_20px_40px_rgba(0,0,0,0.2)]">
+                  <div className="absolute top-full right-0 left-0 z-30 mt-2 overflow-hidden rounded-lg border border-border/70 bg-popover shadow-[0_10px_28px_rgba(0,0,0,0.18)]">
                     {suggestions.length > 0 ? (
                       suggestions.map((suggestion) => (
                         <button
@@ -366,7 +366,7 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
               </div>
 
               <select
-                className="flex h-10 w-full items-center justify-between rounded-full border border-input bg-background px-4 py-2 text-sm ring-offset-background outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background/70 px-3 py-2 text-sm ring-offset-background outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={selectedRole}
                 onChange={(event) => setSelectedRole(event.target.value as ProjectRoleType)}
               >
@@ -376,7 +376,7 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
               </select>
 
               <Button
-                className="h-10 rounded-full"
+                className="h-10"
                 onClick={handleAddMember}
                 disabled={isSubmitting || searchQuery.length < 3}
               >
@@ -398,7 +398,7 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30 hover:bg-muted/30">
+              <TableRow className="bg-muted/18 hover:bg-muted/18">
                 <TableHead className="px-4 py-3">User</TableHead>
                 <TableHead className="px-4 py-3">Role</TableHead>
                 <TableHead className="px-4 py-3 text-right">Actions</TableHead>
@@ -423,7 +423,7 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
                             <div className="flex items-center gap-2">
                               <p className="truncate font-medium text-foreground">{memberName}</p>
                               {isSelf && (
-                                <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-[10px]">
+                                <Badge variant="secondary" className="px-2 py-0.5 text-[10px]">
                                   You
                                 </Badge>
                               )}
@@ -436,7 +436,7 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
                       <TableCell className="px-4 py-3">
                         {canModify && !isSelf ? (
                           <select
-                            className="h-9 rounded-full border border-input bg-background px-3 text-xs outline-none focus:ring-1 focus:ring-ring"
+                            className="h-9 rounded-md border border-input bg-background/70 px-3 text-xs outline-none focus:ring-1 focus:ring-ring"
                             value={member.role}
                             onChange={(event) =>
                               handleUpdateRole(member.userId, event.target.value as ProjectRoleType)
@@ -449,7 +449,7 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
                         ) : (
                           <Badge
                             variant="outline"
-                            className={cn('rounded-full px-3 py-1 font-normal', roleBadgeClasses[member.role])}
+                            className={cn('px-3 py-1 font-normal', roleBadgeClasses[member.role])}
                           >
                             {member.role === PROJECT_ROLES.OWNER && (
                               <Shield className="mr-1 size-3" aria-hidden />
@@ -464,7 +464,7 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                             onClick={() => requestRemoveMember(member, true)}
                           >
                             Leave
@@ -473,7 +473,7 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                             onClick={() => requestRemoveMember(member, false)}
                           >
                             <Trash2 className="size-4" />

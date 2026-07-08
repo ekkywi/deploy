@@ -16,18 +16,18 @@ export function ConsolePageHeader({
   actions,
 }: ConsolePageHeaderProps) {
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+    <div className="flex flex-col gap-3 border-b border-border/70 pb-5 lg:flex-row lg:items-end lg:justify-between">
       <div className="space-y-1.5">
         {eyebrow ? (
           <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground/80">
             {eyebrow}
           </p>
         ) : null}
-        <h1 className="font-heading text-[2rem] font-medium tracking-[-0.05em] text-foreground text-balance lg:text-[2.5rem]">
+        <h1 className="font-heading text-[1.875rem] font-medium tracking-[-0.045em] text-foreground text-balance lg:text-[2.25rem]">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-2xl text-[0.9375rem] leading-6 text-muted-foreground/90 text-balance">
+          <p className="max-w-2xl text-[0.9rem] leading-6 text-muted-foreground/84 text-balance">
             {description}
           </p>
         ) : null}

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { exec } from 'child_process';
 import util from 'util';
 import prisma from '@/lib/prisma';
@@ -6,11 +7,11 @@ import prisma from '@/lib/prisma';
 const execAsync = util.promisify(exec);
 
 export async function GET(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/branches'>
 ) {
     try {
-        const { projectId } = await params;
+        const { projectId } = await ctx.params;
 
         const project = await prisma.project.findUnique({
             where: { id: projectId },
@@ -40,8 +41,8 @@ export async function GET(
         }
 
         return NextResponse.json({ branches });
-    } catch (error: any) {
-        console.error('[API] Failed to fetch branches:', error.message);
+    } catch (error: unknown) {
+        console.error('[API] Failed to fetch branches:', error instanceof Error ? error.message : error);
         return NextResponse.json(
             { error: 'Failed to fetch branches. Check repository access.' },
             { status: 500 }

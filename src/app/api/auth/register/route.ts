@@ -10,7 +10,7 @@ export async function POST(request: Request) {
 
         if (!firstName || !email || !password) {
             return NextResponse.json(
-                { error: 'Firsname, lastname, and email cannot be empty.'},
+                { error: 'First name, last name, and email cannot be empty.'},
                 { status: 400 }
             )
         }

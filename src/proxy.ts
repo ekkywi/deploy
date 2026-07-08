@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { getAuthTokenFromRequest, verifyToken } from '@/lib/auth'
+import { getAuthTokenFromRequest, verifyToken } from '@/lib/auth-token'
 
 const publicRoutes = [
     '/api/auth/login',
@@ -15,7 +15,7 @@ export async function proxy(request: NextRequest) {
     if (
         pathname.startsWith('/_next') ||
         pathname.startsWith('/favicon.ico') ||
-        pathname.startsWith('api/webhooks')
+        pathname.startsWith('/api/webhooks')
     ) {
         return NextResponse.next()
     }

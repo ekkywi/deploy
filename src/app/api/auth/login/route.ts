@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
         const response = NextResponse.json(
             { 
-              message: 'Login berhasil.', 
+              message: 'Login successful.', 
               role: user.globalRole,
               firstName: user.firstName,
               lastName: user.lastName 

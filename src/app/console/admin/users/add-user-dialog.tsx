@@ -1,4 +1,4 @@
-'use-client'
+'use client'
 
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -66,8 +66,8 @@ export function AddUserDialog({ onSuccess }: AddUserDialogProps) {
                 password: '',
                 globalRole: 'DEVELOPER',
             })
-        } catch (error: any) {
-            toast.error(error.message)
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : 'Failed to create user.')
         } finally {
             setIsLoading(false)
         }

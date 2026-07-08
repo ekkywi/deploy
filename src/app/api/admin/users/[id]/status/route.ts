@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 import prisma from '@/lib/prisma'
 import { AccountStatus } from "@prisma/client"
 import { requireRole } from '@/lib/auth'
 import { logAudit } from "@/lib/audit-logger"
 
 export async function PATCH(
-    request: Request,
-    { params }: { params: Promise<{ id: string }> | { id:string } }
+    request: NextRequest,
+    ctx: RouteContext<'/api/admin/users/[id]/status'>
 ) {
     try {
         const auth = await requireRole(
@@ -29,10 +30,10 @@ export async function PATCH(
             )
         }
 
-        const resolvedParams = await params;
+        const { id } = await ctx.params;
         
         const targetUser = await prisma.user.findUnique({
-            where: { id: resolvedParams.id },
+            where: { id },
             select: { status: true }
         })
 
@@ -51,7 +52,7 @@ export async function PATCH(
         }
 
         const updatedUser = await prisma.user.update({
-            where: { id: resolvedParams.id },
+            where: { id },
             data: { status: status as AccountStatus },
             select: {
                 id: true,

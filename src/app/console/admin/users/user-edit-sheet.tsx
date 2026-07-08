@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,22 +29,31 @@ interface UserEditSheetProps {
 }
 
 export function UserEditSheet({ user, open, onOpenChange, onSuccess }: UserEditSheetProps) {
+    return (
+        <Sheet open={open} onOpenChange={onOpenChange}>
+          <UserEditSheetContent
+            key={user ? `${user.id}:${user.firstName}:${user.lastName ?? ''}:${user.globalRole}` : 'none'}
+            user={user}
+            onOpenChange={onOpenChange}
+            onSuccess={onSuccess}
+          />
+        </Sheet>
+      )
+}
+
+interface UserEditSheetContentProps {
+    user: AdminUser | null
+    onOpenChange: (open: boolean) => void
+    onSuccess: (updateUser: AdminUser) => void
+}
+
+function UserEditSheetContent({ user, onOpenChange, onSuccess }: UserEditSheetContentProps) {
     const [isLoading, setIsLoading] = useState(false)
     const [formData, setFormData] = useState({
         firstName: user?.firstName || '',
         lastName: user?.lastName || '',
         globalRole: user?.globalRole || 'DEVELOPER'
     })
-
-    useEffect(() => {
-        if (user) {
-            setFormData({
-                firstName: user.firstName,
-                lastName: user.lastName || '',
-                globalRole: user.globalRole
-            })
-        }
-    }, [user])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -64,16 +73,15 @@ export function UserEditSheet({ user, open, onOpenChange, onSuccess }: UserEditS
             toast.success('User updated successfully.')
             onSuccess(data.user)
             onOpenChange(false)
-        } catch (error: any) {
-            toast.error(error.message)
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : 'Update failed')
         } finally {
             setIsLoading(false)
         }
     }
 
     return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
-          <SheetContent className="sm:max-w-[420px] flex flex-col">
+        <SheetContent className="sm:max-w-[420px] flex flex-col">
             <SheetHeader className="pr-10">
               <SheetTitle>Edit User Profile</SheetTitle>
               <SheetDescription>
@@ -134,6 +142,5 @@ export function UserEditSheet({ user, open, onOpenChange, onSuccess }: UserEditS
               </SheetFooter>
             </form>
           </SheetContent>
-        </Sheet>
       )
 }

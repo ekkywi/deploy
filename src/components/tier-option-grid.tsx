@@ -87,10 +87,10 @@ export function TierOptionGrid({
                 )
               }}
               className={cn(
-                'group flex min-h-[148px] flex-col overflow-hidden rounded-2xl border p-3 text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-                'hover:-translate-y-px hover:border-border/80 hover:bg-background/40',
+                'group flex min-h-[148px] flex-col overflow-hidden rounded-lg border p-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                'hover:border-border/80 hover:bg-background/40',
                 isSelected
-                  ? 'border-border/80 bg-background/70 shadow-[0_12px_30px_rgba(0,0,0,0.16)] ring-1 ring-inset ring-white/6'
+                  ? 'border-border/80 bg-background/70 ring-1 ring-inset ring-white/6'
                   : 'border-border/60 bg-muted/25 text-muted-foreground/90',
                 option.accentClassName
               )}

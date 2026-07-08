@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
-import { GlobalRole, ProjectRoleType } from '@prisma/client';
+import type { NextRequest } from "next/server";
+import { GlobalRole } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 
 export async function GET(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string, environmentId: string, deploymentId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/environments/[environmentId]/deployments/[deploymentId]/logs'>
 ) {
     try {
         const auth = await requireAuth(request);
         if (auth.response || !auth.session) return auth.response;
 
-        const { projectId, environmentId, deploymentId } = await params;
+        const { projectId, environmentId, deploymentId } = await ctx.params;
         const { userId, role: globalRole } = auth.session;
 
         if (globalRole !== GlobalRole.SYSADMIN) {
@@ -61,8 +62,8 @@ export async function GET(
             }
         });
 
-    } catch (error: any) {
-        console.error('Log Streaming Proxy Error:', error.message);
+    } catch (error: unknown) {
+        console.error('Log Streaming Proxy Error:', error instanceof Error ? error.message : error);
         return NextResponse.json(
             { error: 'Failed to establish log stream connection.' },
             { status: 500 }

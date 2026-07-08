@@ -272,7 +272,7 @@ export default function InfrastructurePage() {
                     />
                   </div>
 
-                  <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+                  <div className="rounded-lg border border-border/70 bg-muted/16 p-4">
                     <TierOptionGrid
                       options={tierOptions}
                       selectedValues={formData.supportedTiers}
@@ -358,7 +358,7 @@ export default function InfrastructurePage() {
           {workers.map((worker) => (
             <Card
               key={worker.id}
-              className="flex flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:border-border/80"
+              className="flex flex-col overflow-hidden transition-colors hover:border-border/80"
             >
               <CardHeader className="border-b pb-4">
                 <div className="flex items-start justify-between gap-3">
@@ -505,7 +505,7 @@ export default function InfrastructurePage() {
                 />
               </div>
 
-              <div className="rounded-2xl border border-border/70 bg-muted/20 p-4">
+              <div className="rounded-lg border border-border/70 bg-muted/16 p-4">
                 <TierOptionGrid
                   options={tierOptions}
                   selectedValues={formData.supportedTiers}

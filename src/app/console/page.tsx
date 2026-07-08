@@ -156,7 +156,7 @@ function OverviewSkeleton() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-3">
           <Skeleton className="h-5 w-32 rounded-full" />
-          <Skeleton className="h-11 w-full max-w-xl rounded-2xl" />
+        <Skeleton className="h-11 w-full max-w-xl rounded-lg" />
           <Skeleton className="h-5 w-full max-w-2xl" />
         </div>
         <Skeleton className="h-10 w-44 rounded-full" />
@@ -177,10 +177,10 @@ function OverviewSkeleton() {
             <Skeleton className="h-4 w-80" />
           </CardHeader>
           <CardContent className="grid gap-4 pt-5 sm:grid-cols-2">
-            <Skeleton className="h-28 rounded-2xl" />
-            <Skeleton className="h-28 rounded-2xl" />
-            <Skeleton className="h-28 rounded-2xl" />
-            <Skeleton className="h-28 rounded-2xl" />
+            <Skeleton className="h-28 rounded-lg" />
+            <Skeleton className="h-28 rounded-lg" />
+            <Skeleton className="h-28 rounded-lg" />
+            <Skeleton className="h-28 rounded-lg" />
           </CardContent>
         </Card>
 
@@ -190,9 +190,9 @@ function OverviewSkeleton() {
             <Skeleton className="h-4 w-72" />
           </CardHeader>
           <CardContent className="space-y-3 pt-5">
-            <Skeleton className="h-[4.5rem] w-full rounded-2xl" />
-            <Skeleton className="h-[4.5rem] w-full rounded-2xl" />
-            <Skeleton className="h-[4.5rem] w-full rounded-2xl" />
+            <Skeleton className="h-[4.5rem] w-full rounded-lg" />
+            <Skeleton className="h-[4.5rem] w-full rounded-lg" />
+            <Skeleton className="h-[4.5rem] w-full rounded-lg" />
           </CardContent>
         </Card>
       </div>
@@ -203,9 +203,9 @@ function OverviewSkeleton() {
           <Skeleton className="h-4 w-72" />
         </CardHeader>
         <CardContent className="space-y-3 pt-5">
-          <Skeleton className="h-16 w-full rounded-2xl" />
-          <Skeleton className="h-16 w-full rounded-2xl" />
-          <Skeleton className="h-16 w-full rounded-2xl" />
+          <Skeleton className="h-16 w-full rounded-lg" />
+          <Skeleton className="h-16 w-full rounded-lg" />
+          <Skeleton className="h-16 w-full rounded-lg" />
         </CardContent>
       </Card>
     </div>
@@ -228,11 +228,11 @@ function QuickActionCard({
   return (
     <Link
       href={href}
-      className="group flex h-full min-h-28 flex-col justify-between rounded-3xl border border-border/70 bg-muted/20 p-4 transition-all hover:-translate-y-0.5 hover:border-border/90 hover:bg-muted/30"
+      className="group flex h-full min-h-28 flex-col justify-between rounded-lg border border-border/70 bg-muted/16 p-4 transition-colors hover:border-border/90 hover:bg-muted/24"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/40 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground/80">
+          <div className="inline-flex items-center gap-2 rounded-md border border-border/60 bg-background/40 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground/78">
             {label}
           </div>
           <p className="text-[15px] font-medium tracking-[-0.02em] text-foreground">
@@ -242,7 +242,7 @@ function QuickActionCard({
             {description}
           </p>
         </div>
-        <span className="inline-flex size-10 items-center justify-center rounded-2xl border border-border/60 bg-background/50 text-foreground transition-transform group-hover:translate-x-0.5">
+        <span className="inline-flex size-9 items-center justify-center rounded-md border border-border/60 bg-background/50 text-foreground transition-transform group-hover:translate-x-0.5">
           <Icon className="size-4" aria-hidden />
         </span>
       </div>
@@ -338,13 +338,13 @@ export default function ConsoleOverviewPage() {
         description="Monitor projects, environments, deployment flow, and platform readiness from one operational surface."
         actions={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-            <Button variant="outline" className="w-full rounded-full sm:w-auto" asChild>
+            <Button variant="outline" className="w-full sm:w-auto" asChild>
               <Link href="/console/projects">
                 <Layers className="mr-2 size-4" />
                 Projects
               </Link>
             </Button>
-            <Button className="w-full rounded-full sm:w-auto" asChild>
+            <Button className="w-full sm:w-auto" asChild>
               <Link href="/console/deployments">
                 <Rocket className="mr-2 size-4" />
                 Deployments
@@ -389,10 +389,10 @@ export default function ConsoleOverviewPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 pt-5 sm:flex-row">
-            <Button onClick={() => window.location.reload()} className="rounded-full">
+            <Button onClick={() => window.location.reload()}>
               Retry
             </Button>
-            <Button variant="outline" asChild className="rounded-full">
+            <Button variant="outline" asChild>
               <Link href="/console/projects">Open Projects</Link>
             </Button>
           </CardContent>
@@ -410,7 +410,7 @@ export default function ConsoleOverviewPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4 pt-5 sm:grid-cols-2">
-                <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+                <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
                   <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
                     Session
                   </p>
@@ -425,7 +425,7 @@ export default function ConsoleOverviewPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+                <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
                   <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
                     Access
                   </p>
@@ -442,7 +442,7 @@ export default function ConsoleOverviewPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+                <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
                   <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
                     Release flow
                   </p>
@@ -464,7 +464,7 @@ export default function ConsoleOverviewPage() {
                   ) : null}
                 </div>
 
-                <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+                <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
                   <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
                     Health
                   </p>
@@ -498,7 +498,7 @@ export default function ConsoleOverviewPage() {
                   return (
                     <div
                       key={`${alert.title}-${index}`}
-                      className={`rounded-2xl border p-4 ${styles.card}`}
+                      className={`rounded-lg border p-4 ${styles.card}`}
                     >
                       <div className="flex items-start gap-3">
                         <span className={`inline-flex size-9 items-center justify-center rounded-xl border ${styles.badge}`}>
@@ -552,7 +552,7 @@ export default function ConsoleOverviewPage() {
                         className="flex flex-col gap-4 p-4 transition-colors hover:bg-muted/25 md:flex-row md:items-center md:justify-between"
                       >
                         <div className="flex min-w-0 items-start gap-3.5">
-                          <span className={`inline-flex min-w-28 items-center justify-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium ${styles.badge}`}>
+                          <span className={`inline-flex min-w-28 items-center justify-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-medium ${styles.badge}`}>
                             <StatusIcon
                               className={`size-3 ${deployment.status === 'BUILDING' ? 'animate-spin' : ''}`}
                               aria-hidden
@@ -592,7 +592,7 @@ export default function ConsoleOverviewPage() {
                           </div>
                         </div>
 
-                        <Button variant="ghost" size="sm" className="w-fit rounded-full" asChild>
+                        <Button variant="ghost" size="sm" className="w-fit" asChild>
                           <Link href="/console/deployments">
                             View deployment log
                             <ExternalLink className="ml-2 size-4" />
@@ -671,7 +671,7 @@ export default function ConsoleOverviewPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 pt-5">
-                <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+                <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
                   <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
                     User
                   </p>
@@ -680,7 +680,7 @@ export default function ConsoleOverviewPage() {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+                  <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
                     <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
                       Role
                     </p>
@@ -689,7 +689,7 @@ export default function ConsoleOverviewPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+                  <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
                     <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
                       Account
                     </p>
@@ -701,7 +701,7 @@ export default function ConsoleOverviewPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+                <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
                   <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
                     Workspace fit
                   </p>

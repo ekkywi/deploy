@@ -1,22 +1,9 @@
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { GlobalRole, ProjectRoleType } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
-import { getProjectDeleteCandidates, teardownEnvironmentSafely } from '@/lib/services/delete-workflow-service'
-
-type DeleteProjectWorkflowDeps = {
-    prisma: typeof prisma;
-    getProjectDeleteCandidates: typeof getProjectDeleteCandidates;
-    teardownEnvironmentSafely: typeof teardownEnvironmentSafely;
-    now: () => number;
-};
-
-const defaultDeleteProjectWorkflowDeps: DeleteProjectWorkflowDeps = {
-    prisma,
-    getProjectDeleteCandidates,
-    teardownEnvironmentSafely,
-    now: () => Date.now(),
-};
+import { teardownQueue } from '@/lib/queue/teardown-queue'
 
 async function checkProjectAuthorization(
     userId: string,
@@ -53,15 +40,14 @@ async function checkProjectAuthorization(
 }
 
 export async function PATCH(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]'>
 ) {
     try {
         const auth = await requireAuth(request);
         if (auth.response || !auth.session) return auth.response;
 
-        const resolvedParams = await params;
-        const { projectId } = resolvedParams;
+        const { projectId } = await ctx.params;
         const { userId, role } = auth.session;
 
         const authCheck = await checkProjectAuthorization(userId, role, projectId);
@@ -146,15 +132,14 @@ export async function PATCH(
 }
 
 export async function DELETE(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]'>
 ) {
     try {
         const auth = await requireAuth(request);
         if (auth.response || !auth.session) return auth.response;
 
-        const resolvedParams = await params;
-        const { projectId } = resolvedParams;
+        const { projectId } = await ctx.params;
         const { userId, role } = auth.session;
 
         const authCheck = await checkProjectAuthorization(userId, role, projectId);
@@ -162,105 +147,24 @@ export async function DELETE(
             return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
         }
 
-        const deletedEnvironments: Array<{
-            id: string;
-            name: string;
-            stopped: boolean;
-        }> = [];
-        const result = await deleteProjectWorkflow(projectId, userId, authCheck.project.name);
-        return NextResponse.json(result.body, { status: result.status });
+        await teardownQueue.add('delete-project-job', {
+            projectId: projectId,
+            userId: userId,
+            projectName: authCheck.project.name
+        });
+
+        return NextResponse.json(
+            { 
+                message: 'Project deletion queued successfully. It will be removed in the background.',
+                status: 'PROCESSING'
+            }, 
+            { status: 202 }
+        );
 
     } catch (error) {
         console.error('Delete project error:', error);
         return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
     }
-}
-
-export async function deleteProjectWorkflow(
-    projectId: string,
-    userId: string,
-    projectName: string,
-    deps: DeleteProjectWorkflowDeps = defaultDeleteProjectWorkflowDeps
-) {
-    const deletedEnvironments: Array<{
-        id: string;
-        name: string;
-        stopped: boolean;
-    }> = [];
-    const failedTeardowns: Array<{
-        id: string;
-        name: string;
-        error: string;
-    }> = [];
-    const autoStoppedEnvironments: Array<{ id: string; name: string }> = [];
-
-    const { environments, runningEnvironments } = await deps.getProjectDeleteCandidates(projectId);
-
-    for (const environment of environments) {
-        try {
-            const result = await deps.teardownEnvironmentSafely(environment, userId);
-
-            if (result.status === 'DELETED') {
-                deletedEnvironments.push({
-                    id: environment.id,
-                    name: environment.name,
-                    stopped: Boolean(result.stopped),
-                });
-            }
-
-            if (result.stopped) {
-                autoStoppedEnvironments.push({ id: environment.id, name: environment.name });
-            }
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Unknown teardown error';
-            failedTeardowns.push({ id: environment.id, name: environment.name, error: message });
-        }
-    }
-
-    if (failedTeardowns.length > 0) {
-        return {
-            status: 502,
-            body: {
-                error: 'Project deletion aborted because one or more environments could not be torn down safely.',
-                runningEnvironments,
-                deletedEnvironments,
-                autoStoppedEnvironments,
-                failedTeardowns,
-                retryable: true,
-            },
-        };
-    }
-
-    const timestamp = deps.now();
-    const releasedName = `${projectName}_deleted_${timestamp}`;
-
-    await deps.prisma.$transaction(async (tx) => {
-        await tx.project.update({
-            where: { id: projectId },
-            data: {
-                deletedAt: new Date(),
-                name: releasedName
-            }
-        });
-
-        await tx.auditLog.create({
-            data: {
-                userId,
-                action: 'DELETE_PROJECT',
-                targetType: 'PROJECT',
-                targetId: projectId,
-            }
-        });
-    });
-
-    return {
-        status: 200,
-        body: {
-            message: 'Project deleted successfully after all environments were torn down.',
-            deletedEnvironments,
-            autoStoppedEnvironments,
-        },
-    };
 }
 
 function parseProjectPayload(body: unknown) {

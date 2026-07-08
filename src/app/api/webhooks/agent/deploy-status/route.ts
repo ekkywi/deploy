@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import prisma from '@/lib/prisma';
 import { DeployStatus } from '@prisma/client';
 
+const isDeployStatus = (status: string): status is DeployStatus => {
+    return Object.values(DeployStatus).includes(status as DeployStatus);
+};
+
 export async function POST(request: Request) {
     try {
         const authHeader = request.headers.get('authorization');
@@ -26,18 +30,30 @@ export async function POST(request: Request) {
             );
         }
 
-        const body = await request.json();
+        const body: { deploymentId?: unknown; status?: unknown; port?: unknown; message?: unknown } = await request.json();
         const { deploymentId, status, port, message } = body;
 
-        if (!deploymentId || !status) {
+        const deploymentIdText = typeof deploymentId === 'string' ? deploymentId : '';
+        const statusText = typeof status === 'string' ? status : '';
+        const portValue = typeof port === 'number' ? port : null;
+        const messageText = typeof message === 'string' ? message : undefined;
+
+        if (!deploymentIdText || !statusText) {
             return NextResponse.json(
                 { error: 'Bad Request: Missing deploymentId or status.' },
                 { status: 400 }
             );
         }
 
+        if (!isDeployStatus(statusText)) {
+            return NextResponse.json(
+                { error: 'Bad Request: Invalid deployment status.' },
+                { status: 400 }
+            );
+        }
+
         const deployment = await prisma.deployment.findUnique({
-            where: { id: deploymentId }
+            where: { id: deploymentIdText }
         });
 
         if (!deployment) {
@@ -47,29 +63,33 @@ export async function POST(request: Request) {
             );
         }
 
-        const updateData: any = {
-            status: status as DeployStatus,
+        const updateData: {
+            status: DeployStatus;
+            errorMessage?: string;
+            assignedPort?: number;
+        } = {
+            status: statusText,
         };
 
-        if (status === 'FAILED') {
-            updateData.errorMessage = message;
+        if (statusText === 'FAILED') {
+            updateData.errorMessage = messageText;
         }
 
-        if (status === 'SUCCESS' && port !== null) {
-            updateData.assignedPort = port;
+        if (statusText === 'SUCCESS' && portValue !== null) {
+            updateData.assignedPort = portValue;
         }
 
         await prisma.deployment.update({
-            where: { id: deploymentId },
+            where: { id: deploymentIdText },
             data: updateData
         });
 
-        console.log(`[WEBHOOK] Deployment ${deploymentId} updated to ${status} (Port: ${port || 'N/A'})`);
+        console.log(`[WEBHOOK] Deployment ${deploymentIdText} updated to ${statusText} (Port: ${portValue || 'N/A'})`);
 
         return NextResponse.json({ message: 'Webhook processed successfully.' }, { status: 200 });
 
-    } catch (error: any) {
-        console.error('Webhook processing error:', error.message);
+    } catch (error: unknown) {
+        console.error('Webhook processing error:', error instanceof Error ? error.message : error);
         return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
     }
 }

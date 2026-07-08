@@ -68,7 +68,7 @@ export default function LoginPage() {
 
   return (
     <AuthShell>
-      <Card className="border-border/80 bg-card/95 ring-0">
+      <Card className="border-border/80 bg-card/92 ring-0">
         <CardHeader className="border-b text-left">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             Console access
@@ -149,7 +149,7 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 size="lg"
-                className={cn('mt-3 w-full rounded-full')}
+                className={cn('mt-3 w-full')}
                 disabled={isSubmitting}
                 aria-busy={isSubmitting}
               >

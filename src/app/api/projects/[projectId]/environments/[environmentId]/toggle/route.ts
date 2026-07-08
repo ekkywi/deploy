@@ -1,21 +1,19 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { GlobalRole, ProjectRoleType, LifeCycleStatus } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
-
-export function isRuntimeMutationBlockedByLifecycle(lifecycle: LifeCycleStatus | string | null | undefined) {
-    return lifecycle === LifeCycleStatus.DELETING || lifecycle === LifeCycleStatus.DELETED;
-}
+import { isRuntimeMutationBlockedByLifecycle } from '@/lib/services/environment-lifecycle';
 
 export async function POST(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string, environmentId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/environments/[environmentId]/toggle'>
 ) {
     try {
         const auth = await requireAuth(request);
         if (auth.response || !auth.session) return auth.response;
 
-        const { projectId, environmentId } = await params;
+        const { projectId, environmentId } = await ctx.params;
         const { userId, role: globalRole } = auth.session;
 
         if (globalRole !== GlobalRole.SYSADMIN) {
@@ -80,7 +78,7 @@ export async function POST(
 
         return NextResponse.json({ message: `Environment is now ${nextStatus.toLowerCase()}` });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Toggle error:', error);
         return NextResponse.json({ error: 'Failed to communicate with worker node.' }, { status: 500 });
     }

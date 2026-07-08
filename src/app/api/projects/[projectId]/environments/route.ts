@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { GlobalRole, ProjectRoleType, EnvironmentTier, StackType } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
@@ -18,16 +19,15 @@ function sanitizeNodeVersion(value: unknown) {
 }
 
 export async function GET(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/environments'>
 ) {
     try {
         const auth = await requireAuth(request);
 
         if (auth.response || !auth.session) return auth.response;
 
-        const resolvedParams = await params;
-        const { projectId } = resolvedParams;
+        const { projectId } = await ctx.params;
         const { userId, role } = auth.session;
 
         if (role !== GlobalRole.SYSADMIN) {
@@ -65,15 +65,14 @@ export async function GET(
         }
 
 export async function POST(
-    request: Request,
-    { params }: { params: Promise<{ projectId: string }> }
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]/environments'>
 ) {
     try {
         const auth = await requireAuth(request);
         if (auth.response || !auth.session) return auth.response;
 
-        const resolvedParams = await params;
-        const { projectId } = resolvedParams;
+        const { projectId } = await ctx.params;
         const { userId, role: globalRole } = auth.session;
 
         if (globalRole !== GlobalRole.SYSADMIN) {
