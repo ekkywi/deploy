@@ -3,6 +3,7 @@ import { BookOpen } from 'lucide-react'
 import { AuthGuard } from '@/components/auth/auth-guard'
 import { DashboardSidebar } from '@/components/layout/dashboard-sidebar'
 import { DashboardHeader } from '@/components/layout/dashboard-header'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 
 export default function DashboardLayout({
@@ -25,6 +26,7 @@ export default function DashboardLayout({
               <BookOpen className="size-3.5 shrink-0" aria-hidden />
               <span className="hidden sm:inline">Docs</span>
             </Link>
+            <ThemeToggle />
             <DashboardHeader />
           </header>
           <div className="min-w-0 flex-1 overflow-auto">

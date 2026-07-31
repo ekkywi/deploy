@@ -1,7 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { useAuthStore } from '@/store/useAuthStore'
-import { LogOut, User } from 'lucide-react'
+import { LogOut, Settings, User } from 'lucide-react'
 
 import {
   DropdownMenu,
@@ -51,6 +52,12 @@ export function DashboardHeader() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild className="cursor-pointer">
+          <Link href="/console/profile">
+            <Settings className="mr-2 size-4" />
+            Profile
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => logout()} className="cursor-pointer">
           <LogOut className="mr-2 size-4" />
           Log out

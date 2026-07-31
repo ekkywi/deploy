@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 function LogoMark({ className }: { className?: string }) {
   return (
@@ -11,12 +12,12 @@ function LogoMark({ className }: { className?: string }) {
 
 function ConsolePreview() {
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-[#0a0a0a] shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-[0_0_0_1px_rgba(0,0,0,0.04)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
       <div className="flex h-9 items-center gap-2 border-b border-border px-3">
-        <span className="size-2 rounded-full bg-[#333]" />
-        <span className="size-2 rounded-full bg-[#333]" />
-        <span className="size-2 rounded-full bg-[#333]" />
-        <div className="ml-3 h-5 flex-1 rounded-md bg-[#111]" />
+        <span className="size-2 rounded-full bg-muted-foreground/30" />
+        <span className="size-2 rounded-full bg-muted-foreground/30" />
+        <span className="size-2 rounded-full bg-muted-foreground/30" />
+        <div className="ml-3 h-5 flex-1 rounded-md bg-muted" />
       </div>
       <div className="grid min-h-[280px] sm:min-h-[340px] sm:grid-cols-[180px_minmax(0,1fr)]">
         <aside className="hidden border-r border-border p-3 sm:block">
@@ -84,14 +85,14 @@ export default function Home() {
     <main className="relative min-h-svh overflow-hidden bg-background text-foreground">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(255,255,255,0.08),transparent)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(0,0,0,0.05),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(255,255,255,0.08),transparent)]"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.35]"
+        className="pointer-events-none absolute inset-0 opacity-[0.45] dark:opacity-[0.35]"
         style={{
           backgroundImage:
-            'linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)',
+            'linear-gradient(to right, color-mix(in srgb, var(--foreground) 6%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in srgb, var(--foreground) 6%, transparent) 1px, transparent 1px)',
           backgroundSize: '64px 64px',
           maskImage: 'radial-gradient(ellipse 60% 50% at 50% 0%, black, transparent)',
           WebkitMaskImage:
@@ -118,6 +119,7 @@ export default function Home() {
           >
             Self-hosting
           </Link>
+          <ThemeToggle />
           <Link
             href="/login"
             className="px-2.5 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"

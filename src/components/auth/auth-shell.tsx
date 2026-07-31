@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 function DeployLogo({ className }: { className?: string }) {
   return (
@@ -30,17 +31,20 @@ export function AuthShell({
     <div className="relative flex min-h-svh flex-col bg-background text-foreground">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_-10%,rgba(255,255,255,0.07),transparent)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_-10%,rgba(0,0,0,0.04),transparent)] dark:bg-[radial-gradient(ellipse_70%_45%_at_50%_-10%,rgba(255,255,255,0.07),transparent)]"
       />
 
       <header className="relative z-10 flex h-14 items-center justify-between px-5 sm:px-6">
         <DeployLogo />
-        <Link
-          href="/docs"
-          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Docs
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/docs"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Docs
+          </Link>
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-5 pb-16 pt-6 sm:px-6">

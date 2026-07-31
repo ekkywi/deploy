@@ -14,6 +14,7 @@ interface AuthState {
     isLoading: boolean
     isAuthenticated: boolean
     fetchUser: () => Promise<void>
+    setUser: (user: User) => void
     logout: () => Promise<void>
 }
 
@@ -47,6 +48,14 @@ export const useAuthStore = create<AuthState>((set) => ({
                 isLoading: false
             })
         }
+    },
+
+    setUser: (user) => {
+        set({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+        })
     },
 
     logout: async () => {

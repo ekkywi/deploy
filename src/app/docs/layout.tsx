@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { DocsNav } from '@/components/docs/docs-nav'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,13 +19,14 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             <span className="hidden text-border sm:inline">/</span>
             <span className="hidden text-sm text-muted-foreground sm:inline">Docs</span>
           </div>
-          <nav className="flex items-center gap-3 text-sm">
+          <nav className="flex items-center gap-2 text-sm sm:gap-3">
             <Link href="/console" className="text-muted-foreground transition-colors hover:text-foreground">
               Console
             </Link>
             <Link href="/login" className="text-muted-foreground transition-colors hover:text-foreground">
               Log in
             </Link>
+            <ThemeToggle />
           </nav>
         </div>
       </header>
