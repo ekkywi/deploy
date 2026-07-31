@@ -41,6 +41,12 @@ export type ProjectMember = {
   }
 }
 
+export type ProjectEnvironmentSummary = {
+  id: string
+  name: string
+  tier: 'PRODUCTION' | 'STAGING' | 'DEVELOPMENT'
+}
+
 export type ProjectWithDetails = {
   id: string
   name: string
@@ -49,9 +55,16 @@ export type ProjectWithDetails = {
   createdAt: string
   updatedAt: string
   members: ProjectMember[]
+  environments: ProjectEnvironmentSummary[]
   _count: {
     environments: number
   }
+}
+
+const environmentTierStyles: Record<ProjectEnvironmentSummary['tier'], string> = {
+  PRODUCTION: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/14',
+  STAGING: 'border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/14',
+  DEVELOPMENT: 'border-blue-500/30 bg-blue-500/10 text-blue-300 hover:bg-blue-500/14',
 }
 
 export const getColumns = (
@@ -66,9 +79,15 @@ export const getColumns = (
     cell: ({ row }) => {
       const name = row.getValue('name') as string
       const description = row.original.description
+      const projectId = row.original.id
       return (
         <div className="flex flex-col">
-          <span className="font-medium text-foreground">{name}</span>
+          <Link
+            href={`/console/projects/${projectId}`}
+            className="font-medium text-foreground transition-colors hover:text-foreground/80"
+          >
+            {name}
+          </Link>
           {description && (
             <span className="text-xs text-muted-foreground line-clamp-1 max-w-[300px]">
               {description}
@@ -132,10 +151,28 @@ export const getColumns = (
     id: 'environments',
     header: 'Environments',
     cell: ({ row }) => {
-      const count = row.original._count?.environments || 0
+      const projectId = row.original.id
+      const environments = row.original.environments ?? []
+
+      if (environments.length === 0) {
+        return <span className="text-sm text-muted-foreground">None</span>
+      }
+
       return (
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary">{count}</Badge>
+        <div className="flex max-w-[280px] flex-wrap gap-1.5">
+          {environments.map((env) => (
+            <Link
+              key={env.id}
+              href={`/console/projects/${projectId}/environments/${env.id}`}
+              className={cn(
+                'inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium transition-colors',
+                environmentTierStyles[env.tier]
+              )}
+              title={`Open ${env.name} dashboard`}
+            >
+              {env.name}
+            </Link>
+          ))}
         </div>
       )
     },

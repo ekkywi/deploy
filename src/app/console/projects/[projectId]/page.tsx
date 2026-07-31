@@ -173,11 +173,14 @@ export default function ProjectWorkspacePage({
             currentUserId={user.id}
             currentUserGlobalRole={user.role}
             projectMembers={project.members}
-            onEnvironmentDeleted={() =>
+            onEnvironmentDeleted={(environmentId) =>
               setProject((currentProject) =>
                 currentProject
                   ? {
                       ...currentProject,
+                      environments: (currentProject.environments ?? []).filter(
+                        (environment) => environment.id !== environmentId
+                      ),
                       _count: {
                         ...currentProject._count,
                         environments: Math.max(currentProject._count.environments - 1, 0),

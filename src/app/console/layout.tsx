@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import { BookOpen } from 'lucide-react'
 import { AuthGuard } from '@/components/auth/auth-guard'
 import { DashboardSidebar } from '@/components/layout/dashboard-sidebar'
 import { DashboardHeader } from '@/components/layout/dashboard-header'
@@ -16,6 +18,13 @@ export default function DashboardLayout({
           <header className="sticky top-0 z-20 flex h-11 shrink-0 items-center gap-2 border-b border-border bg-background px-3">
             <SidebarTrigger className="size-7" />
             <div className="min-w-0 flex-1" />
+            <Link
+              href="/docs"
+              className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <BookOpen className="size-3.5 shrink-0" aria-hidden />
+              <span className="hidden sm:inline">Docs</span>
+            </Link>
             <DashboardHeader />
           </header>
           <div className="min-w-0 flex-1 overflow-auto">

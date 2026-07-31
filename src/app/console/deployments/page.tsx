@@ -1,4 +1,5 @@
-import { Activity, Clock, Server } from 'lucide-react'
+import { Activity, Clock, ExternalLink, Server } from 'lucide-react'
+import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import { formatDistanceToNow } from 'date-fns'
 import { ConsolePageHeader } from '@/components/layout/console-page-header'
@@ -12,6 +13,7 @@ import { GlobalRole } from '@prisma/client'
 import { DeploymentLogDialog } from '@/components/deployment-log-dialog'
 import { DeploymentStatusBadge } from '@/components/deployment-status-badge'
 import { CancelDeployButton } from '@/components/cancel-deploy-button'
+import { Button } from '@/components/ui/button'
 
 export default async function GlobalDeploymentsPage() {
   const headersList = await headers()
@@ -71,7 +73,7 @@ export default async function GlobalDeploymentsPage() {
 
   return (
     <div className="space-y-4">
-      <ConsolePageHeader title="Deployments" />
+      <ConsolePageHeader title="Activity" />
 
       <div className="flex flex-wrap gap-1.5">
         <ConsoleStatChip label="Total" value={deployments.length} />
@@ -90,12 +92,18 @@ export default async function GlobalDeploymentsPage() {
           />
         ) : (
           <div className="divide-y divide-border">
-            {deployments.map((deploy) => (
+            {deployments.map((deploy) => {
+              const environmentHref = `/console/projects/${deploy.environment.projectId}/environments/${deploy.environmentId}`
+
+              return (
               <div
                 key={deploy.id}
                 className="flex flex-col gap-2 px-3 py-2.5 transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div className="flex min-w-0 items-start gap-3">
+                <Link
+                  href={environmentHref}
+                  className="flex min-w-0 flex-1 items-start gap-3 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
                   <div className="pt-0.5">
                     <DeploymentStatusBadge status={deploy.status} />
                   </div>
@@ -121,7 +129,7 @@ export default async function GlobalDeploymentsPage() {
                       ) : null}
                     </div>
                   </div>
-                </div>
+                </Link>
 
                 <div className="flex shrink-0 items-center gap-1.5 self-start sm:self-auto">
                   <CancelDeployButton
@@ -136,9 +144,16 @@ export default async function GlobalDeploymentsPage() {
                     deploymentId={deploy.id}
                     status={deploy.status}
                   />
+                  <Button variant="ghost" size="sm" className="h-7 px-2" asChild>
+                    <Link href={environmentHref}>
+                      <ExternalLink className="size-3.5" />
+                      <span className="sr-only">Open environment</span>
+                    </Link>
+                  </Button>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

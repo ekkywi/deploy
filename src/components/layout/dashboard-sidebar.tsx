@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  BookOpen,
   Layers,
   LayoutDashboard,
   Rocket,
@@ -38,14 +37,9 @@ const navItems = [
     icon: Layers,
   },
   {
-    title: 'Deployments',
+    title: 'Activity',
     url: '/console/deployments',
     icon: Rocket,
-  },
-  {
-    title: 'Docs',
-    url: '/docs',
-    icon: BookOpen,
   },
 ]
 
@@ -76,9 +70,7 @@ export function DashboardSidebar() {
                     isActive={
                       item.url === '/console'
                         ? pathname === item.url
-                        : item.url === '/docs'
-                          ? pathname === '/docs' || pathname.startsWith('/docs/')
-                          : pathname.startsWith(item.url)
+                        : pathname.startsWith(item.url)
                     }
                     tooltip={item.title}
                   >

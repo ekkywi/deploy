@@ -48,6 +48,18 @@ export async function GET(request: Request) {
                         }
                     }
                 },
+                environments: {
+                    where: { deletedAt: null },
+                    select: {
+                        id: true,
+                        name: true,
+                        tier: true,
+                    },
+                    orderBy: [
+                        { tier: 'asc' },
+                        { name: 'asc' },
+                    ],
+                },
                 _count: {
                     select: {
                         environments: {
@@ -152,6 +164,18 @@ export async function POST(request: Request) {
                                 }
                             }
                         }
+                    },
+                    environments: {
+                        where: { deletedAt: null },
+                        select: {
+                            id: true,
+                            name: true,
+                            tier: true,
+                        },
+                        orderBy: [
+                            { tier: 'asc' },
+                            { name: 'asc' },
+                        ],
                     },
                     _count: {
                         select: {

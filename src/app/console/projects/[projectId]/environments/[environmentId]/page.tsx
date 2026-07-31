@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Activity, GitBranch, Clock, Server } from 'lucide-react'
+import { ArrowLeft, Activity, ExternalLink, GitBranch, Clock, Globe, Server } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,6 +18,7 @@ import { RedeployButton } from '@/components/redeploy-button'
 import { RollbackButton } from '@/components/rollback-button'
 import { ConsoleEmptyState } from '@/components/layout/console-empty-state'
 import { formatDeployRef } from '@/lib/git-ref'
+import { resolveVisitTarget } from '@/lib/visit-url'
 
 export default async function EnvironmentDashboardPage({
   params,
@@ -60,6 +61,12 @@ export default async function EnvironmentDashboardPage({
 
   const isBuilding = !!activeDeployment
   const hasSuccessfulDeploy = !!lastSuccessDeploy
+  const visitTarget = resolveVisitTarget({
+    domain: environment.domain,
+    assignedPort: environment.assignedPort,
+    workerIpAddress: lastSuccessDeploy?.workerNode?.ipAddress,
+    deploymentPort: lastSuccessDeploy?.assignedPort,
+  })
 
   return (
     <div className="space-y-4">
@@ -84,12 +91,42 @@ export default async function EnvironmentDashboardPage({
                 {environment.tier}
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {environment.domain ? environment.domain : 'No domain configured'}
-            </p>
+            {visitTarget ? (
+              <a
+                href={visitTarget.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex max-w-full items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {visitTarget.kind === 'domain' ? (
+                  <Globe className="size-3 shrink-0" aria-hidden />
+                ) : (
+                  <Server className="size-3 shrink-0" aria-hidden />
+                )}
+                <span className="truncate font-mono">{visitTarget.label}</span>
+                <ExternalLink className="size-3 shrink-0 opacity-60" aria-hidden />
+              </a>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {environment.domain
+                  ? environment.domain
+                  : hasSuccessfulDeploy
+                    ? 'No domain or reachable IP yet'
+                    : 'No domain configured — IP link appears after a successful deploy'}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {visitTarget ? (
+              <Button variant="outline" size="sm" asChild>
+                <a href={visitTarget.url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="mr-1.5 size-3.5" />
+                  Visit
+                </a>
+              </Button>
+            ) : null}
+
             {environment.project.repoUrl ? (
               <Button variant="outline" size="sm" asChild>
                 <a href={environment.project.repoUrl} target="_blank" rel="noopener noreferrer">
@@ -197,6 +234,22 @@ export default async function EnvironmentDashboardPage({
           </CardHeader>
           <CardContent className="space-y-3 px-3 py-3 text-sm">
             <div className="space-y-0.5">
+              <span className="text-xs text-muted-foreground">URL</span>
+              {visitTarget ? (
+                <a
+                  href={visitTarget.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 font-medium transition-colors hover:text-foreground"
+                >
+                  <span className="truncate font-mono text-[13px]">{visitTarget.label}</span>
+                  <ExternalLink className="size-3 shrink-0 opacity-60" aria-hidden />
+                </a>
+              ) : (
+                <p className="font-medium text-muted-foreground">Unavailable</p>
+              )}
+            </div>
+            <div className="space-y-0.5">
               <span className="text-xs text-muted-foreground">Execution</span>
               <p className="font-medium">Docker</p>
             </div>
@@ -215,9 +268,12 @@ export default async function EnvironmentDashboardPage({
             <div className="space-y-0.5">
               <span className="text-xs text-muted-foreground">Worker</span>
               {lastSuccessDeploy?.workerNode ? (
-                <p className="flex items-center gap-2 font-medium">
+                <p className="flex flex-wrap items-center gap-2 font-medium">
                   <Server className="size-3 text-emerald-500" />
                   {lastSuccessDeploy.workerNode.name}
+                  <span className="font-mono text-xs text-muted-foreground">
+                    ({lastSuccessDeploy.workerNode.ipAddress})
+                  </span>
                 </p>
               ) : (
                 <p className="font-medium text-muted-foreground">Waiting for deploy</p>

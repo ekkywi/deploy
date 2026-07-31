@@ -14,6 +14,7 @@ import {
   Plus,
   Server,
   Trash2,
+  ArrowRight,
 } from 'lucide-react'
 
 import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
@@ -70,7 +71,7 @@ interface EnvironmentsTabProps {
   currentUserId: string
   currentUserGlobalRole: 'SYSADMIN' | 'MANAGER' | 'DEVELOPER'
   projectMembers: { userId: string; role: 'OWNER' | 'EDITOR' | 'VIEWER' }[]
-  onEnvironmentDeleted?: () => void
+  onEnvironmentDeleted?: (environmentId: string) => void
 }
 
 type EnvironmentFormData = {
@@ -258,7 +259,7 @@ export function EnvironmentsTab({
       toast.success(formatEnvironmentDeleteSuccessMessage(data))
       setEnvironments((prev) => prev.filter((env) => env.id !== deletedEnvironmentId))
       setDeletingEnv(null)
-      onEnvironmentDeleted?.()
+      onEnvironmentDeleted?.(deletedEnvironmentId)
       await fetchEnvironments()
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Failed to delete environment')
@@ -444,16 +445,24 @@ export function EnvironmentsTab({
           {environments.map((env) => (
             <Card
               key={env.id}
-              className="flex flex-col border-border/75 bg-card/80 transition-colors hover:border-border/90"
+              className="group relative flex flex-col border-border/75 bg-card/80 transition-colors hover:border-border hover:bg-accent/25"
             >
-              <CardHeader className="gap-3 border-b pb-4">
+              <Link
+                href={`/console/projects/${projectId}/environments/${env.id}`}
+                className="absolute inset-0 z-0 rounded-[inherit]"
+                aria-label={`Open ${env.name} dashboard`}
+              />
+
+              <CardHeader className="relative z-10 gap-3 border-b pb-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="flex size-9 items-center justify-center rounded-xl border border-border/70 bg-background/65">
                         <Server className="size-4 text-muted-foreground" />
                       </div>
-                      <CardTitle className="truncate pr-2">{env.name}</CardTitle>
+                      <CardTitle className="truncate pr-2 transition-colors group-hover:text-foreground">
+                        {env.name}
+                      </CardTitle>
                     </div>
 
                     {env.domain ? (
@@ -461,7 +470,8 @@ export function EnvironmentsTab({
                         href={`https://${env.domain}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex max-w-full items-center text-[11px] text-muted-foreground/80 transition-colors hover:text-foreground"
+                        className="relative z-20 inline-flex max-w-full items-center text-[11px] text-muted-foreground/80 transition-colors hover:text-foreground"
+                        onClick={(event) => event.stopPropagation()}
                       >
                         <Globe className="mr-1 size-3 shrink-0" />
                         <span className="truncate">{env.domain}</span>
@@ -475,7 +485,7 @@ export function EnvironmentsTab({
                   </div>
 
                   {canEdit ? (
-                    <div className="flex shrink-0 items-center gap-2">
+                    <div className="relative z-20 flex shrink-0 items-center gap-2">
                       <Badge
                         variant="outline"
                         className={cn('px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.16em]', tierConfig[env.tier].color)}
@@ -514,7 +524,7 @@ export function EnvironmentsTab({
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-4 pt-5">
+              <CardContent className="relative z-10 space-y-4 pt-5 pointer-events-none">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-lg border border-border/60 bg-background/55 p-3">
                     <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground/72">Stack</p>
@@ -553,13 +563,14 @@ export function EnvironmentsTab({
                 </div>
               </CardContent>
 
-              <CardFooter className="mt-auto justify-between gap-3 pt-0">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground/72">
-                  Open runtime dashboard
+              <CardFooter className="relative z-10 mt-auto items-center justify-between gap-3 border-t border-border/70 py-3 pointer-events-none">
+                <p className="text-[11px] leading-none uppercase tracking-[0.16em] text-muted-foreground/72 transition-colors group-hover:text-muted-foreground">
+                  Open dashboard
                 </p>
-                <Button variant="secondary" className="text-[13px]" size="sm" asChild>
-                  <Link href={`/console/projects/${projectId}/environments/${env.id}`}>Open Dashboard</Link>
-                </Button>
+                <span className="inline-flex h-7 items-center gap-1 text-[13px] font-medium leading-none text-muted-foreground transition-colors group-hover:text-foreground">
+                  Open
+                  <ArrowRight className="size-3.5" />
+                </span>
               </CardFooter>
             </Card>
           ))}

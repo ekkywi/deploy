@@ -150,7 +150,7 @@ export default function ConsoleOverviewPage() {
             <Button variant="outline" size="sm" asChild>
               <Link href="/console/deployments">
                 <Rocket className="mr-1.5 size-3.5" />
-                Deployments
+                Activity
               </Link>
             </Button>
             <Button size="sm" asChild>
@@ -238,7 +238,7 @@ export default function ConsoleOverviewPage() {
             href="/console/deployments"
             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
-            View all
+            View activity
             <ArrowRight className="size-3" />
           </Link>
         </div>
@@ -265,13 +265,17 @@ export default function ConsoleOverviewPage() {
               {recentDeployments.map((deployment) => {
                 const meta = getDeploymentStatusMeta(deployment.status)
                 const StatusIcon = meta.icon
+                const environmentHref = `/console/projects/${deployment.projectId}/environments/${deployment.environmentId}`
 
                 return (
                   <div
                     key={deployment.id}
                     className="flex flex-col gap-2 px-3 py-2.5 transition-colors hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="flex min-w-0 items-center gap-2.5">
+                    <Link
+                      href={environmentHref}
+                      className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
                       <StatusIcon
                         className={`size-3.5 shrink-0 ${meta.iconClassName} ${meta.spin ? 'animate-spin' : ''}`}
                         aria-hidden
@@ -292,7 +296,7 @@ export default function ConsoleOverviewPage() {
                           ) : null}
                         </div>
                       </div>
-                    </div>
+                    </Link>
 
                     <div className="flex items-center gap-1.5 self-start sm:self-auto">
                       <CancelDeployButton
@@ -308,9 +312,7 @@ export default function ConsoleOverviewPage() {
                         status={deployment.status}
                       />
                       <Button variant="ghost" size="sm" className="h-7 px-2" asChild>
-                        <Link
-                          href={`/console/projects/${deployment.projectId}/environments/${deployment.environmentId}`}
-                        >
+                        <Link href={environmentHref}>
                           <ExternalLink className="size-3.5" />
                           <span className="sr-only">Open environment</span>
                         </Link>
