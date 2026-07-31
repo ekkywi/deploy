@@ -9,12 +9,13 @@ import {
   Key,
   Copy,
   CheckCircle2,
-  ShieldAlert,
   Loader2,
   Edit2,
   Trash2,
   Power,
   AlertTriangle,
+  RefreshCw,
+  HeartPulse,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -25,7 +26,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { ConsolePageHeader } from '@/components/layout/console-page-header'
 import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
-import { TierOptionGrid, type TierOption } from '@/components/tier-option-grid'
+import { WorkerTierPicker } from '@/components/worker-tier-picker'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
@@ -44,28 +45,43 @@ type WorkerNode = {
   }
 }
 
+type WorkerHealthStatus = 'online' | 'unreachable' | 'unauthorized'
+
+type WorkerHealthResult = {
+  workerId: string
+  status: WorkerHealthStatus
+  latencyMs: number
+  checkedAt: string
+  uptimeSeconds?: number
+  error?: string
+}
+
 const AVAILABLE_TIERS = ['DEVELOPMENT', 'STAGING', 'PRODUCTION'] as const satisfies readonly TierValue[]
 
-const tierOptions: TierOption[] = [
-  {
-    value: 'DEVELOPMENT',
-    label: 'Development',
-    description: 'Best for active iteration, quick feedback, and isolated test runs.',
-    accentClassName: 'border-blue-500/30 bg-blue-500/6',
-  },
-  {
-    value: 'STAGING',
-    label: 'Staging',
-    description: 'Use for release previews and validation before production traffic.',
-    accentClassName: 'border-amber-500/30 bg-amber-500/6',
-  },
-  {
-    value: 'PRODUCTION',
-    label: 'Production',
-    description: 'Reserved for live workloads with the strictest isolation expectations.',
-    accentClassName: 'border-emerald-500/30 bg-emerald-500/6',
-  },
-]
+const TIER_LABELS: Record<TierValue, string> = {
+  DEVELOPMENT: 'Development',
+  STAGING: 'Staging',
+  PRODUCTION: 'Production',
+}
+
+function formatLatency(ms: number) {
+  return `${ms}ms`
+}
+
+function healthLabel(status: WorkerHealthStatus | 'checking' | undefined) {
+  switch (status) {
+    case 'online':
+      return 'Online'
+    case 'unauthorized':
+      return 'Auth error'
+    case 'unreachable':
+      return 'Offline'
+    case 'checking':
+      return 'Checking'
+    default:
+      return 'Unknown'
+  }
+}
 
 export default function InfrastructurePage() {
   const [workers, setWorkers] = useState<WorkerNode[]>([])
@@ -75,6 +91,9 @@ export default function InfrastructurePage() {
   const [editWorker, setEditWorker] = useState<WorkerNode | null>(null)
   const [deleteWorker, setDeleteWorker] = useState<WorkerNode | null>(null)
   const [isActionLoading, setIsActionLoading] = useState(false)
+  const [healthById, setHealthById] = useState<Record<string, WorkerHealthResult>>({})
+  const [checkingIds, setCheckingIds] = useState<Set<string>>(new Set())
+  const [isCheckingAll, setIsCheckingAll] = useState(false)
   const [formData, setFormData] = useState(() => ({
     name: '',
     ipAddress: '',
@@ -91,17 +110,68 @@ export default function InfrastructurePage() {
       if (!res.ok) throw new Error('Failed to fetch worker nodes')
       const data = await res.json()
       setWorkers(data.workers)
+      return data.workers as WorkerNode[]
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Error loading nodes')
+      return [] as WorkerNode[]
     }
   }, [])
+
+  const applyHealthResults = useCallback((results: WorkerHealthResult[]) => {
+    setHealthById((prev) => {
+      const next = { ...prev }
+      for (const result of results) {
+        next[result.workerId] = result
+      }
+      return next
+    })
+  }, [])
+
+  const checkAllHealth = useCallback(async () => {
+    setIsCheckingAll(true)
+    try {
+      const res = await fetch('/api/admin/workers/health')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Health check failed')
+      applyHealthResults(data.results as WorkerHealthResult[])
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Health check failed')
+    } finally {
+      setIsCheckingAll(false)
+    }
+  }, [applyHealthResults])
+
+  const checkWorkerHealth = useCallback(
+    async (workerId: string) => {
+      setCheckingIds((prev) => new Set(prev).add(workerId))
+      try {
+        const res = await fetch(`/api/admin/workers/${workerId}/health`)
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Health check failed')
+        applyHealthResults([data.health as WorkerHealthResult])
+      } catch (error: unknown) {
+        toast.error(error instanceof Error ? error.message : 'Health check failed')
+      } finally {
+        setCheckingIds((prev) => {
+          const next = new Set(prev)
+          next.delete(workerId)
+          return next
+        })
+      }
+    },
+    [applyHealthResults]
+  )
 
   useEffect(() => {
     let isMounted = true
 
     const loadWorkers = async () => {
-      await refreshWorkers()
-      if (isMounted) setIsLoading(false)
+      const loaded = await refreshWorkers()
+      if (!isMounted) return
+      setIsLoading(false)
+      if (loaded.length > 0) {
+        void checkAllHealth()
+      }
     }
 
     void loadWorkers()
@@ -109,7 +179,7 @@ export default function InfrastructurePage() {
     return () => {
       isMounted = false
     }
-  }, [refreshWorkers])
+  }, [refreshWorkers, checkAllHealth])
 
   const resetForm = () =>
     setFormData({
@@ -136,6 +206,7 @@ export default function InfrastructurePage() {
       setIsRegisterOpen(false)
       resetForm()
       await refreshWorkers()
+      void checkAllHealth()
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : 'Registration failed')
     } finally {
@@ -218,6 +289,7 @@ export default function InfrastructurePage() {
     total: workers.length,
     active: workers.filter((worker) => worker.isActive).length,
     disabled: workers.filter((worker) => !worker.isActive).length,
+    online: workers.filter((worker) => healthById[worker.id]?.status === 'online').length,
     deployments: workers.reduce((total, worker) => total + worker._count.deployments, 0),
   }
 
@@ -247,89 +319,104 @@ export default function InfrastructurePage() {
       <ConsolePageHeader
         title="Infrastructure"
         actions={
-          <Dialog
-            open={isRegisterOpen}
-            onOpenChange={(open) => {
-              setIsRegisterOpen(open)
-              if (!open) resetForm()
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1.5">
-                <Plus className="size-4" /> Register Worker
+          <div className="flex items-center gap-2">
+            {workers.length > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => void checkAllHealth()}
+                disabled={isCheckingAll}
+              >
+                {isCheckingAll ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <HeartPulse className="size-3.5" />
+                )}
+                Check health
               </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[640px]">
-              <form onSubmit={handleRegisterWorker}>
+            ) : null}
+            <Dialog
+              open={isRegisterOpen}
+              onOpenChange={(open) => {
+                setIsRegisterOpen(open)
+                if (!open) resetForm()
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1.5">
+                  <Plus className="size-4" /> Register Worker
+                </Button>
+              </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <form onSubmit={handleRegisterWorker} className="space-y-4">
                 <DialogHeader>
-                  <DialogTitle>Register Worker Node</DialogTitle>
+                  <DialogTitle>Register worker</DialogTitle>
                   <DialogDescription>
-                    Add a new execution node and define its supported workload isolation.
+                    Add a host that runs deployments for your environments.
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="grid gap-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Worker Name</Label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="worker-name" className="text-xs">
+                      Name
+                    </Label>
                     <Input
+                      id="worker-name"
+                      placeholder="worker-01"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
                       minLength={2}
+                      className="h-9"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>IPv4 Address</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="worker-ip" className="text-xs">
+                      IPv4 address
+                    </Label>
                     <Input
+                      id="worker-ip"
+                      placeholder="192.168.1.10"
                       value={formData.ipAddress}
                       onChange={(e) => setFormData({ ...formData, ipAddress: e.target.value })}
                       required
+                      className="h-9 font-mono text-sm"
                     />
-                  </div>
-
-                  <div className="rounded-lg border border-border/70 bg-muted/16 p-4">
-                    <TierOptionGrid
-                      options={tierOptions}
-                      selectedValues={formData.supportedTiers}
-                      onChange={(nextValues) =>
-                        setFormData((prev) => ({ ...prev, supportedTiers: nextValues as TierValue[] }))
-                      }
-                      mode="multi"
-                      label="Allowed Workload Tiers"
-                      helperText="Choose every tier this worker can host. Keeping production separate is the safest default."
-                    />
-
-                    {formData.supportedTiers.length === 0 ? (
-                      <p className="mt-3 text-[11px] text-destructive">
-                        Select at least one tier before registering.
-                      </p>
-                    ) : null}
-
-                    {isMixingProduction ? (
-                      <div className="mt-3 flex items-start gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-[13px] text-amber-600 dark:text-amber-400">
-                        <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                        <p className="leading-relaxed">
-                          <strong>Production sharing warning:</strong> this worker mixes production with lower
-                          environments. Keep enough headroom to avoid noisy-neighbor OOM events.
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-2 flex items-start gap-3 rounded-xl border bg-muted/50 p-3 text-sm">
-                    <ShieldAlert className="mt-0.5 size-5 shrink-0 text-amber-500" />
-                    <p className="leading-relaxed text-muted-foreground">
-                      A secure Agent Token will be generated automatically. You must insert this token into the
-                      Docker Agent environment variables on the target machine.
-                    </p>
                   </div>
                 </div>
 
-                <DialogFooter>
+                <WorkerTierPicker
+                  value={formData.supportedTiers}
+                  onChange={(supportedTiers) =>
+                    setFormData((prev) => ({ ...prev, supportedTiers }))
+                  }
+                />
+
+                {formData.supportedTiers.length === 0 ? (
+                  <p className="text-[11px] text-destructive">Select at least one tier.</p>
+                ) : null}
+
+                {isMixingProduction ? (
+                  <p className="flex items-start gap-1.5 text-[11px] leading-4 text-amber-500">
+                    <AlertTriangle className="mt-0.5 size-3 shrink-0" aria-hidden />
+                    Production is mixed with lower tiers — keep spare capacity on this host.
+                  </p>
+                ) : null}
+
+                <p className="text-[11px] leading-4 text-muted-foreground">
+                  A secure agent token is generated after register. Paste it into the agent{' '}
+                  <code className="text-foreground">.env</code> on that machine.
+                </p>
+
+                <DialogFooter className="gap-2 sm:gap-2">
                   <Button
                     type="button"
                     variant="outline"
+                    size="sm"
                     onClick={() => setIsRegisterOpen(false)}
                     disabled={isActionLoading}
                   >
@@ -337,6 +424,7 @@ export default function InfrastructurePage() {
                   </Button>
                   <Button
                     type="submit"
+                    size="sm"
                     disabled={
                       isActionLoading ||
                       !formData.name ||
@@ -344,21 +432,23 @@ export default function InfrastructurePage() {
                       formData.supportedTiers.length === 0
                     }
                   >
-                    {isActionLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+                    {isActionLoading && <Loader2 className="mr-1.5 size-3.5 animate-spin" />}
                     Register
                   </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         }
       />
 
       <div className="flex flex-wrap gap-1.5">
         <ConsoleStatChip label="Total Nodes" value={stats.total} />
-        <ConsoleStatChip label="Active" value={stats.active} variant="active" />
+        <ConsoleStatChip label="Online" value={stats.online} variant="active" />
+        <ConsoleStatChip label="Enabled" value={stats.active} variant="info" />
         <ConsoleStatChip label="Maintenance" value={stats.disabled} variant="destructive" />
-        <ConsoleStatChip label="Containers" value={stats.deployments} variant="info" />
+        <ConsoleStatChip label="Containers" value={stats.deployments} />
       </div>
 
       {workers.length === 0 ? (
@@ -371,7 +461,12 @@ export default function InfrastructurePage() {
         </Card>
       ) : (
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {workers.map((worker) => (
+          {workers.map((worker) => {
+            const health = healthById[worker.id]
+            const isChecking = checkingIds.has(worker.id) || (isCheckingAll && !health)
+            const reachability = isChecking ? 'checking' : health?.status
+
+            return (
             <Card
               key={worker.id}
               className="flex flex-col overflow-hidden transition-colors hover:border-border/80"
@@ -384,25 +479,57 @@ export default function InfrastructurePage() {
                         {worker.name}
                       </CardTitle>
                       <Badge
-                        variant={worker.isActive ? 'default' : 'secondary'}
+                        variant="secondary"
                         className={cn(
                           'text-[9px] uppercase tracking-[0.16em]',
                           worker.isActive
-                            ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-500'
-                            : 'bg-amber-500/10 text-amber-300 hover:bg-amber-500/10'
+                            ? 'bg-muted text-muted-foreground'
+                            : 'bg-amber-500/10 text-amber-300'
                         )}
                       >
-                        {worker.isActive ? 'Ready' : 'Maintenance'}
+                        {worker.isActive ? 'Enabled' : 'Maintenance'}
+                      </Badge>
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          'text-[9px] uppercase tracking-[0.16em]',
+                          reachability === 'online' &&
+                            'bg-emerald-500/15 text-emerald-400',
+                          reachability === 'unreachable' &&
+                            'bg-red-500/15 text-red-400',
+                          reachability === 'unauthorized' &&
+                            'bg-amber-500/15 text-amber-300',
+                          (reachability === 'checking' || !reachability) &&
+                            'bg-muted text-muted-foreground'
+                        )}
+                        title={health?.error}
+                      >
+                        {healthLabel(reachability)}
                       </Badge>
                     </div>
-                    <CardDescription className="font-mono text-[11px]">{worker.ipAddress}</CardDescription>
+                    <CardDescription className="font-mono text-[11px]">{worker.ipAddress}:4000</CardDescription>
                   </div>
 
                   <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      title="Check health"
+                      disabled={isChecking}
+                      onClick={() => void checkWorkerHealth(worker.id)}
+                    >
+                      {isChecking ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="size-4" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className={`h-8 w-8 ${worker.isActive ? 'text-emerald-500' : 'text-amber-500'}`}
+                      title={worker.isActive ? 'Put in maintenance' : 'Enable worker'}
                       onClick={() => handleToggleStatus(worker)}
                     >
                       <Power className="size-4" />
@@ -440,13 +567,13 @@ export default function InfrastructurePage() {
                       variant="secondary"
                       className="bg-muted/60 text-[9px] uppercase tracking-wider text-muted-foreground"
                     >
-                      {tierOptions.find((item) => item.value === tier)?.label ?? tier}
+                      {TIER_LABELS[tier] ?? tier}
                     </Badge>
                   ))}
                 </div>
               </CardHeader>
 
-              <CardContent className="flex-1 pb-4 pt-5">
+              <CardContent className="flex-1 space-y-3 pb-4 pt-5">
                 <div className="flex items-center justify-between text-sm text-muted-foreground/80">
                   <div className="flex items-center gap-1.5">
                     <Activity className="size-4" />
@@ -456,6 +583,19 @@ export default function InfrastructurePage() {
                     {worker.supportedTiers.length} tier{worker.supportedTiers.length === 1 ? '' : 's'}
                   </span>
                 </div>
+                {health ? (
+                  <p className="text-[11px] text-muted-foreground">
+                    Last check {formatLatency(health.latencyMs)}
+                    {typeof health.uptimeSeconds === 'number'
+                      ? ` · up ${Math.floor(health.uptimeSeconds / 60)}m`
+                      : ''}
+                    {health.error ? ` · ${health.error}` : ''}
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">
+                    Health not checked yet.
+                  </p>
+                )}
               </CardContent>
 
               <CardFooter className="flex flex-col items-start gap-2 border-t bg-muted/25 pt-4">
@@ -481,7 +621,8 @@ export default function InfrastructurePage() {
                 </div>
               </CardFooter>
             </Card>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -494,54 +635,76 @@ export default function InfrastructurePage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-[640px]">
-          <form onSubmit={handleEditWorker}>
+        <DialogContent className="sm:max-w-md">
+          <form onSubmit={handleEditWorker} className="space-y-4">
             <DialogHeader>
-              <DialogTitle>Edit Worker Node</DialogTitle>
-              <DialogDescription>Update connection details and allowed workloads.</DialogDescription>
+              <DialogTitle>Edit worker</DialogTitle>
+              <DialogDescription>Update connection details and allowed tiers.</DialogDescription>
             </DialogHeader>
 
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label>Worker Name</Label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-worker-name" className="text-xs">
+                  Name
+                </Label>
                 <Input
+                  id="edit-worker-name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
                   minLength={2}
+                  className="h-9"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>IPv4 Address</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-worker-ip" className="text-xs">
+                  IPv4 address
+                </Label>
                 <Input
+                  id="edit-worker-ip"
                   value={formData.ipAddress}
                   onChange={(e) => setFormData({ ...formData, ipAddress: e.target.value })}
                   required
-                />
-              </div>
-
-              <div className="rounded-lg border border-border/70 bg-muted/16 p-4">
-                <TierOptionGrid
-                  options={tierOptions}
-                  selectedValues={formData.supportedTiers}
-                  onChange={(nextValues) =>
-                    setFormData((prev) => ({ ...prev, supportedTiers: nextValues as TierValue[] }))
-                  }
-                  mode="multi"
-                  label="Allowed Workload Tiers"
-                  helperText="Adjust which environments this node can serve. Production should stay isolated unless capacity is intentionally shared."
+                  className="h-9 font-mono text-sm"
                 />
               </div>
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditWorker(null)}>
+            <WorkerTierPicker
+              value={formData.supportedTiers}
+              onChange={(supportedTiers) =>
+                setFormData((prev) => ({ ...prev, supportedTiers }))
+              }
+            />
+
+            {formData.supportedTiers.length === 0 ? (
+              <p className="text-[11px] text-destructive">Select at least one tier.</p>
+            ) : null}
+
+            {isMixingProduction ? (
+              <p className="flex items-start gap-1.5 text-[11px] leading-4 text-amber-500">
+                <AlertTriangle className="mt-0.5 size-3 shrink-0" aria-hidden />
+                Production is mixed with lower tiers — keep spare capacity on this host.
+              </p>
+            ) : null}
+
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEditWorker(null)}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isActionLoading || formData.supportedTiers.length === 0}>
-                {isActionLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
-                Save Changes
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isActionLoading || formData.supportedTiers.length === 0}
+              >
+                {isActionLoading && <Loader2 className="mr-1.5 size-3.5 animate-spin" />}
+                Save changes
               </Button>
             </DialogFooter>
           </form>
