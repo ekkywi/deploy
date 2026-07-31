@@ -91,7 +91,7 @@ export function DeploymentLogViewer({
         {logs.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center space-y-3 text-zinc-600">
             <Loader2 className="size-5 animate-spin" />
-            <p>{status === 'PENDING' ? 'Menunggu alokasi Worker Node...' : 'Menghubungkan ke aliran log Proxmox...'}</p>
+            <p>{status === 'PENDING' ? 'Waiting for Worker Node allocation...' : 'Connecting to log stream...'}</p>
           </div>
         ) : (
           <div className="space-y-0.5 font-mono min-w-0">

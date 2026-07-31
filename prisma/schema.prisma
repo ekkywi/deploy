@@ -74,7 +74,6 @@ model ProjectRole {
 
 // --- GLOBAL INFRASTRUCTURE (CONTROL PLANE) ---
 
-// Ini adalah LXC Proxmox Anda yang sudah terinstal Docker
 model WorkerNode {
   id              String            @id @default(uuid())
   name            String            @unique
@@ -194,6 +193,7 @@ model AuditLog {
   targetType String
   targetId   String
   ipAddress  String?
+  metadata   Json?
   createdAt  DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)

@@ -18,6 +18,11 @@ import {
   formatProjectDeleteSuccessMessage,
 } from '@/app/console/projects/delete-message-utils';
 import {
+  enqueueProjectDeleteJob,
+  isRedisUnavailableError,
+  type TeardownJobPayload,
+} from '@/lib/queue/teardown-queue';
+import {
   reconcileDeletingEnvironment,
   teardownEnvironmentSafely,
   type DeleteWorkflowDeps,
@@ -441,6 +446,50 @@ test('formats project delete success messages with deleted and auto-stopped envi
   );
 });
 
+test('project delete queue helper returns 202 when enqueue succeeds', async () => {
+  const payload: TeardownJobPayload = {
+    projectId: 'project-1',
+    userId: 'user-1',
+    projectName: 'Project One',
+  };
+
+  const result = await enqueueProjectDeleteJob(payload, {
+    add: async () => ({ id: 'job-1' } as any),
+  });
+
+  assert.equal(result.status, 202);
+  assert.deepEqual(result.body, {
+    message: 'Project deletion queued successfully. It will be removed in the background.',
+    status: 'PROCESSING',
+  });
+});
+
+test('project delete queue helper maps Redis connection failures to 503', async () => {
+  const payload: TeardownJobPayload = {
+    projectId: 'project-1',
+    userId: 'user-1',
+    projectName: 'Project One',
+  };
+
+  const result = await enqueueProjectDeleteJob(payload, {
+    add: async () => {
+      throw new Error('connect ECONNREFUSED 172.31.254.131:6379');
+    },
+  });
+
+  assert.equal(result.status, 503);
+  assert.deepEqual(result.body, {
+    error: 'Project deletion is temporarily unavailable because the queue cannot reach Redis. Please try again shortly.',
+    retryable: true,
+  });
+});
+
+test('redis unavailable detection follows connection-level failures', () => {
+  assert.equal(isRedisUnavailableError(new Error('connect ECONNREFUSED 172.31.254.131:6379')), true);
+  assert.equal(isRedisUnavailableError(new Error('Reached the max retries per request limit (which is 20).')), true);
+  assert.equal(isRedisUnavailableError(new Error('WRONGPASS invalid username-password pair')), false);
+});
+
 test('formats retryable environment delete errors with lifecycle context', () => {
   const message = formatEnvironmentDeleteErrorMessage({
     error: 'Failed to destroy infrastructure on the server.',
@@ -464,4 +513,10 @@ test('formats environment delete success messages with retry note when provided'
     message,
     'Environment completely destroyed and removed. Finalization can be retried if needed.'
   );
+});
+
+test('teardown queue module does not export the worker bootstrap', async () => {
+  const teardownModule = await import('@/lib/queue/teardown-queue');
+
+  assert.equal('teardownWorker' in teardownModule, false);
 });

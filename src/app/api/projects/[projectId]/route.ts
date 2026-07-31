@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { GlobalRole, ProjectRoleType } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
-import { teardownQueue } from '@/lib/queue/teardown-queue'
+import { enqueueProjectDeleteJob } from '@/lib/queue/teardown-queue'
 
 async function checkProjectAuthorization(
     userId: string,
@@ -147,19 +147,13 @@ export async function DELETE(
             return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
         }
 
-        await teardownQueue.add('delete-project-job', {
+        const deleteQueueResult = await enqueueProjectDeleteJob({
             projectId: projectId,
             userId: userId,
             projectName: authCheck.project.name
-        });
+        })
 
-        return NextResponse.json(
-            { 
-                message: 'Project deletion queued successfully. It will be removed in the background.',
-                status: 'PROCESSING'
-            }, 
-            { status: 202 }
-        );
+        return NextResponse.json(deleteQueueResult.body, { status: deleteQueueResult.status })
 
     } catch (error) {
         console.error('Delete project error:', error);

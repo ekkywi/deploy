@@ -23,7 +23,7 @@ node_modules/
 .env.development
 .env.test
 .env.production
-!.env.example # Diizinkan untuk panduan setup developer lain
+!.env.example # Allowed for other developers' setup guide
 
 # =========================================
 # PRISMA & DATABASE

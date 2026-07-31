@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "worker:teardown": "tsx src/lib/queue/teardown-worker.ts",
     "test": "env DATABASE_URL=postgres://user:pass@127.0.0.1:5432/deploy-test JWT_SECRET=test-secret node --import tsx src/run-tests.ts"
   },
   "dependencies": {

@@ -123,6 +123,9 @@ export async function deleteProjectWorkflow(
                 action: 'DELETE_PROJECT',
                 targetType: 'PROJECT',
                 targetId: projectId,
+                metadata: {
+                    projectName: projectName
+                }
             }
         })
     })
