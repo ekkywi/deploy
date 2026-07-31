@@ -5,10 +5,18 @@ import { DeployStatus } from '@prisma/client'
 const TERMINAL_STATUSES = new Set<DeployStatus>([
   DeployStatus.SUCCESS,
   DeployStatus.FAILED,
+  DeployStatus.CANCELLED,
 ])
 
 const isDeployStatus = (status: string): status is DeployStatus => {
   return Object.values(DeployStatus).includes(status as DeployStatus)
+}
+
+function parseCommitHash(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!/^[0-9a-f]{7,40}$/i.test(trimmed)) return null
+  return trimmed.toLowerCase()
 }
 
 export async function POST(request: Request) {
@@ -40,13 +48,15 @@ export async function POST(request: Request) {
       status?: unknown
       port?: unknown
       message?: unknown
+      commitHash?: unknown
     } = await request.json()
-    const { deploymentId, status, port, message } = body
+    const { deploymentId, status, port, message, commitHash } = body
 
     const deploymentIdText = typeof deploymentId === 'string' ? deploymentId : ''
     const statusText = typeof status === 'string' ? status : ''
     const portValue = typeof port === 'number' ? port : null
     const messageText = typeof message === 'string' ? message : undefined
+    const commitHashValue = parseCommitHash(commitHash)
 
     if (!deploymentIdText || !statusText) {
       return NextResponse.json(
@@ -93,10 +103,14 @@ export async function POST(request: Request) {
     if (
       statusText !== DeployStatus.SUCCESS &&
       statusText !== DeployStatus.FAILED &&
-      statusText !== DeployStatus.BUILDING
+      statusText !== DeployStatus.BUILDING &&
+      statusText !== DeployStatus.CANCELLED
     ) {
       return NextResponse.json(
-        { error: 'Bad Request: Agents may only report BUILDING, SUCCESS, or FAILED.' },
+        {
+          error:
+            'Bad Request: Agents may only report BUILDING, SUCCESS, FAILED, or CANCELLED.',
+        },
         { status: 400 }
       )
     }
@@ -106,13 +120,22 @@ export async function POST(request: Request) {
       errorMessage?: string | null
       assignedPort?: number
       workerNodeId?: string
+      commitHash?: string
     } = {
       status: statusText,
       workerNodeId: worker.id,
     }
 
-    if (statusText === DeployStatus.FAILED) {
-      updateData.errorMessage = messageText ?? 'Deployment failed.'
+    if (commitHashValue) {
+      updateData.commitHash = commitHashValue
+    }
+
+    if (statusText === DeployStatus.FAILED || statusText === DeployStatus.CANCELLED) {
+      updateData.errorMessage =
+        messageText ??
+        (statusText === DeployStatus.CANCELLED
+          ? 'Cancelled by user.'
+          : 'Deployment failed.')
     }
 
     if (statusText === DeployStatus.SUCCESS) {
@@ -135,7 +158,7 @@ export async function POST(request: Request) {
     }
 
     console.log(
-      `[WEBHOOK] Deployment ${deploymentIdText} updated to ${statusText} (Port: ${portValue || 'N/A'})`
+      `[WEBHOOK] Deployment ${deploymentIdText} updated to ${statusText} (Port: ${portValue || 'N/A'}${commitHashValue ? `, Commit: ${commitHashValue.slice(0, 7)}` : ''})`
     )
 
     return NextResponse.json(

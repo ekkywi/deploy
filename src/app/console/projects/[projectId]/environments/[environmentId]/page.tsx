@@ -11,9 +11,13 @@ import { EnvVarsManager } from './env-vars-manager'
 import { DeployStatus } from '@prisma/client'
 import { ToggleStateButton } from './toggle-state-button'
 import { formatDistanceToNow } from 'date-fns'
+import { CancelDeployButton } from '@/components/cancel-deploy-button'
 import { DeploymentLogDialog } from '@/components/deployment-log-dialog'
 import { DeploymentStatusBadge } from '@/components/deployment-status-badge'
+import { RedeployButton } from '@/components/redeploy-button'
+import { RollbackButton } from '@/components/rollback-button'
 import { ConsoleEmptyState } from '@/components/layout/console-empty-state'
+import { formatDeployRef } from '@/lib/git-ref'
 
 export default async function EnvironmentDashboardPage({
   params,
@@ -102,6 +106,13 @@ export default async function EnvironmentDashboardPage({
               hasSuccessfulDeploy={hasSuccessfulDeploy}
             />
 
+            <RedeployButton
+              projectId={projectId}
+              environmentId={environmentId}
+              branchName={environment.branchName}
+              disabled={isBuilding || !environment.project.repoUrl}
+            />
+
             <DeployButton
               projectId={projectId}
               environmentId={environmentId}
@@ -134,10 +145,8 @@ export default async function EnvironmentDashboardPage({
                     <div className="flex min-w-0 items-start gap-2.5">
                       <DeploymentStatusBadge status={deploy.status} />
                       <div className="min-w-0">
-                        <p className="truncate text-sm">
-                          {deploy.commitHash
-                            ? deploy.commitHash.substring(0, 7)
-                            : 'Manual deploy'}
+                        <p className="truncate font-mono text-sm">
+                          {formatDeployRef(deploy.commitHash)}
                         </p>
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                           <span className="inline-flex items-center gap-1">
@@ -153,12 +162,28 @@ export default async function EnvironmentDashboardPage({
                         </div>
                       </div>
                     </div>
-                    <DeploymentLogDialog
-                      projectId={projectId}
-                      environmentId={environmentId}
-                      deploymentId={deploy.id}
-                      status={deploy.status}
-                    />
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <RollbackButton
+                        projectId={projectId}
+                        environmentId={environmentId}
+                        deploymentId={deploy.id}
+                        commitHash={deploy.commitHash}
+                        status={deploy.status}
+                        disabled={isBuilding}
+                      />
+                      <CancelDeployButton
+                        projectId={projectId}
+                        environmentId={environmentId}
+                        deploymentId={deploy.id}
+                        status={deploy.status}
+                      />
+                      <DeploymentLogDialog
+                        projectId={projectId}
+                        environmentId={environmentId}
+                        deploymentId={deploy.id}
+                        status={deploy.status}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -171,6 +196,10 @@ export default async function EnvironmentDashboardPage({
             <CardTitle className="text-sm font-medium">Runtime</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 px-3 py-3 text-sm">
+            <div className="space-y-0.5">
+              <span className="text-xs text-muted-foreground">Execution</span>
+              <p className="font-medium">Docker</p>
+            </div>
             <div className="space-y-0.5">
               <span className="text-xs text-muted-foreground">Stack</span>
               <p className="font-medium">{environment.stackType}</p>

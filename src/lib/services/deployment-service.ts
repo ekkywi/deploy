@@ -1,20 +1,45 @@
 import prisma from '@/lib/prisma'
 import { DeployStatus } from '@prisma/client'
 import { logAudit } from '@/lib/audit-logger'
+import { isGitCommitSha } from '@/lib/git-ref'
 import {
   deploymentBlockedMessage,
   isDeploymentBlockedByLifecycle,
 } from '@/lib/services/environment-lifecycle'
 
+export type DeployAuditAction =
+  | 'TRIGGER_DEPLOYMENT'
+  | 'WEBHOOK_DEPLOYMENT'
+  | 'REDEPLOY'
+  | 'ROLLBACK_DEPLOYMENT'
+
+export type ExecuteDeploymentMeta = {
+  action?: DeployAuditAction
+  /** When false, do not overwrite environment.branchName (used for SHA rollbacks). */
+  updateBranchName?: boolean
+  sourceDeploymentId?: string
+}
+
+export { isGitCommitSha } from '@/lib/git-ref'
+
 export async function executeDeploymentService(
   environmentId: string,
-  branch: string,
+  gitRef: string,
   actorId: string,
-  request?: Request
+  request?: Request,
+  meta?: ExecuteDeploymentMeta
 ) {
   let deploymentId: string | null = null
+  const ref = gitRef.trim()
+  const action: DeployAuditAction =
+    meta?.action ?? (request ? 'TRIGGER_DEPLOYMENT' : 'WEBHOOK_DEPLOYMENT')
+  const updateBranchName = meta?.updateBranchName ?? !isGitCommitSha(ref)
 
   try {
+    if (!ref) {
+      throw new Error('A git branch or commit is required.')
+    }
+
     const environment = await prisma.environment.findUnique({
       where: { id: environmentId, deletedAt: null },
       include: { project: true, variables: true },
@@ -92,7 +117,10 @@ export async function executeDeploymentService(
 
     await prisma.environment.update({
       where: { id: environmentId },
-      data: { assignedPort: targetPort, branchName: branch },
+      data: {
+        assignedPort: targetPort,
+        ...(updateBranchName ? { branchName: ref } : {}),
+      },
     })
 
     const newDeployment = await prisma.deployment.create({
@@ -101,7 +129,7 @@ export async function executeDeploymentService(
         workerNodeId: selectedWorker.id,
         status: DeployStatus.PENDING,
         assignedPort: targetPort,
-        commitHash: branch,
+        commitHash: ref,
         logFilePath: `/logs/${environmentId}-${Date.now()}.log`,
       },
     })
@@ -109,10 +137,13 @@ export async function executeDeploymentService(
 
     logAudit({
       userId: actorId,
-      action: request ? 'TRIGGER_DEPLOYMENT' : 'WEBHOOK_DEPLOYMENT',
+      action,
       targetType: 'ENVIRONMENT',
       targetId: environmentId,
-      request: request,
+      request,
+      metadata: meta?.sourceDeploymentId
+        ? { sourceDeploymentId: meta.sourceDeploymentId, gitRef: ref }
+        : { gitRef: ref },
     })
 
     const agentUrl = `http://${selectedWorker.ipAddress}:4000/api/deploy`
@@ -123,7 +154,7 @@ export async function executeDeploymentService(
       stackType: environment.stackType,
       nodeVersion: environment.nodeVersion,
       environmentName: environment.name,
-      branch: branch,
+      branch: ref,
       targetPort: targetPort,
       envVars: environment.variables.map((v) => ({ key: v.key, value: v.value })),
     }
@@ -151,7 +182,7 @@ export async function executeDeploymentService(
       data: { status: DeployStatus.BUILDING },
     })
 
-    return { success: true, deployment: updatedDeployment }
+    return { success: true as const, deployment: updatedDeployment }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown deployment error'
     console.error(`[Deploy Service]`, message)
@@ -166,6 +197,96 @@ export async function executeDeploymentService(
       })
     }
 
-    return { success: false, error: message }
+    return { success: false as const, error: message }
   }
+}
+
+export async function redeployEnvironmentService(
+  environmentId: string,
+  actorId: string,
+  request?: Request
+) {
+  const environment = await prisma.environment.findUnique({
+    where: { id: environmentId, deletedAt: null },
+    select: { branchName: true },
+  })
+
+  if (!environment) {
+    return { success: false as const, error: 'Environment not found.' }
+  }
+
+  let gitRef = environment.branchName?.trim() || ''
+
+  if (!gitRef) {
+    const lastSuccess = await prisma.deployment.findFirst({
+      where: { environmentId, status: DeployStatus.SUCCESS, commitHash: { not: null } },
+      orderBy: { createdAt: 'desc' },
+      select: { commitHash: true },
+    })
+    gitRef = lastSuccess?.commitHash?.trim() || ''
+  }
+
+  if (!gitRef) {
+    return {
+      success: false as const,
+      error: 'No branch or previous successful commit available to redeploy.',
+    }
+  }
+
+  return executeDeploymentService(environmentId, gitRef, actorId, request, {
+    action: 'REDEPLOY',
+    updateBranchName: !isGitCommitSha(gitRef),
+  })
+}
+
+export async function rollbackDeploymentService(
+  environmentId: string,
+  sourceDeploymentId: string,
+  actorId: string,
+  request?: Request
+) {
+  const source = await prisma.deployment.findFirst({
+    where: { id: sourceDeploymentId, environmentId },
+    select: { id: true, status: true, commitHash: true },
+  })
+
+  if (!source) {
+    return { success: false as const, error: 'Source deployment not found.', status: 404 }
+  }
+
+  if (source.status !== DeployStatus.SUCCESS) {
+    return {
+      success: false as const,
+      error: 'Only successful deployments can be rolled back to.',
+      status: 409,
+    }
+  }
+
+  const commitHash = source.commitHash?.trim() || ''
+  if (!isGitCommitSha(commitHash)) {
+    return {
+      success: false as const,
+      error:
+        'This deployment has no recorded commit SHA. Redeploy a new build first, then rollback will be available.',
+      status: 409,
+    }
+  }
+
+  const result = await executeDeploymentService(
+    environmentId,
+    commitHash,
+    actorId,
+    request,
+    {
+      action: 'ROLLBACK_DEPLOYMENT',
+      updateBranchName: false,
+      sourceDeploymentId: source.id,
+    }
+  )
+
+  if (!result.success) {
+    return { success: false as const, error: result.error, status: 502 }
+  }
+
+  return result
 }

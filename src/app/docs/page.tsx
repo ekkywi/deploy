@@ -7,8 +7,9 @@ export default function DocsHomePage() {
       <h1>Documentation</h1>
       <p>
         Deploy is a self-hosted control plane for shipping apps onto your own worker
-        nodes. Use these guides to run the console day to day, or to install it for
-        your team.
+        nodes. Apps are built and run as <strong>Docker containers</strong> — Docker
+        is the only runtime supported right now. Use these guides to run the console
+        day to day, or to install it for your team.
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2">

@@ -149,6 +149,7 @@ export async function GET(request: Request) {
         BUILDING: 0,
         SUCCESS: 0,
         FAILED: 0,
+        CANCELLED: 0,
       }
     )
 

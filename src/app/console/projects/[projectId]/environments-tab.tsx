@@ -320,7 +320,11 @@ export function EnvironmentsTab({
               <form onSubmit={handleCreate} className="flex max-h-[calc(100vh-2rem)] flex-col">
                 <DialogHeader className="shrink-0 px-4 pt-4">
                   <DialogTitle>Create Environment</DialogTitle>
-                  <DialogDescription>Create a new environment for this project.</DialogDescription>
+                  <DialogDescription>
+                    Create a new environment for this project. Deploys run as Docker
+                    containers on your workers — Docker is the only runtime supported
+                    right now.
+                  </DialogDescription>
                 </DialogHeader>
 
                 <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
@@ -362,6 +366,10 @@ export function EnvironmentsTab({
 
                       <div className="space-y-2">
                         <Label>Tech Stack</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Built and run as a Docker container on your workers. Docker is
+                          the only runtime supported right now.
+                        </p>
                         <select
                           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                           value={createData.stackType}
@@ -522,7 +530,7 @@ export function EnvironmentsTab({
                     </p>
                     <div className="mt-2 flex items-center gap-2 text-[13px] font-medium text-foreground">
                       <Server className="size-4 text-muted-foreground" />
-                      <span>{isNodeStack(env.stackType) ? `Node ${env.nodeVersion || '22'}` : 'Docker Pool'}</span>
+                      <span>{isNodeStack(env.stackType) ? `Node ${env.nodeVersion || '22'}` : 'Docker'}</span>
                     </div>
                   </div>
                 </div>

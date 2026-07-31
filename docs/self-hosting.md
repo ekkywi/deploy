@@ -1,6 +1,6 @@
 # Self-hosting guide
 
-This guide covers running the Deploy **control plane** with Docker Compose. Worker hosts still need a separate deploy agent process that can talk to Docker and clone your git repositories.
+This guide covers running the Deploy **control plane** with Docker Compose. Worker hosts still need a separate deploy agent process that can talk to Docker and clone your git repositories. **Docker is the only execution runtime supported right now** — apps are built and run as containers on worker hosts.
 
 ## Architecture at a glance
 
@@ -65,7 +65,7 @@ After the first successful boot, set `SEED_ON_START=false`. Re-running seed will
 
 ## 3. Register a worker node
 
-1. Provision a Linux host with Docker installed.
+1. Provision a Linux host with Docker installed (required — only Docker is supported).
 2. Run the **deploy agent** on that host (separate repository/process) listening on port **4000**, with an auth token.
 3. In the console: **Admin → Infrastructure →** add a worker with the host’s reachable IPv4 and matching token.
 4. On the worker host, set `AGENT_AUTH_TOKEN` to that same token and `CONTROL_PLANE_URL` to your control plane base URL (for example `http://192.168.1.10:3000`). Without `CONTROL_PLANE_URL`, deploy status will not update in the console.

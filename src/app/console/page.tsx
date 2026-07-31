@@ -17,6 +17,7 @@ import { ConsolePageHeader } from '@/components/layout/console-page-header'
 import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
 import { ConsoleEmptyState } from '@/components/layout/console-empty-state'
 import { DeploymentLogDialog } from '@/components/deployment-log-dialog'
+import { CancelDeployButton } from '@/components/cancel-deploy-button'
 import {
   DeploymentStatusBadge,
   getDeploymentStatusMeta,
@@ -32,7 +33,7 @@ type OverviewAlert = {
 
 type OverviewDeployment = {
   id: string
-  status: 'PENDING' | 'BUILDING' | 'SUCCESS' | 'FAILED'
+  status: 'PENDING' | 'BUILDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED'
   projectId: string
   environmentId: string
   projectName: string
@@ -294,6 +295,12 @@ export default function ConsoleOverviewPage() {
                     </div>
 
                     <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                      <CancelDeployButton
+                        projectId={deployment.projectId}
+                        environmentId={deployment.environmentId}
+                        deploymentId={deployment.id}
+                        status={deployment.status}
+                      />
                       <DeploymentLogDialog
                         projectId={deployment.projectId}
                         environmentId={deployment.environmentId}

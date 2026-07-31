@@ -1,8 +1,8 @@
-import { CheckCircle2, Clock3, Loader2, TriangleAlert } from 'lucide-react'
+import { Ban, CheckCircle2, Clock3, Loader2, TriangleAlert } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-export type DeploymentStatus = 'PENDING' | 'BUILDING' | 'SUCCESS' | 'FAILED' | string
+export type DeploymentStatus = 'PENDING' | 'BUILDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED' | string
 
 const STATUS_META: Record<
   string,
@@ -26,6 +26,12 @@ const STATUS_META: Record<
     className: 'border-destructive/20 bg-destructive/10 text-destructive',
     iconClassName: 'text-destructive',
     icon: TriangleAlert,
+  },
+  CANCELLED: {
+    label: 'Cancelled',
+    className: 'border-border bg-muted/40 text-muted-foreground hover:bg-muted/50',
+    iconClassName: 'text-muted-foreground',
+    icon: Ban,
   },
   BUILDING: {
     label: 'Building',

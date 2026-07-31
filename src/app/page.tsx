@@ -144,8 +144,9 @@ export default function Home() {
             Ship on your own infrastructure
           </h1>
           <p className="mx-auto mt-4 max-w-lg text-base text-muted-foreground text-balance sm:text-lg">
-            A self-hosted control plane for projects, environments, and deployments —
-            built for internal teams.
+            A self-hosted control plane for projects, environments, and deployments.
+            Apps run as Docker containers on your worker hosts — Docker is the only
+            runtime supported right now.
           </p>
 
           <div className="mt-7 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
@@ -175,11 +176,11 @@ export default function Home() {
           {[
             {
               title: 'Projects & environments',
-              body: 'Connect repos, define stacks and tiers, and manage env vars in one place.',
+              body: 'Connect repos, pick a stack and tier, and manage env vars in one place.',
             },
             {
-              title: 'Deployments & logs',
-              body: 'Trigger builds, watch status, and stream logs from your worker agents.',
+              title: 'Docker on your workers',
+              body: 'Each deploy builds and runs a container via the agent on a Docker host. No other runtime is supported yet.',
             },
             {
               title: 'Self-hosted by design',
@@ -206,7 +207,8 @@ export default function Home() {
               Ready to self-host?
             </h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Install with Compose, register a worker agent, and deploy your first project.
+              Install with Compose, register a Docker worker agent, and deploy your first
+              project.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">

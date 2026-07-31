@@ -6,8 +6,10 @@ export default function SelfHostingDocsPage() {
     <DocsProse>
       <h1>Self-hosting</h1>
       <p>
-        Run the Deploy <strong>control plane</strong> with Docker Compose. Builds still
-        happen on separate worker hosts via a deploy agent (port <code>4000</code>).
+        Run the Deploy <strong>control plane</strong> with Docker Compose. App builds
+        and runs happen on separate worker hosts via a deploy agent (port{' '}
+        <code>4000</code>). Workers must have Docker installed — Docker is the only
+        runtime supported right now.
       </p>
 
       <h2>What Compose starts</h2>
@@ -123,7 +125,7 @@ docker compose up -d --build`}</code>
 
       <h2>3. Register a worker node</h2>
       <ol>
-        <li>Provision a Linux host with Docker.</li>
+        <li>Provision a Linux host with Docker (required — only Docker is supported).</li>
         <li>
           Run the <strong>deploy agent</strong> on that host (separate process),
           listening on port <strong>4000</strong>, with an auth token and{' '}

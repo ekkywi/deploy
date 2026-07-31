@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
-import { Terminal, Loader2 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Loader2, Terminal } from 'lucide-react'
+import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface DeploymentLogViewerProps {
   projectId: string
@@ -12,41 +14,110 @@ interface DeploymentLogViewerProps {
   status: string
 }
 
+function isTerminalStatus(status: string) {
+  return status === 'SUCCESS' || status === 'FAILED' || status === 'CANCELLED'
+}
+
+const CONNECT_TIMEOUT_MS = 8_000
+
+const LOAD_ERROR_MESSAGE =
+  'Could not load deployment logs. The worker agent may be offline, or logs for this deployment are no longer available.'
+
 export function DeploymentLogViewer({
   projectId,
   environmentId,
   deploymentId,
-  status
+  status,
 }: DeploymentLogViewerProps) {
   const [logs, setLogs] = useState<string[]>([])
   const [isConnected, setIsConnected] = useState(false)
+  const [streamError, setStreamError] = useState<string | null>(null)
+  const [retryKey, setRetryKey] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const toastShownRef = useRef(false)
+  const isFinished = isTerminalStatus(status)
+
+  const notifyLoadFailure = useCallback((message: string) => {
+    setStreamError(message)
+    if (toastShownRef.current) return
+    toastShownRef.current = true
+    toast.error('Failed to load logs', {
+      description: message,
+      duration: 8_000,
+    })
+  }, [])
+
+  const handleRetry = () => {
+    toastShownRef.current = false
+    setLogs([])
+    setStreamError(null)
+    setIsConnected(false)
+    setRetryKey((key) => key + 1)
+  }
 
   useEffect(() => {
     if (status === 'PENDING') return
 
+    let closedByCleanup = false
+    let opened = false
+    let receivedMessage = false
+    let settled = false
+
+    setIsConnected(false)
+    setStreamError(null)
+
     const url = `/api/projects/${projectId}/environments/${environmentId}/deployments/${deploymentId}/logs`
     const eventSource = new EventSource(url)
 
+    const failIfNoData = () => {
+      if (settled || closedByCleanup || opened || receivedMessage) return
+      settled = true
+      eventSource.close()
+      notifyLoadFailure(LOAD_ERROR_MESSAGE)
+    }
+
+    const connectTimeout = window.setTimeout(failIfNoData, CONNECT_TIMEOUT_MS)
+
     eventSource.onopen = () => {
+      opened = true
+      settled = true
+      window.clearTimeout(connectTimeout)
       setIsConnected(true)
+      setStreamError(null)
     }
 
     eventSource.onmessage = (event) => {
+      receivedMessage = true
+      settled = true
+      window.clearTimeout(connectTimeout)
+      setIsConnected(true)
+      setStreamError(null)
       const cleanText = event.data.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '')
       setLogs((prev) => [...prev, cleanText])
     }
 
-    eventSource.onerror = (err) => {
-      console.error("SSE Stream Error:", err)
+    eventSource.onerror = () => {
       setIsConnected(false)
+      window.clearTimeout(connectTimeout)
+
+      if (closedByCleanup) return
+
       eventSource.close()
+
+      if (opened || receivedMessage) {
+        settled = true
+        return
+      }
+
+      failIfNoData()
     }
 
     return () => {
+      closedByCleanup = true
+      window.clearTimeout(connectTimeout)
       eventSource.close()
     }
-  }, [projectId, environmentId, deploymentId, status])
+  }, [projectId, environmentId, deploymentId, status, retryKey, notifyLoadFailure])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -54,55 +125,106 @@ export function DeploymentLogViewer({
     }
   }, [logs])
 
-  const isFinished = status === 'SUCCESS' || status === 'FAILED'
+  const streamBadge = (() => {
+    if (streamError) {
+      return {
+        label: 'Unavailable',
+        className: 'border-destructive/20 bg-destructive/10 text-destructive',
+      }
+    }
+    if (!isFinished && isConnected) {
+      return {
+        label: 'Live',
+        className: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
+      }
+    }
+    if (!isFinished && !isConnected && status !== 'PENDING') {
+      return {
+        label: 'Connecting',
+        className: 'border-sky-500/20 bg-sky-500/10 text-sky-400',
+      }
+    }
+    if (isFinished || logs.length > 0) {
+      return {
+        label: 'Closed',
+        className: 'border-border bg-muted/40 text-muted-foreground',
+      }
+    }
+    return null
+  })()
 
   return (
-    <Card className="flex h-full min-h-0 w-full flex-col rounded-none border-0 bg-[#0a0a0a] text-zinc-300 transition-all duration-200 dark">
-      <CardHeader className="border-b border-zinc-800 bg-zinc-950/80 py-2.5 px-4 flex flex-row items-center justify-between space-y-0 shrink-0">
-        <CardTitle className="flex items-center gap-2 text-[13px] font-mono font-medium text-zinc-400">
-          <Terminal className="size-4" />
-          build-execution.log
-        </CardTitle>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            {!isFinished && isConnected && (
-              <Badge variant="outline" className="animate-pulse border-emerald-500/30 bg-emerald-500/10 text-[10px] uppercase text-emerald-400">
-                Live Stream
-              </Badge>
-            )}
-            {!isFinished && !isConnected && status !== 'PENDING' && (
-              <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-[10px] uppercase text-amber-400">
-                Connecting...
-              </Badge>
-            )}
-            {isFinished && (
-              <Badge variant="outline" className="border-zinc-700 bg-zinc-800 text-[10px] uppercase text-zinc-400">
-                Stream Closed
-              </Badge>
-            )}
-          </div>
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2">
+        <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+          <Terminal className="size-3.5 shrink-0" aria-hidden />
+          <span className="truncate font-mono">build-execution.log</span>
         </div>
-      </CardHeader>
-      
-      <CardContent
+        {streamBadge ? (
+          <Badge
+            variant="outline"
+            className={cn(
+              'px-1.5 text-[10px] font-medium uppercase tracking-wide',
+              streamBadge.className,
+              !isFinished && isConnected && !streamError ? 'animate-pulse' : null
+            )}
+          >
+            {streamBadge.label}
+          </Badge>
+        ) : null}
+      </div>
+
+      <div
         ref={scrollRef}
-        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 font-mono text-[12px] leading-relaxed tracking-tight select-text bg-[#0a0a0a]"
+        className="min-h-0 flex-1 select-text overflow-x-hidden overflow-y-auto bg-card px-3 py-3 font-mono text-[12px] leading-relaxed tracking-tight sm:px-4"
       >
         {logs.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center space-y-3 text-zinc-600">
-            <Loader2 className="size-5 animate-spin" />
-            <p>{status === 'PENDING' ? 'Waiting for Worker Node allocation...' : 'Connecting to log stream...'}</p>
+          <div className="flex h-full min-h-48 flex-col items-center justify-center gap-3 px-4 text-center">
+            {streamError ? (
+              <>
+                <p className="max-w-md text-sm text-destructive">{streamError}</p>
+                <Button type="button" variant="outline" size="sm" onClick={handleRetry}>
+                  Try again
+                </Button>
+              </>
+            ) : (
+              <>
+                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  {status === 'PENDING'
+                    ? 'Waiting for worker allocation…'
+                    : 'Connecting to log stream…'}
+                </p>
+              </>
+            )}
           </div>
         ) : (
-          <div className="space-y-0.5 font-mono min-w-0">
+          <div className="min-w-0 space-y-px">
             {logs.map((log, index) => {
-              const isError = log.includes('[ERROR]') || log.includes('ERR!') || log.toLowerCase().includes('failed')
-              const isSuccess = log.includes('[SUCCESS]') || log.includes('Done in')
-              
+              const isError =
+                log.includes('[ERROR]') ||
+                log.includes('ERR!') ||
+                log.toLowerCase().includes('failed')
+              const isSuccess =
+                log.includes('[SUCCESS]') ||
+                log.includes('[✅ SUCCESS]') ||
+                log.includes('Done in')
+
               return (
-                <div key={index} className="flex min-w-0 items-start rounded px-1 py-0.5 hover:bg-zinc-900/40">
-                  <span className="mr-4 select-none text-zinc-600 text-right w-10 shrink-0 font-mono">{index + 1}</span>
-                  <span className={`min-w-0 flex-1 whitespace-pre-wrap break-words font-mono ${isError ? 'text-red-400 font-medium' : isSuccess ? 'text-emerald-400' : 'text-zinc-300'}`}>
+                <div
+                  key={index}
+                  className="flex min-w-0 items-start gap-3 rounded-sm px-1.5 py-0.5 hover:bg-accent/50"
+                >
+                  <span className="w-8 shrink-0 select-none text-right text-muted-foreground/70">
+                    {index + 1}
+                  </span>
+                  <span
+                    className={cn(
+                      'min-w-0 flex-1 break-words whitespace-pre-wrap text-foreground/90',
+                      isError && 'font-medium text-destructive',
+                      isSuccess && 'text-emerald-400'
+                    )}
+                  >
                     {log}
                   </span>
                 </div>
@@ -110,7 +232,7 @@ export function DeploymentLogViewer({
             })}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

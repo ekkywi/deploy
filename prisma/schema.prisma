@@ -163,6 +163,7 @@ enum DeployStatus {
   BUILDING
   SUCCESS
   FAILED
+  CANCELLED
 }
 
 model Deployment {

@@ -11,6 +11,7 @@ import { requireAuth } from '@/lib/auth'
 import { GlobalRole } from '@prisma/client'
 import { DeploymentLogDialog } from '@/components/deployment-log-dialog'
 import { DeploymentStatusBadge } from '@/components/deployment-status-badge'
+import { CancelDeployButton } from '@/components/cancel-deploy-button'
 
 export default async function GlobalDeploymentsPage() {
   const headersList = await headers()
@@ -122,7 +123,13 @@ export default async function GlobalDeploymentsPage() {
                   </div>
                 </div>
 
-                <div className="self-start sm:self-auto">
+                <div className="flex shrink-0 items-center gap-1.5 self-start sm:self-auto">
+                  <CancelDeployButton
+                    projectId={deploy.environment.projectId}
+                    environmentId={deploy.environmentId}
+                    deploymentId={deploy.id}
+                    status={deploy.status}
+                  />
                   <DeploymentLogDialog
                     projectId={deploy.environment.projectId}
                     environmentId={deploy.environmentId}

@@ -1,6 +1,6 @@
 # Deploy
 
-Self-hosted control plane for deploying apps onto your own worker nodes. Built for internal teams and operators who want a Vercel-like workflow without giving up their infrastructure.
+Self-hosted control plane for deploying apps onto your own worker nodes. Apps run as **Docker containers** on those hosts — **Docker is the only runtime supported right now**. Built for internal teams and operators who want a Vercel-like workflow without giving up their infrastructure.
 
 ## What this repo is
 
@@ -11,7 +11,7 @@ This repository is the **control plane** (web console + API + teardown worker):
 - Worker node registry and audit logs
 - Background project teardown via Redis/BullMQ
 
-Runtime builds and containers are executed by a separate **deploy agent** on each worker host (listens on port `4000`).
+Runtime builds and Docker containers are executed by a separate **deploy agent** on each worker host (listens on port `4000`). Worker hosts must have Docker installed.
 
 ## Quick start (Docker Compose)
 

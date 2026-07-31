@@ -9,6 +9,10 @@ export default function UsingDeployDocsPage() {
         This tutorial covers the day-to-day console workflow for internal teams:
         accounts, projects, environments, deployments, and collaboration.
       </p>
+      <p>
+        <strong>Runtime:</strong> Deploy only supports <strong>Docker</strong> on
+        worker hosts. The agent builds and runs each environment as a container.
+      </p>
 
       <h2>1. Accounts and access</h2>
       <ul>
@@ -41,11 +45,13 @@ export default function UsingDeployDocsPage() {
       <h2>3. Environments</h2>
       <p>
         Environments live under a project (for example <code>development</code>,{' '}
-        <code>staging</code>, <code>production</code>). For each environment configure:
+        <code>staging</code>, <code>production</code>). Every environment is deployed
+        as a Docker container. For each environment configure:
       </p>
       <ul>
         <li>
-          <strong>Stack</strong> — Next.js, Laravel, or Node.js
+          <strong>Stack</strong> — Next.js, Laravel, or Node.js (all run as Docker
+          containers)
         </li>
         <li>
           <strong>Tier</strong> — which worker nodes are allowed to run it
@@ -69,7 +75,7 @@ export default function UsingDeployDocsPage() {
         <li>Open the environment page and start a deploy for the chosen branch.</li>
         <li>
           Deploy picks an active worker that supports the environment tier, then asks
-          the agent on that host to build and run the app.
+          the agent on that Docker host to build and run the container.
         </li>
         <li>
           Watch status on Overview / Deployments, and open logs from the deployment
@@ -78,8 +84,21 @@ export default function UsingDeployDocsPage() {
       </ol>
       <p>
         Status values: <code>PENDING</code> → <code>BUILDING</code> →{' '}
-        <code>SUCCESS</code> or <code>FAILED</code>.
+        <code>SUCCESS</code>, <code>FAILED</code>, or <code>CANCELLED</code>. While a
+        build is queued or running, editors can cancel it from the deployment row.
       </p>
+      <ul>
+        <li>
+          <strong>Redeploy</strong> — rebuild the environment&apos;s current branch (or
+          last known ref) with the current environment variables.
+        </li>
+        <li>
+          <strong>Rollback</strong> — from a successful deployment row that has a
+          recorded commit SHA, pin and redeploy that commit. Older rows without a SHA
+          cannot be rolled back until a new successful deploy records one. Rollback does
+          not restore historical env vars.
+        </li>
+      </ul>
 
       <h2>5. GitHub webhook (optional)</h2>
       <ol>
@@ -101,7 +120,7 @@ export default function UsingDeployDocsPage() {
         </li>
         <li>
           <Link href="/console/admin/infrastructure">Infrastructure</Link> — register
-          worker nodes (IP + auth token + tiers)
+          Docker worker nodes (IP + auth token + tiers)
         </li>
         <li>
           <Link href="/console/admin/system-logs">Audit Logs</Link> — track sensitive
@@ -111,8 +130,8 @@ export default function UsingDeployDocsPage() {
 
       <h2>Checklist for a first successful deploy</h2>
       <ol>
-        <li>At least one active worker with a matching tier</li>
-        <li>Agent reachable at <code>http://&lt;worker-ip&gt;:4000</code></li>
+        <li>At least one active Docker worker with a matching tier</li>
+        <li>Docker installed on the worker; agent reachable at <code>http://&lt;worker-ip&gt;:4000</code></li>
         <li>Project repo URL cloneable from the worker</li>
         <li>Environment variables set for the app</li>
         <li>Teardown worker running if you plan to delete projects later</li>

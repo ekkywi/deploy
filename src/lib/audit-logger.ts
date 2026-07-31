@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { headers } from 'next/headers';
+import type { Prisma } from '@prisma/client';
 
 type AuditLogParams = {
     userId?: string | null;
@@ -7,6 +8,7 @@ type AuditLogParams = {
     targetType: string;
     targetId: string;
     request?: Request;
+    metadata?: Prisma.InputJsonValue;
 };
 
 export async function logAudit(params: AuditLogParams) {
@@ -22,7 +24,7 @@ export async function logAudit(params: AuditLogParams) {
         }
 
         const isSystemActor = params.userId === 'SYSTEM';
-        const finalUserId = isSystemActor ? null : params.userId;
+        const finalUserId = isSystemActor ? null : (params.userId ?? null);
         const finalActorName = isSystemActor ? 'System/Webhook' : null;
 
         prisma.auditLog.create({
@@ -33,6 +35,7 @@ export async function logAudit(params: AuditLogParams) {
                 targetType: params.targetType.toUpperCase(),
                 targetId: params.targetId,
                 ipAddress: ipAddress !== 'UNKNOWN' ? ipAddress : null,
+                metadata: params.metadata ?? undefined,
             }
         }).catch(err => {
             console.error('[AUDIT LOG ERROR] Failed to write audit log to DB:', err);

@@ -1,7 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { DeploymentStatusBadge } from '@/components/deployment-status-badge'
 import { DeploymentLogViewer } from '@/components/deployment-log-viewer'
 
 interface DeploymentLogDialogProps {
@@ -15,36 +24,43 @@ export function DeploymentLogDialog({
   projectId,
   environmentId,
   deploymentId,
-  status
+  status,
 }: DeploymentLogDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/30">
+        <Button type="button" variant="outline" size="sm" className="h-7 px-2.5 text-xs">
           Logs
-        </button>
+        </Button>
       </DialogTrigger>
       <DialogContent
-        className="h-[90vh] max-h-[90vh] border-zinc-800 bg-[#0a0a0a] p-0 overflow-hidden sm:rounded-xl shadow-2xl gap-0"
-        style={{
-          width: 'min(92vw, 1120px)',
-          maxWidth: 'calc(100vw - 2rem)',
-        }}
+        showCloseButton
+        className="flex h-[min(86vh,720px)] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl"
       >
-        <DialogHeader className="sr-only">
-          <DialogTitle>Deployment Logs</DialogTitle>
+        <DialogHeader className="shrink-0 space-y-1 border-b border-border px-4 py-3 pr-12 text-left">
+          <div className="flex flex-wrap items-center gap-2">
+            <DialogTitle className="text-sm font-medium tracking-tight">
+              Deployment logs
+            </DialogTitle>
+            <DeploymentStatusBadge status={status} />
+          </div>
+          <DialogDescription className="text-xs">
+            Build output from the worker agent for this deployment.
+          </DialogDescription>
         </DialogHeader>
-        
-        {isOpen && (
-          <DeploymentLogViewer 
-            projectId={projectId}
-            environmentId={environmentId}
-            deploymentId={deploymentId}
-            status={status}
-          />
-        )}
+
+        <div className="min-h-0 flex-1">
+          {isOpen ? (
+            <DeploymentLogViewer
+              projectId={projectId}
+              environmentId={environmentId}
+              deploymentId={deploymentId}
+              status={status}
+            />
+          ) : null}
+        </div>
       </DialogContent>
     </Dialog>
   )

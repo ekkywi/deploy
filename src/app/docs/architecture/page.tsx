@@ -7,7 +7,9 @@ export default function ArchitectureDocsPage() {
       <h1>Architecture</h1>
       <p>
         Deploy splits into a <strong>control plane</strong> (this application) and{' '}
-        <strong>execution agents</strong> on worker hosts.
+        <strong>execution agents</strong> on worker hosts. The only supported
+        execution runtime is <strong>Docker</strong>: agents build and run app
+        containers on each worker.
       </p>
 
       <h2>Control plane</h2>
@@ -63,10 +65,13 @@ export default function ArchitectureDocsPage() {
       </ul>
 
       <h2>Deploy agent</h2>
-      <p>Each registered worker runs an agent (default port 4000) that:</p>
+      <p>
+        Each registered worker runs an agent (default port 4000) on a host with
+        Docker. The agent:
+      </p>
       <ul>
         <li>accepts authenticated deploy / stop / destroy requests</li>
-        <li>clones the repository and builds/runs containers on that host</li>
+        <li>clones the repository and builds/runs Docker containers on that host</li>
         <li>streams build logs back to the console</li>
       </ul>
       <p>

@@ -1,6 +1,6 @@
 # Architecture
 
-Deploy is split into a **control plane** (this repository) and **execution agents** on worker hosts.
+Deploy is split into a **control plane** (this repository) and **execution agents** on worker hosts. The only supported execution runtime is **Docker**: agents build and run app containers on each worker.
 
 ## Control plane (this repo)
 
@@ -21,10 +21,10 @@ Main domain model (see `prisma/schema.prisma`):
 
 ## Deploy agent (separate process)
 
-Each registered worker runs an agent (default port `4000`) that:
+Each registered worker runs an agent (default port `4000`) on a host with Docker. The agent:
 
 - accepts authenticated deploy / stop / destroy requests from the control plane
-- clones the repository and builds/runs containers on that host
+- clones the repository and builds/runs Docker containers on that host
 - streams build logs back to the console
 
 The control plane selects a worker by active flag + supported tier, then POSTs to:

@@ -318,6 +318,7 @@ export default function InfrastructurePage() {
     <div className="space-y-4">
       <ConsolePageHeader
         title="Infrastructure"
+        description="Docker worker hosts that run the deploy agent. Docker is the only runtime supported right now."
         actions={
           <div className="flex items-center gap-2">
             {workers.length > 0 ? (
@@ -354,7 +355,8 @@ export default function InfrastructurePage() {
                 <DialogHeader>
                   <DialogTitle>Register worker</DialogTitle>
                   <DialogDescription>
-                    Add a host that runs deployments for your environments.
+                    Add a Docker host that runs the deploy agent. Docker is the only
+                    runtime supported right now.
                   </DialogDescription>
                 </DialogHeader>
 
@@ -408,7 +410,8 @@ export default function InfrastructurePage() {
                 ) : null}
 
                 <p className="text-[11px] leading-4 text-muted-foreground">
-                  A secure agent token is generated after register. Paste it into the agent{' '}
+                  The host needs Docker and a running deploy agent. A secure agent token
+                  is generated after register — paste it into the agent{' '}
                   <code className="text-foreground">.env</code> on that machine.
                 </p>
 
@@ -456,7 +459,8 @@ export default function InfrastructurePage() {
           <Server className="mb-3 size-7 text-muted-foreground/30" />
           <h3 className="text-sm font-medium">No worker nodes registered</h3>
           <p className="mt-1 max-w-md text-center text-xs text-muted-foreground">
-            Register the first execution node so projects can start scheduling deployments.
+            Register a Docker host with the deploy agent so projects can schedule
+            deployments. Docker is the only runtime supported right now.
           </p>
         </Card>
       ) : (
