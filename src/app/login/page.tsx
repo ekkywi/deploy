@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -59,29 +60,41 @@ export default function LoginPage() {
   const isSubmitting = form.formState.isSubmitting
 
   return (
-    <AuthShell>
-      <div className="space-y-6">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl font-semibold tracking-tight">Log in</h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your email to continue to Deploy.
+    <AuthShell
+      footer={
+        <>
+          Don&apos;t have an account?{' '}
+          <Link
+            href="/register"
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+          >
+            Sign up
+          </Link>
+        </>
+      }
+    >
+      <div className="space-y-5">
+        <div className="space-y-1 text-center">
+          <h1 className="text-lg font-medium tracking-tight">Log in to Deploy</h1>
+          <p className="text-xs text-muted-foreground">
+            Enter your credentials to open the console.
           </p>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
+                <FormItem className="gap-1.5">
+                  <FormLabel className="text-xs">Email</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="name@company.com"
                       type="email"
                       autoComplete="email"
-                      className="h-10"
+                      className="h-9"
                       {...field}
                     />
                   </FormControl>
@@ -94,27 +107,27 @@ export default function LoginPage() {
               control={form.control}
               name="password"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
+                <FormItem className="gap-1.5">
+                  <FormLabel className="text-xs">Password</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="current-password"
-                        className="h-10 pr-10"
+                        className="h-9 pr-9"
                         {...field}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded-md p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+                        className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-0.5 text-muted-foreground transition-colors hover:text-foreground"
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? (
-                          <EyeOff className="size-4" aria-hidden />
+                          <EyeOff className="size-3.5" aria-hidden />
                         ) : (
-                          <Eye className="size-4" aria-hidden />
+                          <Eye className="size-3.5" aria-hidden />
                         )}
                       </button>
                     </div>
@@ -126,14 +139,14 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              size="lg"
-              className="w-full"
+              size="sm"
+              className="h-9 w-full"
               disabled={isSubmitting}
               aria-busy={isSubmitting}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="animate-spin" aria-hidden />
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
                   Signing in...
                 </>
               ) : (
@@ -142,16 +155,6 @@ export default function LoginPage() {
             </Button>
           </form>
         </Form>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
-          <a
-            href="/register"
-            className="font-medium text-foreground underline-offset-4 hover:underline"
-          >
-            Sign up
-          </a>
-        </p>
       </div>
     </AuthShell>
   )

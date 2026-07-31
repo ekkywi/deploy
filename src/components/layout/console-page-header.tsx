@@ -15,19 +15,19 @@ export function ConsolePageHeader({
   actions,
 }: ConsolePageHeaderProps) {
   return (
-    <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-start sm:justify-between">
-      <div className="min-w-0 space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+    <div className="flex flex-col gap-2 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 space-y-0.5">
+        <h1 className="text-lg font-medium tracking-tight text-foreground">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            {description}
-          </p>
+          <p className="max-w-2xl text-xs text-muted-foreground">{description}</p>
         ) : null}
       </div>
 
-      {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+      ) : null}
     </div>
   )
 }

@@ -111,12 +111,12 @@ export default function ProjectsPage() {
   if (!user) return null
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ConsolePageHeader
         title="Projects"
         actions={
-          <Button onClick={() => setIsCreateOpen(true)} className="w-full sm:w-auto">
-            <Plus className="mr-2 size-4" />
+          <Button size="sm" onClick={() => setIsCreateOpen(true)} className="w-full sm:w-auto">
+            <Plus className="mr-1.5 size-3.5" />
             Create Project
           </Button>
         }

@@ -2,15 +2,22 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getAuthTokenFromRequest, verifyToken } from '@/lib/auth-token'
 
 const publicRoutes = [
+    '/',
     '/api/auth/login',
     '/login',
     '/api/auth/register',
     '/register',
 ]
 
+function isPublicPath(pathname: string) {
+    if (publicRoutes.includes(pathname)) return true
+    if (pathname === '/docs' || pathname.startsWith('/docs/')) return true
+    return false
+}
+
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
-    const isPublicRoute = publicRoutes.includes(pathname)
+    const isPublicRoute = isPublicPath(pathname)
 
     if (
         pathname.startsWith('/_next') ||

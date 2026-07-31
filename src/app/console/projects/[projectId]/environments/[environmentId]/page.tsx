@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft, Activity, GitBranch, Clock, Server } from 'lucide-react'
 import prisma from '@/lib/prisma'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AutoRefresh } from '@/components/auto-refresh'
 import { DeployButton } from './deploy-button'
@@ -58,12 +58,12 @@ export default async function EnvironmentDashboardPage({
   const hasSuccessfulDeploy = !!lastSuccessDeploy
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3 border-b border-border pb-4">
+    <div className="space-y-4">
+      <div className="space-y-2 border-b border-border pb-3">
         <Button
           variant="ghost"
           size="sm"
-          className="-ml-2 h-8 px-2 text-muted-foreground hover:text-foreground"
+          className="-ml-2 h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
           asChild
         >
           <Link href={`/console/projects/${projectId}`}>
@@ -72,15 +72,15 @@ export default async function EnvironmentDashboardPage({
           </Link>
         </Button>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 space-y-1">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 space-y-0.5">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-semibold tracking-tight">{environment.name}</h1>
+              <h1 className="text-lg font-medium tracking-tight">{environment.name}</h1>
               <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
                 {environment.tier}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {environment.domain ? environment.domain : 'No domain configured'}
             </p>
           </div>
@@ -112,11 +112,10 @@ export default async function EnvironmentDashboardPage({
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader className="border-b">
-            <CardTitle>Deployments</CardTitle>
-            <CardDescription>Recent builds for this environment.</CardDescription>
+      <div className="grid gap-3 lg:grid-cols-3">
+        <Card className="gap-0 py-0 shadow-none lg:col-span-2">
+          <CardHeader className="border-b px-3 py-2.5">
+            <CardTitle className="text-sm font-medium">Deployments</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {deployments.length === 0 ? (
@@ -130,12 +129,12 @@ export default async function EnvironmentDashboardPage({
                 {deployments.map((deploy) => (
                   <div
                     key={deploy.id}
-                    className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-2 px-3 py-2.5 transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="flex min-w-0 items-start gap-3">
+                    <div className="flex min-w-0 items-start gap-2.5">
                       <DeploymentStatusBadge status={deploy.status} />
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
+                        <p className="truncate text-sm">
                           {deploy.commitHash
                             ? deploy.commitHash.substring(0, 7)
                             : 'Manual deploy'}
@@ -167,17 +166,16 @@ export default async function EnvironmentDashboardPage({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle>Runtime</CardTitle>
-            <CardDescription>Stack and worker.</CardDescription>
+        <Card className="gap-0 py-0 shadow-none">
+          <CardHeader className="border-b px-3 py-2.5">
+            <CardTitle className="text-sm font-medium">Runtime</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4 text-sm">
-            <div className="space-y-1">
+          <CardContent className="space-y-3 px-3 py-3 text-sm">
+            <div className="space-y-0.5">
               <span className="text-xs text-muted-foreground">Stack</span>
               <p className="font-medium">{environment.stackType}</p>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <span className="text-xs text-muted-foreground">Node</span>
               <p className="font-medium">
                 {environment.stackType === 'LARAVEL'
@@ -185,7 +183,7 @@ export default async function EnvironmentDashboardPage({
                   : `Node ${environment.nodeVersion || '22'}`}
               </p>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <span className="text-xs text-muted-foreground">Worker</span>
               {lastSuccessDeploy?.workerNode ? (
                 <p className="flex items-center gap-2 font-medium">
@@ -196,7 +194,7 @@ export default async function EnvironmentDashboardPage({
                 <p className="font-medium text-muted-foreground">Waiting for deploy</p>
               )}
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <span className="text-xs text-muted-foreground">Port</span>
               <p className="font-medium">
                 {environment.assignedPort ? environment.assignedPort : 'Unassigned'}

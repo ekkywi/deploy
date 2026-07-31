@@ -7,7 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
   title: "Deploy",
-  description: "Deploy your projects across environments.",
+  description:
+    "Self-hosted control plane for projects, environments, and deployments on your own infrastructure.",
 };
 
 export default function RootLayout({

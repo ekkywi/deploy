@@ -20,7 +20,7 @@ export function ConsoleStatChip({
   } as const
 
   return (
-    <div className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs">
+    <div className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs">
       <span className={`size-1.5 shrink-0 rounded-full ${dotStyles[variant]}`} />
       <span className="text-muted-foreground">{label}</span>
       <span className="font-medium tabular-nums text-foreground">{value}</span>

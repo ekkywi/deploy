@@ -69,13 +69,10 @@ export default async function GlobalDeploymentsPage() {
   )
 
   return (
-    <div className="space-y-6">
-      <ConsolePageHeader
-        title="Deployments"
-        description="Last 50 deployments across your projects."
-      />
+    <div className="space-y-4">
+      <ConsolePageHeader title="Deployments" />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         <ConsoleStatChip label="Total" value={deployments.length} />
         <ConsoleStatChip label="Ready" value={totals.success} variant="active" />
         <ConsoleStatChip label="Building" value={totals.building} variant="info" />
@@ -83,7 +80,7 @@ export default async function GlobalDeploymentsPage() {
         <ConsoleStatChip label="Error" value={totals.failed} variant="destructive" />
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border">
+      <div className="overflow-hidden rounded-md border border-border">
         {deployments.length === 0 ? (
           <ConsoleEmptyState
             icon={Activity}
@@ -95,7 +92,7 @@ export default async function GlobalDeploymentsPage() {
             {deployments.map((deploy) => (
               <div
                 key={deploy.id}
-                className="flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 px-3 py-2.5 transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex min-w-0 items-start gap-3">
                   <div className="pt-0.5">

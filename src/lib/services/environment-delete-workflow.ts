@@ -50,8 +50,9 @@ async function checkEnvironmentAuthorization(
         return { error: 'Forbidden. Only Project Owners and Editors can modify environment.', status: 403 }
     }
 
-    if (!requireEditorOrOwner && ['VIEWER', 'DEVELOPER'].includes(membership.role)) {
-        return { error: 'Forbidden. Only Admins can delete environments.', status: 403 }
+    // Deletion requires OWNER (or SYSADMIN above).
+    if (!requireEditorOrOwner && membership.role !== ProjectRoleType.OWNER) {
+        return { error: 'Forbidden. Only Project Owners can delete environments.', status: 403 }
     }
 
     return null

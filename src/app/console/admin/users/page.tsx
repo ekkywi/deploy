@@ -106,14 +106,13 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ConsolePageHeader
         title="Users"
-        description="Approve accounts and manage access."
         actions={<AddUserDialog onSuccess={handleAddSuccess} />}
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         <ConsoleStatChip label="Total" value={stats.total} />
         <ConsoleStatChip label="Pending" value={stats.pending} variant="pending" />
         <ConsoleStatChip label="Active" value={stats.active} variant="active" />

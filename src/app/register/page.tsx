@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -69,26 +70,38 @@ export default function RegisterPage() {
   const isSubmitting = form.formState.isSubmitting
 
   return (
-    <AuthShell>
-      <div className="space-y-6">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl font-semibold tracking-tight">Sign up</h1>
-          <p className="text-sm text-muted-foreground">
-            Create an account. An admin will approve it before you can sign in.
+    <AuthShell
+      footer={
+        <>
+          Already have an account?{' '}
+          <Link
+            href="/login"
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+          >
+            Log in
+          </Link>
+        </>
+      }
+    >
+      <div className="space-y-5">
+        <div className="space-y-1 text-center">
+          <h1 className="text-lg font-medium tracking-tight">Create your account</h1>
+          <p className="text-xs text-muted-foreground">
+            An admin must approve new accounts before sign-in.
           </p>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="firstName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First name</FormLabel>
+                  <FormItem className="gap-1.5">
+                    <FormLabel className="text-xs">First name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John" className="h-10" {...field} />
+                      <Input placeholder="John" className="h-9" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -99,13 +112,13 @@ export default function RegisterPage() {
                 control={form.control}
                 name="lastName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
+                  <FormItem className="gap-1.5">
+                    <FormLabel className="text-xs">
                       Last name{' '}
                       <span className="font-normal text-muted-foreground">(optional)</span>
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Doe" className="h-10" {...field} />
+                      <Input placeholder="Doe" className="h-9" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -117,14 +130,14 @@ export default function RegisterPage() {
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
+                <FormItem className="gap-1.5">
+                  <FormLabel className="text-xs">Email</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="name@company.com"
                       type="email"
                       autoComplete="email"
-                      className="h-10"
+                      className="h-9"
                       {...field}
                     />
                   </FormControl>
@@ -137,24 +150,28 @@ export default function RegisterPage() {
               control={form.control}
               name="password"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
+                <FormItem className="gap-1.5">
+                  <FormLabel className="text-xs">Password</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="new-password"
-                        className="h-10 pr-10"
+                        className="h-9 pr-9"
                         {...field}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
-                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        {showPassword ? (
+                          <EyeOff className="size-3.5" />
+                        ) : (
+                          <Eye className="size-3.5" />
+                        )}
                       </button>
                     </div>
                   </FormControl>
@@ -167,24 +184,30 @@ export default function RegisterPage() {
               control={form.control}
               name="confirmPassword"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm password</FormLabel>
+                <FormItem className="gap-1.5">
+                  <FormLabel className="text-xs">Confirm password</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showConfirmPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         autoComplete="new-password"
-                        className="h-10 pr-10"
+                        className="h-9 pr-9"
                         {...field}
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                        className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label={
+                          showConfirmPassword ? 'Hide password' : 'Show password'
+                        }
                       >
-                        {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        {showConfirmPassword ? (
+                          <EyeOff className="size-3.5" />
+                        ) : (
+                          <Eye className="size-3.5" />
+                        )}
                       </button>
                     </div>
                   </FormControl>
@@ -195,15 +218,15 @@ export default function RegisterPage() {
 
             <Button
               type="submit"
-              size="lg"
-              className="w-full"
+              size="sm"
+              className="h-9 w-full"
               disabled={isSubmitting}
               aria-busy={isSubmitting}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                  Submitting...
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                  Creating account...
                 </>
               ) : (
                 'Create account'
@@ -211,16 +234,6 @@ export default function RegisterPage() {
             </Button>
           </form>
         </Form>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{' '}
-          <a
-            href="/login"
-            className="font-medium text-foreground underline-offset-4 hover:underline"
-          >
-            Log in
-          </a>
-        </p>
       </div>
     </AuthShell>
   )

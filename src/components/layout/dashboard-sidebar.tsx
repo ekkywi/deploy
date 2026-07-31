@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  BookOpen,
   Layers,
   LayoutDashboard,
   Rocket,
@@ -41,6 +42,11 @@ const navItems = [
     url: '/console/deployments',
     icon: Rocket,
   },
+  {
+    title: 'Docs',
+    url: '/docs',
+    icon: BookOpen,
+  },
 ]
 
 export function DashboardSidebar() {
@@ -49,7 +55,7 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="flex h-12 flex-row items-center border-b border-sidebar-border p-2">
+      <SidebarHeader className="flex h-11 flex-row items-center border-b border-sidebar-border p-2">
         <Link
           href="/console"
           className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-sm font-medium text-sidebar-foreground outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:p-2! group-data-[collapsible=icon]:px-0"
@@ -70,7 +76,9 @@ export function DashboardSidebar() {
                     isActive={
                       item.url === '/console'
                         ? pathname === item.url
-                        : pathname.startsWith(item.url)
+                        : item.url === '/docs'
+                          ? pathname === '/docs' || pathname.startsWith('/docs/')
+                          : pathname.startsWith(item.url)
                     }
                     tooltip={item.title}
                   >

@@ -23,14 +23,14 @@ type ProjectTab = 'environments' | 'members' | 'settings'
 
 function ProjectWorkspaceSkeleton() {
   return (
-    <div className="space-y-6">
-      <div className="space-y-3 border-b border-border pb-4">
-        <Skeleton className="h-4 w-28" />
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-80" />
+    <div className="space-y-4">
+      <div className="space-y-2 border-b border-border pb-3">
+        <Skeleton className="h-3.5 w-24" />
+        <Skeleton className="h-6 w-56" />
+        <Skeleton className="h-3.5 w-72" />
       </div>
-      <Skeleton className="h-9 w-80" />
-      <Skeleton className="h-64 w-full rounded-lg" />
+      <Skeleton className="h-8 w-72" />
+      <Skeleton className="h-56 w-full rounded-md" />
     </div>
   )
 }
@@ -105,23 +105,23 @@ export default function ProjectWorkspacePage({
   const accessLabel = user.role === 'SYSADMIN' ? 'Admin' : myMembership?.role ?? 'No access'
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3 border-b border-border pb-4">
+    <div className="space-y-4">
+      <div className="space-y-2 border-b border-border pb-3">
         <Button
           variant="ghost"
           size="sm"
-          className="-ml-2 h-8 px-2 text-muted-foreground hover:text-foreground"
+          className="-ml-2 h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
           onClick={() => router.push('/console/projects')}
         >
           <ArrowLeft className="mr-1.5 size-3.5" />
           Projects
         </Button>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 space-y-0.5">
+            <h1 className="text-lg font-medium tracking-tight">{project.name}</h1>
             {project.description ? (
-              <p className="max-w-2xl text-sm text-muted-foreground">{project.description}</p>
+              <p className="max-w-2xl text-xs text-muted-foreground">{project.description}</p>
             ) : null}
             <p className="text-xs text-muted-foreground">
               {project._count.environments} env
@@ -135,7 +135,7 @@ export default function ProjectWorkspacePage({
           </div>
 
           {project.repoUrl ? (
-            <Button variant="outline" size="sm" className="shrink-0" asChild>
+            <Button variant="outline" size="sm" className="h-8 shrink-0" asChild>
               <a href={project.repoUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="mr-1.5 size-3.5" />
                 Repository
@@ -148,20 +148,20 @@ export default function ProjectWorkspacePage({
       <Tabs
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as ProjectTab)}
-        className="space-y-4"
+        className="space-y-3"
       >
         <div className="border-b border-border">
-          <TabsList variant="line" className="w-full justify-start gap-1">
-            <TabsTrigger value="environments">
-              <Server className="mr-2 size-4" />
+          <TabsList variant="line" className="h-9 w-full justify-start gap-0">
+            <TabsTrigger value="environments" className="text-xs">
+              <Server className="mr-1.5 size-3.5" />
               Environments
             </TabsTrigger>
-            <TabsTrigger value="members">
-              <Users className="mr-2 size-4" />
+            <TabsTrigger value="members" className="text-xs">
+              <Users className="mr-1.5 size-3.5" />
               Members
             </TabsTrigger>
-            <TabsTrigger value="settings">
-              <Settings className="mr-2 size-4" />
+            <TabsTrigger value="settings" className="text-xs">
+              <Settings className="mr-1.5 size-3.5" />
               Settings
             </TabsTrigger>
           </TabsList>

@@ -1,39 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Deploy
 
-## Getting Started
+Self-hosted control plane for deploying apps onto your own worker nodes. Built for internal teams and operators who want a Vercel-like workflow without giving up their infrastructure.
 
-First, run the development server:
+## What this repo is
+
+This repository is the **control plane** (web console + API + teardown worker):
+
+- Projects, environments, env vars, members
+- Deployments triggered from the console or GitHub webhooks
+- Worker node registry and audit logs
+- Background project teardown via Redis/BullMQ
+
+Runtime builds and containers are executed by a separate **deploy agent** on each worker host (listens on port `4000`).
+
+## Quick start (Docker Compose)
+
+Requirements: Docker Engine + Docker Compose v2.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
+# set a strong JWT_SECRET (and change SEED_ADMIN_PASSWORD)
+docker compose up -d --build
 ```
 
-This project defaults to Turbopack for local development.
-If you need the Webpack fallback, use `npm run dev:webpack`.
+Open [http://localhost:3000](http://localhost:3000) and sign in with the seed admin from `.env` (defaults: `admin@localhost` / `changeme`).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Services started:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Service    | Role                                      |
+|------------|-------------------------------------------|
+| `web`      | Next.js console + API                     |
+| `worker`   | Async project teardown consumer           |
+| `postgres` | Primary database                          |
+| `redis`    | Job queue for teardown                    |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Stop:
 
-## Learn More
+```bash
+docker compose down
+```
 
-To learn more about Next.js, take a look at the following resources:
+Data persists in Docker volumes (`postgres_data`, `redis_data`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Local development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cp .env.example .env
+# point DATABASE_URL / Redis at local services (or use compose for postgres+redis only)
 
-## Deploy on Vercel
+npm install
+npx prisma migrate deploy
+npm run db:seed
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+In another terminal:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run worker:teardown
+```
+
+## Documentation
+
+- In-app docs: [/docs](/docs) (Getting started, Using Deploy, Self-hosting, Architecture)
+- [Self-hosting guide](docs/self-hosting.md) — install, env vars, upgrades, backups (repo mirror)
+- [Architecture](docs/architecture.md) — control plane vs agent, main flows
+- [Contributing](CONTRIBUTING.md) — local setup and PR expectations
+
+## License
+
+Choose and add a license before publishing the project publicly.

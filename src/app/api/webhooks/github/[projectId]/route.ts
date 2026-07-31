@@ -79,7 +79,8 @@ export async function POST(
             where: {
                 projectId: project.id,
                 branchName: pushedBranch,
-                deletedAt: null
+                deletedAt: null,
+                lifecycle: 'ACTIVE',
             },
             select: { id: true }
         });

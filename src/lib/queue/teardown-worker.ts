@@ -31,6 +31,20 @@ export const teardownWorker = new Worker<TeardownJobPayload>(
     }
 )
 
+teardownWorker.on('ready', () => {
+    console.log(`[WORKER] Listening on queue "${TEARDOWN_QUEUE_NAME}"`)
+})
+
 teardownWorker.on('failed', (job, err) => {
     console.error(`[WORKER ERROR] Job ${job?.id} failed:`, err.message)
+})
+
+process.on('SIGINT', async () => {
+    await teardownWorker.close()
+    process.exit(0)
+})
+
+process.on('SIGTERM', async () => {
+    await teardownWorker.close()
+    process.exit(0)
 })

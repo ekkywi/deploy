@@ -95,33 +95,30 @@ export default async function SystemLogsPage({
   }
 
   return (
-    <div className="space-y-6">
-      <ConsolePageHeader
-        title="Audit Logs"
-        description="Administrative actions across the platform."
-      />
+    <div className="space-y-4">
+      <ConsolePageHeader title="Audit Logs" />
 
       <Card>
-        <CardContent className="p-4">
-          <form method="GET" className="flex flex-col items-end gap-3 sm:flex-row">
-            <div className="w-full flex-1 space-y-1.5">
+        <CardContent className="p-3">
+          <form method="GET" className="flex flex-col items-end gap-2 sm:flex-row">
+            <div className="w-full flex-1 space-y-1">
               <label htmlFor="q" className="text-xs text-muted-foreground">Search</label>
               <div className="relative">
-                <Search className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
+                <Search className="absolute top-2 left-2.5 size-3.5 text-muted-foreground" />
                 <Input
                   id="q"
                   name="q"
                   defaultValue={q}
                   placeholder="Action, target ID, or email..."
-                  className="h-9 pl-9 text-sm"
+                  className="h-8 pl-8 text-sm"
                 />
               </div>
             </div>
 
-            <div className="w-full space-y-1.5 sm:w-48">
+            <div className="w-full space-y-1 sm:w-48">
               <label htmlFor="type" className="text-xs text-muted-foreground">Target</label>
               <div className="relative">
-                <Filter className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
+                <Filter className="absolute top-2 left-2.5 size-3.5 text-muted-foreground" />
                 <select
                   id="type"
                   name="type"

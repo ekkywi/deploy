@@ -21,14 +21,14 @@ export function ConsoleEmptyState({
   className,
 }: ConsoleEmptyStateProps) {
   return (
-    <div className={cn('flex flex-col items-center px-4 py-16 text-center', className)}>
-      <Icon className="mb-3 size-8 text-muted-foreground/30" aria-hidden />
+    <div className={cn('flex flex-col items-center px-4 py-10 text-center', className)}>
+      <Icon className="mb-2 size-6 text-muted-foreground/30" aria-hidden />
       <p className="text-sm font-medium text-foreground">{title}</p>
       {description ? (
-        <p className="mt-1 max-w-md text-sm text-muted-foreground">{description}</p>
+        <p className="mt-1 max-w-sm text-xs text-muted-foreground">{description}</p>
       ) : null}
       {actionLabel && onAction ? (
-        <Button className="mt-4" size="sm" variant="outline" onClick={onAction}>
+        <Button className="mt-3" size="sm" variant="outline" onClick={onAction}>
           {actionLabel}
         </Button>
       ) : null}

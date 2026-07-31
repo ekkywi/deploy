@@ -411,6 +411,7 @@ test('environment delete workflow returns retryable failure when recovery fails'
 test('deployment and toggle are blocked while environment is DELETING or DELETED', () => {
   assert.equal(isDeploymentBlockedByLifecycle(LifeCycleStatus.DELETING), true);
   assert.equal(isDeploymentBlockedByLifecycle(LifeCycleStatus.DELETED), true);
+  assert.equal(isDeploymentBlockedByLifecycle(LifeCycleStatus.SUSPENDED), true);
   assert.equal(isDeploymentBlockedByLifecycle(LifeCycleStatus.ACTIVE), false);
 
   assert.equal(isRuntimeMutationBlockedByLifecycle(LifeCycleStatus.DELETING), true);

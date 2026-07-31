@@ -223,30 +223,29 @@ export default function InfrastructurePage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="space-y-2 border-b border-border pb-4">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-72" />
+      <div className="space-y-4">
+        <div className="space-y-2 border-b border-border pb-3">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-3.5 w-64" />
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Skeleton className="h-8 w-24 rounded-md" />
-          <Skeleton className="h-8 w-24 rounded-md" />
-          <Skeleton className="h-8 w-24 rounded-md" />
+        <div className="flex flex-wrap gap-1.5">
+          <Skeleton className="h-7 w-20 rounded-md" />
+          <Skeleton className="h-7 w-20 rounded-md" />
+          <Skeleton className="h-7 w-20 rounded-md" />
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <Skeleton className="h-48 rounded-lg" />
-          <Skeleton className="h-48 rounded-lg" />
-          <Skeleton className="h-48 rounded-lg" />
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <Skeleton className="h-40 rounded-md" />
+          <Skeleton className="h-40 rounded-md" />
+          <Skeleton className="h-40 rounded-md" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ConsolePageHeader
         title="Infrastructure"
-        description="Worker nodes that run deployments."
         actions={
           <Dialog
             open={isRegisterOpen}
@@ -256,7 +255,7 @@ export default function InfrastructurePage() {
             }}
           >
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button size="sm" className="gap-1.5">
                 <Plus className="size-4" /> Register Worker
               </Button>
             </DialogTrigger>
@@ -355,7 +354,7 @@ export default function InfrastructurePage() {
         }
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         <ConsoleStatChip label="Total Nodes" value={stats.total} />
         <ConsoleStatChip label="Active" value={stats.active} variant="active" />
         <ConsoleStatChip label="Maintenance" value={stats.disabled} variant="destructive" />
@@ -363,15 +362,15 @@ export default function InfrastructurePage() {
       </div>
 
       {workers.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center border-dashed py-20">
-          <Server className="mb-4 size-10 text-muted-foreground/30" />
-          <h3 className="text-[15px] font-medium tracking-[-0.02em]">No worker nodes registered</h3>
-          <p className="mt-1 max-w-md text-center text-[13px] leading-5 text-muted-foreground/85">
+        <Card className="flex flex-col items-center justify-center border-dashed py-12 shadow-none">
+          <Server className="mb-3 size-7 text-muted-foreground/30" />
+          <h3 className="text-sm font-medium">No worker nodes registered</h3>
+          <p className="mt-1 max-w-md text-center text-xs text-muted-foreground">
             Register the first execution node so projects can start scheduling deployments.
           </p>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {workers.map((worker) => (
             <Card
               key={worker.id}

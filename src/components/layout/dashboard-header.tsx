@@ -24,13 +24,13 @@ export function DashboardHeader() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 gap-2 px-1.5 text-muted-foreground hover:text-foreground">
-          <Avatar className="size-6">
+        <Button variant="ghost" className="relative h-7 gap-2 px-1 text-muted-foreground hover:text-foreground">
+          <Avatar className="size-5">
             <AvatarFallback className="bg-accent text-[10px] font-medium text-foreground">
               {initials || <User className="size-3" />}
             </AvatarFallback>
           </Avatar>
-          <span className="hidden text-sm sm:inline">
+          <span className="hidden text-xs sm:inline">
             {user.firstName}
           </span>
         </Button>

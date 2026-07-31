@@ -141,10 +141,9 @@ export default function ConsoleOverviewPage() {
   const alerts = overview?.alerts ?? []
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <ConsolePageHeader
         title="Overview"
-        description={`Signed in as ${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}`}
         actions={
           <div className="flex gap-2">
             <Button variant="outline" size="sm" asChild>
@@ -163,7 +162,7 @@ export default function ConsoleOverviewPage() {
         }
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         <ConsoleStatChip label="Projects" value={isLoading ? '—' : (summary?.projects ?? 0)} />
         <ConsoleStatChip label="Environments" value={isLoading ? '—' : (summary?.environments ?? 0)} />
         <ConsoleStatChip
@@ -201,25 +200,27 @@ export default function ConsoleOverviewPage() {
       </div>
 
       {error ? (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
+        <div className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2.5 text-sm">
           <p className="font-medium text-destructive">Unable to load overview</p>
-          <p className="mt-1 text-muted-foreground">{error}</p>
-          <Button className="mt-3" size="sm" onClick={() => window.location.reload()}>
+          <p className="mt-0.5 text-xs text-muted-foreground">{error}</p>
+          <Button className="mt-2" size="sm" onClick={() => window.location.reload()}>
             Retry
           </Button>
         </div>
       ) : null}
 
       {!isLoading && !error && alerts.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="text-sm font-medium text-foreground">Needs attention</h2>
-          <div className="divide-y divide-border rounded-lg border border-border">
+        <section className="space-y-2">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Needs attention
+          </h2>
+          <div className="divide-y divide-border rounded-md border border-border">
             {alerts.map((alert, index) => (
-              <div key={`${alert.title}-${index}`} className="flex gap-3 px-4 py-3">
+              <div key={`${alert.title}-${index}`} className="flex gap-2.5 px-3 py-2.5">
                 <span className={`mt-1.5 size-1.5 shrink-0 rounded-full ${alertDot(alert.tone)}`} />
                 <div className="min-w-0">
                   <p className="text-sm font-medium">{alert.title}</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">{alert.description}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{alert.description}</p>
                 </div>
               </div>
             ))}
@@ -227,9 +228,11 @@ export default function ConsoleOverviewPage() {
         </section>
       ) : null}
 
-      <section className="space-y-3">
+      <section className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-foreground">Recent deployments</h2>
+          <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Recent deployments
+          </h2>
           <Link
             href="/console/deployments"
             className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
@@ -239,14 +242,14 @@ export default function ConsoleOverviewPage() {
           </Link>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-border">
+        <div className="overflow-hidden rounded-md border border-border">
           {isLoading ? (
             <div className="divide-y divide-border">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 px-4 py-3">
-                  <Skeleton className="size-4 rounded-full" />
-                  <Skeleton className="h-4 w-48" />
-                  <Skeleton className="ml-auto h-4 w-16" />
+                <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+                  <Skeleton className="size-3.5 rounded-full" />
+                  <Skeleton className="h-3.5 w-48" />
+                  <Skeleton className="ml-auto h-3.5 w-16" />
                 </div>
               ))}
             </div>
@@ -265,15 +268,15 @@ export default function ConsoleOverviewPage() {
                 return (
                   <div
                     key={deployment.id}
-                    className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-2 px-3 py-2.5 transition-colors hover:bg-accent/50 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
                       <StatusIcon
-                        className={`size-4 shrink-0 ${meta.iconClassName} ${meta.spin ? 'animate-spin' : ''}`}
+                        className={`size-3.5 shrink-0 ${meta.iconClassName} ${meta.spin ? 'animate-spin' : ''}`}
                         aria-hidden
                       />
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
+                        <p className="truncate text-sm">
                           {deployment.projectName}
                           <span className="mx-1.5 text-muted-foreground">/</span>
                           <span className="text-muted-foreground">{deployment.environmentName}</span>
@@ -290,7 +293,7 @@ export default function ConsoleOverviewPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <div className="flex items-center gap-1.5 self-start sm:self-auto">
                       <DeploymentLogDialog
                         projectId={deployment.projectId}
                         environmentId={deployment.environmentId}

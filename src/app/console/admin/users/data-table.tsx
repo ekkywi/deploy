@@ -103,15 +103,15 @@ export function DataTable<TData, TValue>({
 
   return (
     <TooltipProvider>
-      <Card>
-        <CardHeader className="border-b pb-3">
+      <Card className="gap-0 overflow-hidden py-0 shadow-none">
+        <CardHeader className="border-b px-3 py-2.5">
           <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
             <Input
               placeholder={searchPlaceholder}
               value={globalFilter ?? ''}
               onChange={(event) => setGlobalFilter(event.target.value)}
-              className="h-9 pl-8 text-sm shadow-none"
+              className="h-8 pl-8 text-sm shadow-none"
             />
           </div>
         </CardHeader>
@@ -127,7 +127,7 @@ export function DataTable<TData, TValue>({
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className={`px-4 py-3 ${
+                      className={`h-9 px-3 py-2 text-xs ${
                         header.id === 'actions' ? 'text-right' : ''
                       }`}
                     >
@@ -151,7 +151,7 @@ export function DataTable<TData, TValue>({
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
                         key={cell.id}
-                        className={`px-4 py-2.5 text-[13px] ${
+                        className={`px-3 py-2 text-sm ${
                           cell.column.id === 'actions' ? 'text-right' : ''
                         }`}
                       >
@@ -185,20 +185,21 @@ export function DataTable<TData, TValue>({
           </Table>
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-2 border-t py-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardFooter className="flex flex-col gap-2 border-t px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
             {filteredCount === 0
               ? `No ${entityLabel} to display`
               : `Showing ${startRow}-${endRow} of ${filteredCount} ${entityLabel}`}
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
               Page {pageCount === 0 ? 0 : pageIndex + 1} of {pageCount}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
+                className="h-7"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
@@ -207,6 +208,7 @@ export function DataTable<TData, TValue>({
               <Button
                 variant="outline"
                 size="sm"
+                className="h-7"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
