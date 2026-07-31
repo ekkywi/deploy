@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
   Table,
@@ -314,13 +314,10 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
       {canModify && (
         <Card className="relative z-20 overflow-visible">
           <CardHeader className="border-b">
-            <CardTitle className="flex items-center gap-2 text-[15px] font-medium tracking-[-0.02em]">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <UserPlus className="size-4" aria-hidden />
-              Add New Member
+              Add member
             </CardTitle>
-            <CardDescription className="text-[13px] leading-5">
-              Invite collaborators by email and choose their workspace role.
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-5">
             <div className="grid gap-3 lg:grid-cols-[1fr_180px_auto]">
@@ -390,10 +387,7 @@ export function MembersTab({ projectId, currentUserId, currentUserGlobalRole }: 
 
       <Card className="relative z-10">
         <CardHeader className="border-b">
-          <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Project Members</CardTitle>
-          <CardDescription className="text-[13px] leading-5">
-            Manage who has access to this project and their permission levels.
-          </CardDescription>
+          <CardTitle className="text-sm font-medium">Members</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>

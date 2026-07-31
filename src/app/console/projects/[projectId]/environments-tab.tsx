@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import {
   Activity,
-  Boxes,
   ExternalLink,
   Globe,
   Layers,
@@ -14,7 +13,6 @@ import {
   Pencil,
   Plus,
   Server,
-  Sparkles,
   Trash2,
 } from 'lucide-react'
 
@@ -23,11 +21,12 @@ import { TierOptionGrid, type TierOption } from '@/components/tier-option-grid'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { formatEnvironmentDeleteErrorMessage, formatEnvironmentDeleteSuccessMessage } from '../environment-delete-message-utils'
 
@@ -92,19 +91,19 @@ const tierOptions: TierOption[] = [
   {
     value: ENVIRONMENT_TIERS.DEVELOPMENT,
     label: 'Development',
-    description: 'Fast iteration space for active builds, debugging, and test traffic.',
+    description: 'For active development and testing.',
     accentClassName: 'border-blue-500/30 bg-blue-500/6',
   },
   {
     value: ENVIRONMENT_TIERS.STAGING,
     label: 'Staging',
-    description: 'Preview the release path with production-like configuration and data flow.',
+    description: 'Production-like preview before release.',
     accentClassName: 'border-amber-500/30 bg-amber-500/6',
   },
   {
     value: ENVIRONMENT_TIERS.PRODUCTION,
     label: 'Production',
-    description: 'Live traffic target with the strongest operational and isolation expectations.',
+    description: 'Live traffic with the highest stability needs.',
     accentClassName: 'border-emerald-500/30 bg-emerald-500/6',
   },
 ]
@@ -149,7 +148,6 @@ export function EnvironmentsTab({
     production: environments.filter((env) => env.tier === ENVIRONMENT_TIERS.PRODUCTION).length,
     staging: environments.filter((env) => env.tier === ENVIRONMENT_TIERS.STAGING).length,
     development: environments.filter((env) => env.tier === ENVIRONMENT_TIERS.DEVELOPMENT).length,
-    nodeBased: environments.filter((env) => isNodeStack(env.stackType)).length,
   }
 
   const fetchEnvironments = useCallback(async () => {
@@ -281,197 +279,158 @@ export function EnvironmentsTab({
   }
 
   if (isLoading) {
-    return <div className="py-12 text-center text-muted-foreground animate-pulse">Loading infrastructure maps...</div>
+    return (
+      <div className="space-y-3 py-8">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Skeleton className="h-40 rounded-lg" />
+          <Skeleton className="h-40 rounded-lg" />
+          <Skeleton className="h-40 rounded-lg" />
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="border-border/80 bg-card/80">
-        <CardHeader className="gap-4 border-b">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-2">
-              <div className="inline-flex w-fit items-center gap-2 rounded-md border border-border/60 bg-background/55 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/82">
-                <Boxes className="size-3.5" />
-                Environment Control Panel
-              </div>
-              <div className="space-y-1">
-                <CardTitle className="text-[18px] tracking-[-0.03em]">Deployment Environments</CardTitle>
-                <CardDescription>
-                  Manage runtime placement, stack context, and deployment targets for this project.
-                </CardDescription>
-              </div>
-            </div>
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <ConsoleStatChip label="Total" value={summary.total} />
+          <ConsoleStatChip label="Production" value={summary.production} variant="active" />
+          <ConsoleStatChip label="Staging" value={summary.staging} variant="pending" />
+          <ConsoleStatChip label="Development" value={summary.development} variant="info" />
+        </div>
 
-            {canEdit ? (
-              <Dialog
-                open={isCreateOpen}
-                onOpenChange={(open) => {
-                  setIsCreateOpen(open)
-                  if (!open) {
-                    setCreateData(getInitialCreateData())
-                  }
-                }}
-              >
-                <DialogTrigger asChild>
-                  <Button className="gap-2 text-[13px] lg:self-start">
-                    <Plus className="size-4" /> New Environment
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[640px] max-h-[calc(100vh-2rem)] overflow-hidden p-0">
-                  <form onSubmit={handleCreate} className="flex max-h-[calc(100vh-2rem)] flex-col">
-                    <DialogHeader className="shrink-0 px-4 pt-4">
-                      <DialogTitle>Create Environment</DialogTitle>
-                      <DialogDescription>Define a new isolated environment logic layer.</DialogDescription>
-                    </DialogHeader>
+        {canEdit ? (
+          <Dialog
+            open={isCreateOpen}
+            onOpenChange={(open) => {
+              setIsCreateOpen(open)
+              if (!open) {
+                setCreateData(getInitialCreateData())
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-2 sm:self-start">
+                <Plus className="size-4" /> New Environment
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[640px] max-h-[calc(100vh-2rem)] overflow-hidden p-0">
+              <form onSubmit={handleCreate} className="flex max-h-[calc(100vh-2rem)] flex-col">
+                <DialogHeader className="shrink-0 px-4 pt-4">
+                  <DialogTitle>Create Environment</DialogTitle>
+                  <DialogDescription>Create a new environment for this project.</DialogDescription>
+                </DialogHeader>
 
-                    <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-                      <div className="grid gap-4">
-                        <div className="space-y-2">
-                          <Label>Environment Name <span className="text-destructive">*</span></Label>
-                          <Input
-                            placeholder="e.g., Production Core"
-                            value={createData.name}
-                            onChange={(e) => setCreateData({ ...createData, name: e.target.value })}
-                            required
-                            minLength={2}
-                          />
-                        </div>
+                <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label>Environment Name <span className="text-destructive">*</span></Label>
+                      <Input
+                        placeholder="e.g., Production Core"
+                        value={createData.name}
+                        onChange={(e) => setCreateData({ ...createData, name: e.target.value })}
+                        required
+                        minLength={2}
+                      />
+                    </div>
 
-                        <div className="space-y-2">
-                          <Label>Domain / Subdomain</Label>
-                          <Input
-                            placeholder="e.g., app.yourdomain.com"
-                            value={createData.domain}
-                            onChange={(e) => setCreateData({ ...createData, domain: e.target.value })}
-                          />
-                        </div>
+                    <div className="space-y-2">
+                      <Label>Domain / Subdomain</Label>
+                      <Input
+                        placeholder="e.g., app.yourdomain.com"
+                        value={createData.domain}
+                        onChange={(e) => setCreateData({ ...createData, domain: e.target.value })}
+                      />
+                    </div>
 
-                        <div className="space-y-4 rounded-lg border border-border/70 bg-muted/16 p-4">
-                          <TierOptionGrid
-                            options={tierOptions}
-                            selectedValues={[createData.tier]}
-                            onChange={(nextValues) =>
-                              setCreateData((prev) => ({
-                                ...prev,
-                                tier: (nextValues[0] ?? prev.tier) as EnvironmentTier,
-                              }))
-                            }
-                            mode="single"
-                            label="Environment Tier"
-                            helperText="Choose one placement tier. This drives the default operational context for the environment."
-                          />
+                    <div className="space-y-4 rounded-lg border border-border p-4">
+                      <TierOptionGrid
+                        options={tierOptions}
+                        selectedValues={[createData.tier]}
+                        onChange={(nextValues) =>
+                          setCreateData((prev) => ({
+                            ...prev,
+                            tier: (nextValues[0] ?? prev.tier) as EnvironmentTier,
+                          }))
+                        }
+                        mode="single"
+                        label="Environment Tier"
+                        helperText="Select the environment tier."
+                      />
 
-                          <div className="space-y-2">
-                            <Label>Tech Stack</Label>
+                      <div className="space-y-2">
+                        <Label>Tech Stack</Label>
+                        <select
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                          value={createData.stackType}
+                          onChange={(e) => {
+                            const nextStack = e.target.value as StackType
+                            setCreateData((prev) => ({
+                              ...prev,
+                              stackType: nextStack,
+                              nodeVersion: isNodeStack(nextStack) ? prev.nodeVersion || '22' : prev.nodeVersion,
+                            }))
+                          }}
+                        >
+                          {Object.values(STACK_TYPES).map((stackType) => (
+                            <option key={stackType} value={stackType}>
+                              {stackType}
+                            </option>
+                          ))}
+                        </select>
+
+                        {isNodeStack(createData.stackType) && (
+                          <div className="space-y-2 rounded-lg border border-border p-3">
+                            <Label className="text-sm">Node Version</Label>
                             <select
-                              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                              value={createData.stackType}
-                              onChange={(e) => {
-                                const nextStack = e.target.value as StackType
-                                setCreateData((prev) => ({
-                                  ...prev,
-                                  stackType: nextStack,
-                                  nodeVersion: isNodeStack(nextStack) ? prev.nodeVersion || '22' : prev.nodeVersion,
-                                }))
-                              }}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                              value={createData.nodeVersion}
+                              onChange={(e) => setCreateData({ ...createData, nodeVersion: e.target.value })}
                             >
-                              {Object.values(STACK_TYPES).map((stackType) => (
-                                <option key={stackType} value={stackType}>
-                                  {stackType}
+                              {NODE_VERSION_OPTIONS.map((version) => (
+                                <option key={version} value={version}>
+                                  Node {version}
                                 </option>
                               ))}
                             </select>
-
-                            {isNodeStack(createData.stackType) && (
-                              <div className="space-y-2 rounded-lg border border-border/70 bg-background/55 p-4">
-                                <div className="flex items-center justify-between gap-3">
-                                  <Label className="text-[13px]">Node Version</Label>
-                                  <span className="rounded-md border border-border/60 bg-muted/50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                                    Node runtime only
-                                  </span>
-                                </div>
-                                <select
-                                  className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                                  value={createData.nodeVersion}
-                                  onChange={(e) => setCreateData({ ...createData, nodeVersion: e.target.value })}
-                                >
-                                  {NODE_VERSION_OPTIONS.map((version) => (
-                                    <option key={version} value={version}>
-                                      Node {version}
-                                    </option>
-                                  ))}
-                                </select>
-                                <p className="text-[12px] leading-5 text-muted-foreground/80">
-                                  This version will be sent to the agent and used as the Docker base image for Node stacks.
-                                </p>
-                              </div>
-                            )}
-
-                            <div className="rounded-xl border border-border/60 bg-background/55 p-3 text-[12px] leading-5 text-muted-foreground/85">
-                              Tier and stack are shown together in the console so teammates can understand routing and
-                              runtime placement at a glance.
-                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
+                  </div>
+                </div>
 
-                    <DialogFooter className="shrink-0 px-4 pb-4">
-                      <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)} disabled={isCreating}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={isCreating || !createData.name}>
-                        {isCreating && <Loader2 className="mr-2 size-4 animate-spin" />}
-                        Create
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            ) : null}
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <ConsoleStatChip label="Total" value={summary.total} />
-            <ConsoleStatChip label="Production" value={summary.production} variant="active" />
-            <ConsoleStatChip label="Staging" value={summary.staging} variant="pending" />
-            <ConsoleStatChip label="Development" value={summary.development} variant="info" />
-            <ConsoleStatChip label="Node-based" value={summary.nodeBased} />
-          </div>
-
-          <div className="flex flex-col gap-3 rounded-lg border border-border/70 bg-muted/14 p-4 md:flex-row md:items-center md:justify-between">
-            <div className="space-y-1">
-              <p className="text-[13px] font-medium text-foreground">Runtime overview</p>
-              <p className="text-[12px] leading-5 text-muted-foreground/85">
-                Scan tier, stack, and deployment readiness before diving into each environment dashboard.
-              </p>
-            </div>
-            <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-muted-foreground/75">
-              <Sparkles className="size-3.5" />
-              Control panel view
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+                <DialogFooter className="shrink-0 px-4 pb-4">
+                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)} disabled={isCreating}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isCreating || !createData.name}>
+                    {isCreating && <Loader2 className="mr-2 size-4 animate-spin" />}
+                    Create
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        ) : null}
+      </div>
 
       {environments.length === 0 ? (
-        <Card className="border-dashed py-16">
-          <CardContent className="flex flex-col items-center justify-center text-center">
-            <div className="mb-4 flex size-14 items-center justify-center rounded-lg border border-border/70 bg-muted/20">
-              <Layers className="size-7 text-muted-foreground/40" />
-            </div>
-            <h3 className="text-[15px] font-medium tracking-[-0.02em]">No environments configured yet</h3>
-            <p className="mt-2 max-w-md text-[13px] leading-5 text-muted-foreground/85">
-              Start by creating the first environment so this project has a clear runtime target and deployment lane.
-            </p>
-            {canEdit ? (
-              <Button className="mt-5 gap-2 text-[13px]" onClick={() => setIsCreateOpen(true)}>
-                <Plus className="size-4" />
-                Create First Environment
-              </Button>
-            ) : null}
-          </CardContent>
-        </Card>
+        <div className="rounded-lg border border-dashed border-border px-4 py-16 text-center">
+          <Layers className="mx-auto mb-3 size-8 text-muted-foreground/30" />
+          <h3 className="text-sm font-medium">No environments yet</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Create an environment to start deploying.
+          </p>
+          {canEdit ? (
+            <Button className="mt-4 gap-2" size="sm" onClick={() => setIsCreateOpen(true)}>
+              <Plus className="size-4" />
+              Create environment
+            </Button>
+          ) : null}
+        </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {environments.map((env) => (
@@ -646,7 +605,7 @@ export function EnvironmentsTab({
                     }
                     mode="single"
                     label="Environment Tier"
-                    helperText="Choose one placement tier. This keeps release intent and operational expectations clear."
+                    helperText="Select the environment tier."
                   />
 
                   <div className="space-y-2">
@@ -670,38 +629,26 @@ export function EnvironmentsTab({
                       ))}
                     </select>
 
-                    {isNodeStack(editData.stackType) && (
-                      <div className="space-y-2 rounded-lg border border-border/70 bg-background/55 p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <Label className="text-[13px]">Node Version</Label>
-                          <span className="rounded-md border border-border/60 bg-muted/50 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                            Node runtime only
-                          </span>
-                        </div>
-                        <select
-                          className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                          value={editData.nodeVersion}
-                          onChange={(e) => setEditData({ ...editData, nodeVersion: e.target.value })}
-                        >
-                          {NODE_VERSION_OPTIONS.map((version) => (
-                            <option key={version} value={version}>
-                              Node {version}
-                            </option>
-                          ))}
-                        </select>
-                        <p className="text-[12px] leading-5 text-muted-foreground/80">
-                          Changing the stack to a non-Node runtime will keep the value stored, but it is ignored until a Node stack is selected again.
-                        </p>
+                        {isNodeStack(editData.stackType) && (
+                          <div className="space-y-2 rounded-lg border border-border p-3">
+                            <Label className="text-sm">Node Version</Label>
+                            <select
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                              value={editData.nodeVersion}
+                              onChange={(e) => setEditData({ ...editData, nodeVersion: e.target.value })}
+                            >
+                              {NODE_VERSION_OPTIONS.map((version) => (
+                                <option key={version} value={version}>
+                                  Node {version}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
                       </div>
-                    )}
-
-                    <div className="rounded-xl border border-border/60 bg-background/55 p-3 text-[12px] leading-5 text-muted-foreground/85">
-                      Tier selection is now visually grouped with stack info so updates feel faster and more obvious.
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
             <DialogFooter className="shrink-0 px-4 pb-4">
               <Button type="button" variant="outline" onClick={() => setEditingEnv(null)} disabled={isUpdating}>

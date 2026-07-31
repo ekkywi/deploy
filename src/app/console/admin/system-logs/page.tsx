@@ -97,39 +97,38 @@ export default async function SystemLogsPage({
   return (
     <div className="space-y-6">
       <ConsolePageHeader
-        eyebrow="Security & Compliance"
-        title="System Audit Logs"
-        description="Immutable record of critical administrative actions across the platform."
+        title="Audit Logs"
+        description="Administrative actions across the platform."
       />
 
-      <Card className="bg-muted/20 border-border/50">
+      <Card>
         <CardContent className="p-4">
-          <form method="GET" className="flex flex-col sm:flex-row gap-3 items-end">
-            <div className="space-y-1.5 flex-1 w-full">
-              <label htmlFor="q" className="text-[11px] font-medium uppercase text-muted-foreground tracking-wider">Search</label>
+          <form method="GET" className="flex flex-col items-end gap-3 sm:flex-row">
+            <div className="w-full flex-1 space-y-1.5">
+              <label htmlFor="q" className="text-xs text-muted-foreground">Search</label>
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-                <Input 
+                <Search className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
+                <Input
                   id="q"
                   name="q"
                   defaultValue={q}
-                  placeholder="Search by action, target ID, or user email..."
-                  className="pl-9 h-9 text-[13px] bg-background"
+                  placeholder="Action, target ID, or email..."
+                  className="h-9 pl-9 text-sm"
                 />
               </div>
             </div>
-            
-            <div className="space-y-1.5 w-full sm:w-48">
-              <label htmlFor="type" className="text-[11px] font-medium uppercase text-muted-foreground tracking-wider">Target Type</label>
+
+            <div className="w-full space-y-1.5 sm:w-48">
+              <label htmlFor="type" className="text-xs text-muted-foreground">Target</label>
               <div className="relative">
-                <Filter className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-                <select 
+                <Filter className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
+                <select
                   id="type"
                   name="type"
                   defaultValue={type}
-                  className="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 py-1 text-[13px] shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="flex h-9 w-full rounded-md border border-input bg-background py-1 pr-3 pl-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
                 >
-                  <option value="ALL">All Types</option>
+                  <option value="ALL">All types</option>
                   <option value="INFRASTRUCTURE">Infrastructure</option>
                   <option value="PROJECT">Project</option>
                   <option value="ENVIRONMENT">Environment</option>
@@ -139,90 +138,102 @@ export default async function SystemLogsPage({
             </div>
 
             <input type="hidden" name="sort" value={sort} />
-            
-            <Button type="submit" size="sm" className="h-9 px-6 w-full sm:w-auto">
-              Apply Filters
+
+            <Button type="submit" size="sm" className="h-9 w-full px-4 sm:w-auto">
+              Apply
             </Button>
-            
+
             {(q || type !== 'ALL') && (
-                <Button type="button" variant="ghost" size="sm" className="h-9 w-full sm:w-auto" asChild>
-                    <Link href="/console/admin/system-logs">Reset</Link>
-                </Button>
+              <Button type="button" variant="ghost" size="sm" className="h-9 w-full sm:w-auto" asChild>
+                <Link href="/console/admin/system-logs">Reset</Link>
+              </Button>
             )}
           </form>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="border-b py-4">
-          <div className="flex justify-between items-center">
+        <CardHeader className="border-b py-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Activity Trails</CardTitle>
-              <CardDescription className="text-[13px] leading-5">Showing {auditLogs.length} of {totalRecords} events.</CardDescription>
+              <CardTitle>Events</CardTitle>
+              <CardDescription>
+                Showing {auditLogs.length} of {totalRecords}
+              </CardDescription>
             </div>
-            
-            <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
+
+            <Button variant="outline" size="sm" asChild>
               <Link href={createQueryString('sort', sort === 'desc' ? 'asc' : 'desc')}>
-                <ArrowUpDown className="mr-2 size-3" />
-                {sort === 'desc' ? 'Newest First' : 'Oldest First'}
+                <ArrowUpDown className="mr-2 size-3.5" />
+                {sort === 'desc' ? 'Newest first' : 'Oldest first'}
               </Link>
             </Button>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {auditLogs.length === 0 ? (
-            <div className="flex flex-col items-center py-16 text-center text-muted-foreground">
-              <ShieldAlert className="mb-3 size-8 opacity-20" />
-              <p className="text-[13px] font-medium text-foreground/85">No audit logs found.</p>
-              <p className="mt-1 text-[13px] leading-5 text-muted-foreground/85">
-                Adjust your search or filter criteria.
+            <div className="flex flex-col items-center py-16 text-center">
+              <ShieldAlert className="mb-3 size-8 text-muted-foreground/30" />
+              <p className="text-sm font-medium">No audit logs found</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Adjust your search or filters.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-muted-foreground">
-                <thead className="border-b bg-muted/50 text-xs uppercase text-foreground/70">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-border text-xs text-muted-foreground">
                   <tr>
-                    <th scope="col" className="px-6 py-3 font-medium">Timestamp</th>
-                    <th scope="col" className="px-6 py-3 font-medium">Actor (User)</th>
-                    <th scope="col" className="px-6 py-3 font-medium">Action</th>
-                    <th scope="col" className="px-6 py-3 font-medium">Target</th>
-                    <th scope="col" className="px-6 py-3 font-medium">IP Address</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Time</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Actor</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Action</th>
+                    <th scope="col" className="px-4 py-3 font-medium">Target</th>
+                    <th scope="col" className="px-4 py-3 font-medium">IP</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/70">
-                  {auditLogs.map((log) => (
-                    <tr key={log.id} className="transition-colors hover:bg-muted/30">
-                      <td className="whitespace-nowrap px-6 py-4 font-mono text-[11px]">
-                        {format(new Date(log.createdAt), 'yyyy-MM-dd HH:mm:ss')}
-                      </td>
-                      <td className="px-6 py-4">
-                        {log.user ? (
-                          <div>
-                            <p className="text-[13px] font-medium text-foreground">{log.user.firstName} {log.user.lastName}</p>
-                            <p className="text-[11px] text-muted-foreground/70">{log.user.email}</p>
+                <tbody className="divide-y divide-border">
+                  {auditLogs.map((log) => {
+                    const meta = log.metadata as { projectName?: string; environmentName?: string } | null
+                    const readableTargetName = meta?.projectName || meta?.environmentName
+
+                    return (
+                      <tr key={log.id} className="transition-colors hover:bg-accent/40">
+                        <td className="whitespace-nowrap px-4 py-3 font-mono text-[11px] text-muted-foreground">
+                          {format(new Date(log.createdAt), 'yyyy-MM-dd HH:mm:ss')}
+                        </td>
+                        <td className="px-4 py-3">
+                          {log.user ? (
+                            <div>
+                              <p className="text-sm font-medium text-foreground">
+                                {log.user.firstName} {log.user.lastName}
+                              </p>
+                              <p className="text-xs text-muted-foreground">{log.user.email}</p>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic">System</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">{getActionBadge(log.action)}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            {getTargetIcon(log.targetType)}
+                            <div>
+                              <p className="text-xs font-medium text-foreground">
+                                {log.targetType}
+                                {readableTargetName ? (
+                                  <span className="text-muted-foreground"> — {readableTargetName}</span>
+                                ) : null}
+                              </p>
+                              <p className="font-mono text-[10px] text-muted-foreground">{log.targetId}</p>
+                            </div>
                           </div>
-                        ) : (
-                          <span className="text-[12px] italic text-muted-foreground/60">System / Deleted User</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {getActionBadge(log.action)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          {getTargetIcon(log.targetType)}
-                          <div>
-                            <p className="text-[12px] font-medium text-foreground">{log.targetType}</p>
-                            <p className="font-mono text-[10px] text-muted-foreground/70">{log.targetId}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 font-mono text-[11px]">
-                        {log.ipAddress || '-'}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 font-mono text-[11px] text-muted-foreground">
+                          {log.ipAddress || '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

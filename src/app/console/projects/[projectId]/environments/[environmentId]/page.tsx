@@ -1,47 +1,35 @@
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, Activity, GitBranch, CheckCircle2, XCircle, Loader2, Clock, Server } from 'lucide-react';
-import prisma from '@/lib/prisma';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { AutoRefresh } from '@/components/auto-refresh';
-import { DeployButton } from './deploy-button';
-import { EnvVarsManager } from './env-vars-manager';
-import { DeployStatus } from '@prisma/client';
-import { ToggleStateButton } from './toggle-state-button'; 
-import { formatDistanceToNow } from 'date-fns';
-import { DeploymentLogDialog } from '@/components/deployment-log-dialog';
-
-function StatusBadge({ status }: { status: string }) {
-  switch (status) {
-    case 'SUCCESS':
-      return <Badge className="border border-emerald-400/14 bg-emerald-400/8 px-2.5 py-1 text-[10px] font-medium text-emerald-200 hover:bg-emerald-400/12"><CheckCircle2 className="mr-1 size-3" /> Success</Badge>
-    case 'FAILED':
-      return <Badge variant="destructive" className="px-2.5 py-1 text-[10px] font-medium"><XCircle className="mr-1 size-3" /> Failed</Badge>
-    case 'BUILDING':
-      return <Badge className="border border-sky-400/14 bg-sky-400/8 px-2.5 py-1 text-[10px] font-medium text-sky-100 hover:bg-sky-400/12"><Loader2 className="mr-1 size-3 animate-spin" /> Building</Badge>
-    case 'PENDING':
-    default:
-      return <Badge variant="outline" className="border-border/60 px-2.5 py-1 text-[10px] font-medium text-muted-foreground"><Clock className="mr-1 size-3" /> Pending</Badge>
-  }
-}
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeft, Activity, GitBranch, Clock, Server } from 'lucide-react'
+import prisma from '@/lib/prisma'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { AutoRefresh } from '@/components/auto-refresh'
+import { DeployButton } from './deploy-button'
+import { EnvVarsManager } from './env-vars-manager'
+import { DeployStatus } from '@prisma/client'
+import { ToggleStateButton } from './toggle-state-button'
+import { formatDistanceToNow } from 'date-fns'
+import { DeploymentLogDialog } from '@/components/deployment-log-dialog'
+import { DeploymentStatusBadge } from '@/components/deployment-status-badge'
+import { ConsoleEmptyState } from '@/components/layout/console-empty-state'
 
 export default async function EnvironmentDashboardPage({
   params,
 }: {
   params: Promise<{ projectId: string; environmentId: string }>
 }) {
-  const resolvedParams = await params;
-  const { projectId, environmentId } = resolvedParams;
+  const resolvedParams = await params
+  const { projectId, environmentId } = resolvedParams
 
   const environment = await prisma.environment.findUnique({
     where: { id: environmentId, projectId, deletedAt: null },
     include: {
       project: { select: { name: true, repoUrl: true } },
-      variables: true 
-    }
-  });
+      variables: true,
+    },
+  })
 
   if (!environment) {
     notFound()
@@ -52,118 +40,126 @@ export default async function EnvironmentDashboardPage({
     orderBy: { createdAt: 'desc' },
     take: 10,
     include: {
-      workerNode: { select: { name: true } }
-    }
-  });
+      workerNode: { select: { name: true } },
+    },
+  })
 
-  const activeDeployment = deployments.find(d => d.status === DeployStatus.PENDING || d.status === DeployStatus.BUILDING);
-  
+  const activeDeployment = deployments.find(
+    (d) => d.status === DeployStatus.PENDING || d.status === DeployStatus.BUILDING
+  )
+
   const lastSuccessDeploy = await prisma.deployment.findFirst({
     where: { environmentId, status: DeployStatus.SUCCESS },
     orderBy: { createdAt: 'desc' },
-    include: { workerNode: true }
-  });
+    include: { workerNode: true },
+  })
 
-  const isBuilding = !!activeDeployment;
-  const hasSuccessfulDeploy = !!lastSuccessDeploy;
+  const isBuilding = !!activeDeployment
+  const hasSuccessfulDeploy = !!lastSuccessDeploy
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-3">
-          <Button variant="ghost" className="w-fit px-3 text-muted-foreground" asChild>
-            <Link href={`/console/projects/${projectId}`}>
-              <ArrowLeft className="mr-2 size-4" /> Back to Project
-            </Link>
-          </Button>
+      <div className="space-y-3 border-b border-border pb-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-2 h-8 px-2 text-muted-foreground hover:text-foreground"
+          asChild
+        >
+          <Link href={`/console/projects/${projectId}`}>
+            <ArrowLeft className="mr-1.5 size-3.5" />
+            {environment.project.name}
+          </Link>
+        </Button>
 
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-medium tracking-tight text-foreground">
-                {environment.name}
-              </h1>
-              <Badge variant="outline" className="uppercase tracking-widest text-[10px]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">{environment.name}</h1>
+              <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
                 {environment.tier}
               </Badge>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {environment.domain ? `Routed to ${environment.domain}` : 'No domain routed yet'}
+            <p className="text-sm text-muted-foreground">
+              {environment.domain ? environment.domain : 'No domain configured'}
             </p>
           </div>
-        </div>
 
-        <div className="flex gap-2">
-          {environment.project.repoUrl && (
-            <Button variant="outline" asChild>
-              <a href={environment.project.repoUrl} target="_blank" rel="noopener noreferrer">
-                <GitBranch className="mr-2 size-4" /> Repository
-              </a>
-            </Button>
-          )}
-          
-          <ToggleStateButton 
-            projectId={projectId}
-            environmentId={environmentId}
-            currentLifecycle={environment.lifecycle}
-            hasSuccessfulDeploy={hasSuccessfulDeploy}
-          />
-          
-          <DeployButton 
-            projectId={projectId} 
-            environmentId={environmentId} 
-            hasRepoUrl={!!environment.project.repoUrl} 
-            defaultBranch={environment.branchName}
-          />
+          <div className="flex flex-wrap gap-2">
+            {environment.project.repoUrl ? (
+              <Button variant="outline" size="sm" asChild>
+                <a href={environment.project.repoUrl} target="_blank" rel="noopener noreferrer">
+                  <GitBranch className="mr-1.5 size-3.5" />
+                  Repository
+                </a>
+              </Button>
+            ) : null}
+
+            <ToggleStateButton
+              projectId={projectId}
+              environmentId={environmentId}
+              currentLifecycle={environment.lifecycle}
+              hasSuccessfulDeploy={hasSuccessfulDeploy}
+            />
+
+            <DeployButton
+              projectId={projectId}
+              environmentId={environmentId}
+              hasRepoUrl={!!environment.project.repoUrl}
+              defaultBranch={environment.branchName}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="md:col-span-2">
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
           <CardHeader className="border-b">
-            <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Deployment History</CardTitle>
-            <CardDescription>Recent builds and execution logs for this environment.</CardDescription>
+            <CardTitle>Deployments</CardTitle>
+            <CardDescription>Recent builds for this environment.</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {deployments.length === 0 ? (
-                <div className="py-12 text-center text-muted-foreground">
-                <Activity className="mx-auto size-12 opacity-20 mb-3" />
-                <p>No deployments yet.</p>
-                <p className="text-sm">Click &quot;Trigger Deploy&quot; to start your first build.</p>
-              </div>
+              <ConsoleEmptyState
+                icon={Activity}
+                title="No deployments yet"
+                description='Click "Deploy" to start your first build.'
+              />
             ) : (
-              <div className="divide-y divide-border/70">
+              <div className="divide-y divide-border">
                 {deployments.map((deploy) => (
-                  <div key={deploy.id} className="flex items-center justify-between p-3.5 transition-colors hover:bg-muted/24">
-                    <div className="flex items-center gap-4">
-                      <div className="w-28">
-                        <StatusBadge status={deploy.status} />
-                      </div>
-                      <div>
-                        <p className="flex items-center gap-2 text-sm font-medium">
-                          {deploy.commitHash ? `Branch: ${deploy.commitHash}` : 'Triggered Deploy'}
+                  <div
+                    key={deploy.id}
+                    className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-accent/40 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      <DeploymentStatusBadge status={deploy.status} />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {deploy.commitHash
+                            ? deploy.commitHash.substring(0, 7)
+                            : 'Manual deploy'}
                         </p>
-                        <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground/80">
-                          <span className="flex items-center gap-1">
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
                             <Clock className="size-3" />
                             {formatDistanceToNow(new Date(deploy.createdAt), { addSuffix: true })}
                           </span>
-                          {deploy.workerNode && (
-                            <span className="flex items-center gap-1">
+                          {deploy.workerNode ? (
+                            <span className="inline-flex items-center gap-1">
                               <Server className="size-3" />
                               {deploy.workerNode.name}
                             </span>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     </div>
-                    <div>
-                      <DeploymentLogDialog 
-                        projectId={projectId}
-                        environmentId={environmentId}
-                        deploymentId={deploy.id}
-                        status={deploy.status}
-                      />
-                    </div>
+                    <DeploymentLogDialog
+                      projectId={projectId}
+                      environmentId={environmentId}
+                      deploymentId={deploy.id}
+                      status={deploy.status}
+                    />
                   </div>
                 ))}
               </div>
@@ -173,34 +169,36 @@ export default async function EnvironmentDashboardPage({
 
         <Card>
           <CardHeader className="border-b">
-            <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Active Runtime</CardTitle>
-            <CardDescription>Current execution coordinates.</CardDescription>
+            <CardTitle>Runtime</CardTitle>
+            <CardDescription>Stack and worker.</CardDescription>
           </CardHeader>
-          <CardContent className="pt-6 space-y-4 text-sm">
+          <CardContent className="space-y-4 pt-4 text-sm">
             <div className="space-y-1">
-              <span className="text-muted-foreground">Stack Type</span>
+              <span className="text-xs text-muted-foreground">Stack</span>
               <p className="font-medium">{environment.stackType}</p>
             </div>
             <div className="space-y-1">
-              <span className="text-muted-foreground">Node Version</span>
+              <span className="text-xs text-muted-foreground">Node</span>
               <p className="font-medium">
-                {environment.stackType === 'LARAVEL' ? 'Not used' : `Node ${environment.nodeVersion || '22'}`}
+                {environment.stackType === 'LARAVEL'
+                  ? 'Not used'
+                  : `Node ${environment.nodeVersion || '22'}`}
               </p>
             </div>
             <div className="space-y-1">
-              <span className="text-muted-foreground">Worker Node</span>
+              <span className="text-xs text-muted-foreground">Worker</span>
               {lastSuccessDeploy?.workerNode ? (
-                <p className="font-medium flex items-center gap-2">
+                <p className="flex items-center gap-2 font-medium">
                   <Server className="size-3 text-emerald-500" />
                   {lastSuccessDeploy.workerNode.name}
                 </p>
               ) : (
-                <p className="font-medium italic opacity-70">Waiting for deployment...</p>
+                <p className="font-medium text-muted-foreground">Waiting for deploy</p>
               )}
             </div>
             <div className="space-y-1">
-              <span className="text-muted-foreground">Internal Port</span>
-              <p className={`font-medium ${!environment.assignedPort ? 'italic opacity-70' : ''}`}>
+              <span className="text-xs text-muted-foreground">Port</span>
+              <p className="font-medium">
                 {environment.assignedPort ? environment.assignedPort : 'Unassigned'}
               </p>
             </div>
@@ -208,10 +206,10 @@ export default async function EnvironmentDashboardPage({
         </Card>
       </div>
 
-      <EnvVarsManager 
-        projectId={projectId} 
-        environmentId={environmentId} 
-        initialVars={environment.variables} 
+      <EnvVarsManager
+        projectId={projectId}
+        environmentId={environmentId}
+        initialVars={environment.variables}
       />
       <AutoRefresh isActive={isBuilding} />
     </div>

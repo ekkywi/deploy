@@ -43,10 +43,11 @@ export function ToggleStateButton({ projectId, environmentId, currentLifecycle, 
   }
 
   return (
-    <Button 
-      onClick={handleToggle} 
-      disabled={isLoading} 
-      variant={isActive ? "outline" : "default"}
+    <Button
+      onClick={() => void handleToggle()}
+      disabled={isLoading}
+      variant={isActive ? 'outline' : 'default'}
+      size="sm"
     >
       {isLoading ? (
         <Loader2 className="mr-2 size-4 animate-spin" />
@@ -55,7 +56,7 @@ export function ToggleStateButton({ projectId, environmentId, currentLifecycle, 
       ) : (
         <Play className="mr-2 size-4" />
       )}
-      {isLoading ? 'Updating...' : isActive ? 'Suspend App' : 'Resume App'}
+      {isLoading ? 'Updating...' : isActive ? 'Suspend' : 'Resume'}
     </Button>
   )
 }

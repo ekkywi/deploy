@@ -108,9 +108,8 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <ConsolePageHeader
-        eyebrow="Administration"
-        title="User Management"
-        description="Review access requests, active operators, and account status changes."
+        title="Users"
+        description="Approve accounts and manage access."
         actions={<AddUserDialog onSuccess={handleAddSuccess} />}
       />
 

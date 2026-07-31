@@ -249,8 +249,8 @@ export const getColumns = (
                   <AlertDialogTitle>Approve User Account?</AlertDialogTitle>
                   <AlertDialogDescription>
                     This action will activate the <strong>{user.email}</strong>{' '}
-                    account and give them full access to the Control Plane according
-                    to their access level.
+                    account and give them access to the console according
+                    to their role.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

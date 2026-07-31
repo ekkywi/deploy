@@ -6,7 +6,6 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuthStore } from '@/store/useAuthStore'
 import { ConsolePageHeader } from '@/components/layout/console-page-header'
-import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
 import { getColumns, ProjectWithDetails } from './columns'
 import { DataTable } from '../admin/users/data-table'
 import { CreateProjectDialog } from './create-project-dialog'
@@ -109,24 +108,12 @@ export default function ProjectsPage() {
     [user]
   )
 
-  const stats = useMemo(() => {
-    if (!user) return { total: 0, myOwn: 0 }
-    return {
-      total: projects.length,
-      myOwn: projects.filter(p => 
-        p.members.some(m => m.userId === user.id && m.role === 'OWNER')
-      ).length
-    }
-  }, [projects, user])
-
   if (!user) return null
 
   return (
     <div className="space-y-6">
       <ConsolePageHeader
-        eyebrow="Project Administration"
-        title="Project Management"
-        description="Organize workloads, repositories, and logical environments."
+        title="Projects"
         actions={
           <Button onClick={() => setIsCreateOpen(true)} className="w-full sm:w-auto">
             <Plus className="mr-2 size-4" />
@@ -135,11 +122,6 @@ export default function ProjectsPage() {
         }
       />
 
-      <div className="flex flex-wrap gap-2">
-        <ConsoleStatChip label="Total Projects" value={stats.total} />
-        <ConsoleStatChip label="Owned by Me" value={stats.myOwn} />
-      </div>
-
       <DataTable
         columns={columns}
         data={projects}
@@ -147,7 +129,7 @@ export default function ProjectsPage() {
         searchPlaceholder="Search projects..."
         entityLabel="projects"
         emptyTitle="No projects found"
-        emptyDescription="Create a project or adjust your search terms."
+        emptyDescription="Create a project to get started."
       />
 
       <CreateProjectDialog 

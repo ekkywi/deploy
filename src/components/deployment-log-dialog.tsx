@@ -22,8 +22,8 @@ export function DeploymentLogDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="rounded-md border border-border/60 bg-muted/20 px-2.5 py-1 font-mono text-[10px] font-medium text-foreground/80 transition-colors hover:bg-muted/45 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1">
-          View Logs
+        <button className="rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/30">
+          Logs
         </button>
       </DialogTrigger>
       <DialogContent

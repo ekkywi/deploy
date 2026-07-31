@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface SettingsTabProps {
@@ -127,10 +127,7 @@ export function SettingsTab({
     <>
       <Card>
         <CardHeader className="border-b">
-          <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Workspace Settings</CardTitle>
-          <CardDescription className="text-[13px] leading-5">
-            Manage operational controls for this project workspace.
-          </CardDescription>
+          <CardTitle className="text-sm font-medium">Webhook</CardTitle>
         </CardHeader>
         <CardContent className="pt-5">
           <div className="rounded-lg border border-border/70 bg-muted/18 p-4">

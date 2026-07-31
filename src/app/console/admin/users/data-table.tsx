@@ -30,7 +30,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { Search, Users } from 'lucide-react'
+import { Search, Inbox } from 'lucide-react'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -104,9 +104,9 @@ export function DataTable<TData, TValue>({
   return (
     <TooltipProvider>
       <Card>
-        <CardHeader className="border-b bg-muted/[0.08] pb-3">
+        <CardHeader className="border-b pb-3">
           <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground/80" />
+            <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
             <Input
               placeholder={searchPlaceholder}
               value={globalFilter ?? ''}
@@ -122,7 +122,7 @@ export function DataTable<TData, TValue>({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
                   key={headerGroup.id}
-                    className="border-b bg-muted/18 hover:bg-muted/18"
+                    className="border-b hover:bg-transparent"
                 >
                   {headerGroup.headers.map((header) => (
                     <TableHead
@@ -170,7 +170,7 @@ export function DataTable<TData, TValue>({
                     className="h-36 px-4 py-3"
                   >
                     <div className="flex flex-col items-center justify-center gap-1.5 text-center">
-                      <Users className="size-7 text-muted-foreground/45" />
+                      <Inbox className="size-7 text-muted-foreground/45" />
                       <p className="text-sm font-medium text-foreground">
                         {emptyTitle ?? `No ${entityLabel} found`}
                       </p>
@@ -185,7 +185,7 @@ export function DataTable<TData, TValue>({
           </Table>
         </CardContent>
 
-        <CardFooter className="flex flex-col gap-2 border-t bg-muted/[0.08] py-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardFooter className="flex flex-col gap-2 border-t py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-muted-foreground">
             {filteredCount === 0
               ? `No ${entityLabel} to display`

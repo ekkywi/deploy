@@ -5,103 +5,32 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
   ExternalLink,
-  LayoutDashboard,
   Server,
   Settings,
   Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ConsolePageHeader } from '@/components/layout/console-page-header'
-import { ConsoleStatChip } from '@/components/layout/console-stat-chip'
 import { useAuthStore } from '@/store/useAuthStore'
 import { ProjectWithDetails } from '../columns'
 import { MembersTab } from './members-tab'
 import { EnvironmentsTab } from './environments-tab'
 import { SettingsTab } from './settings-tab'
 
-type DetailStatProps = {
-  label: string
-  value: string
-  hint?: string
-}
-
-type ProjectTab = 'overview' | 'members' | 'environments' | 'settings'
-
-function DetailStat({ label, value, hint }: DetailStatProps) {
-  return (
-    <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
-      <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
-        {label}
-      </p>
-      <p className="mt-3 text-[13px] font-medium text-foreground">{value}</p>
-      {hint && <p className="mt-1 text-[13px] leading-5 text-muted-foreground/85">{hint}</p>}
-    </div>
-  )
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(value))
-}
+type ProjectTab = 'environments' | 'members' | 'settings'
 
 function ProjectWorkspaceSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-3">
-          <Skeleton className="h-6 w-32 rounded-full" />
-          <Skeleton className="h-11 w-full max-w-lg rounded-lg" />
-          <Skeleton className="h-5 w-full max-w-xl" />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Skeleton className="h-10 w-36 rounded-full" />
-          <Skeleton className="h-10 w-28 rounded-full" />
-          <Skeleton className="h-10 w-40 rounded-full" />
-        </div>
+      <div className="space-y-3 border-b border-border pb-4">
+        <Skeleton className="h-4 w-28" />
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-80" />
       </div>
-
-      <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-        <Card>
-          <CardHeader className="border-b">
-            <Skeleton className="h-5 w-44" />
-            <Skeleton className="h-4 w-72" />
-          </CardHeader>
-          <CardContent className="grid gap-4 pt-5 sm:grid-cols-2">
-            <Skeleton className="h-24 rounded-lg" />
-            <Skeleton className="h-24 rounded-lg" />
-            <Skeleton className="h-24 rounded-lg" />
-            <Skeleton className="h-24 rounded-lg" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="border-b">
-            <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-4 w-64" />
-          </CardHeader>
-          <CardContent className="grid gap-4 pt-5 sm:grid-cols-2">
-            <Skeleton className="h-24 rounded-lg" />
-            <Skeleton className="h-24 rounded-lg" />
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader className="border-b">
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="h-4 w-72" />
-        </CardHeader>
-        <CardContent className="pt-5">
-          <Skeleton className="h-10 w-full max-w-[520px] rounded-lg" />
-          <Skeleton className="mt-6 h-64 rounded-lg" />
-        </CardContent>
-      </Card>
+      <Skeleton className="h-9 w-80" />
+      <Skeleton className="h-64 w-full rounded-lg" />
     </div>
   )
 }
@@ -118,7 +47,7 @@ export default function ProjectWorkspacePage({
 
   const [project, setProject] = useState<ProjectWithDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<ProjectTab>('members')
+  const [activeTab, setActiveTab] = useState<ProjectTab>('environments')
 
   useEffect(() => {
     if (!user) {
@@ -172,107 +101,48 @@ export default function ProjectWorkspacePage({
 
   if (!project) return null
 
-  const projectOwner = project.members.find((member) => member.role === 'OWNER')
   const myMembership = project.members.find((member) => member.userId === user.id)
-  const accessLabel = user.role === 'SYSADMIN' ? 'System Admin' : myMembership?.role ?? 'No access'
+  const accessLabel = user.role === 'SYSADMIN' ? 'Admin' : myMembership?.role ?? 'No access'
 
   return (
     <div className="space-y-6">
-      <ConsolePageHeader
-        eyebrow="Project Workspace"
-        title={project.name}
-        description={project.description || 'Workspace metadata, access, and deployment context live here.'}
-        actions={
-          <Button
-            variant="ghost"
-            className="w-full px-3 text-[13px] text-muted-foreground hover:text-foreground sm:w-auto"
-            onClick={() => router.push('/console/projects')}
-          >
-            <ArrowLeft className="mr-2 size-4" />
-            Back to Projects
-          </Button>
-        }
-      />
+      <div className="space-y-3 border-b border-border pb-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-2 h-8 px-2 text-muted-foreground hover:text-foreground"
+          onClick={() => router.push('/console/projects')}
+        >
+          <ArrowLeft className="mr-1.5 size-3.5" />
+          Projects
+        </Button>
 
-      <div className="flex flex-wrap gap-2">
-        <ConsoleStatChip label="Members" value={project.members.length} />
-        <ConsoleStatChip label="Environments" value={project._count.environments} />
-        <ConsoleStatChip label="Repository" value={project.repoUrl ? 'Linked' : 'Not linked'} />
-        <ConsoleStatChip label="Updated" value={formatDate(project.updatedAt)} variant="info" />
-      </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
+            {project.description ? (
+              <p className="max-w-2xl text-sm text-muted-foreground">{project.description}</p>
+            ) : null}
+            <p className="text-xs text-muted-foreground">
+              {project._count.environments} env
+              {project._count.environments === 1 ? '' : 's'}
+              <span className="mx-1.5">·</span>
+              {project.members.length} member
+              {project.members.length === 1 ? '' : 's'}
+              <span className="mx-1.5">·</span>
+              {accessLabel}
+            </p>
+          </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Workspace snapshot</CardTitle>
-            <CardDescription className="text-[13px] leading-5">
-              High-level metadata for the current project workspace.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 pt-5 sm:grid-cols-2">
-            <DetailStat
-              label="Repository"
-              value={project.repoUrl ? 'Repository linked' : 'No repository linked'}
-              hint={project.repoUrl ? 'Open the external repository source.' : 'Link a repository when the workspace is ready.'}
-            />
-            <DetailStat
-              label="Project Owner"
-              value={projectOwner ? `${projectOwner.user.firstName} ${projectOwner.user.lastName || ''}`.trim() : 'No owner set'}
-              hint={projectOwner?.user.email || 'Ownership is not assigned yet.'}
-            />
-            <DetailStat
-              label="Created"
-              value={formatDate(project.createdAt)}
-              hint="Original project registration timestamp."
-            />
-            <DetailStat
-              label="Updated"
-              value={formatDate(project.updatedAt)}
-              hint="Last workspace metadata change."
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Access summary</CardTitle>
-            <CardDescription className="text-[13px] leading-5">
-              Current session context and workspace visibility.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 pt-5 sm:grid-cols-2">
-            <DetailStat
-              label="Your access"
-              value={accessLabel}
-              hint={user.role === 'SYSADMIN' ? 'Global access for this console session.' : 'Scoped access for this workspace.'}
-            />
-            <DetailStat
-              label="Visibility"
-              value={user.role === 'SYSADMIN' ? 'Full console visibility' : 'Project-scoped visibility'}
-              hint="Permissions are evaluated from the active session."
-            />
-            <div className="sm:col-span-2 rounded-lg border border-border/70 bg-muted/18 p-4">
-              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/80">
+          {project.repoUrl ? (
+            <Button variant="outline" size="sm" className="shrink-0" asChild>
+              <a href={project.repoUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1.5 size-3.5" />
                 Repository
-              </p>
-              {project.repoUrl ? (
-                <a
-                  href={project.repoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-2 text-[13px] font-medium text-foreground transition-colors hover:text-muted-foreground"
-                >
-                  <ExternalLink className="size-4" />
-                  <span className="truncate">{project.repoUrl.replace(/^https?:\/\//, '')}</span>
-                </a>
-              ) : (
-                <p className="mt-3 text-[13px] leading-5 text-muted-foreground/90">
-                  No repository has been linked to this workspace yet.
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </a>
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <Tabs
@@ -280,19 +150,15 @@ export default function ProjectWorkspacePage({
         onValueChange={(value) => setActiveTab(value as ProjectTab)}
         className="space-y-4"
       >
-        <div className="border-b border-border/70">
+        <div className="border-b border-border">
           <TabsList variant="line" className="w-full justify-start gap-1">
-            <TabsTrigger value="overview">
-              <LayoutDashboard className="mr-2 size-4" />
-              Overview
+            <TabsTrigger value="environments">
+              <Server className="mr-2 size-4" />
+              Environments
             </TabsTrigger>
             <TabsTrigger value="members">
               <Users className="mr-2 size-4" />
               Members
-            </TabsTrigger>
-            <TabsTrigger value="environments">
-              <Server className="mr-2 size-4" />
-              Environments
             </TabsTrigger>
             <TabsTrigger value="settings">
               <Settings className="mr-2 size-4" />
@@ -301,33 +167,8 @@ export default function ProjectWorkspacePage({
           </TabsList>
         </div>
 
-        <TabsContent value="overview" className="m-0">
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle className="text-[15px] font-medium tracking-[-0.02em]">Workspace Overview</CardTitle>
-              <CardDescription className="text-[13px] leading-5">
-                Core summary details for this project workspace.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 pt-5 sm:grid-cols-2">
-              <DetailStat label="Members" value={`${project.members.length}`} hint="Team members currently assigned." />
-              <DetailStat label="Environments" value={`${project._count.environments}`} hint="Deployment targets registered to this project." />
-              <DetailStat label="Access" value={accessLabel} hint="Session-scoped permissions in the console." />
-              <DetailStat label="Repository" value={project.repoUrl ? 'Linked' : 'Not linked'} hint="External source control connection." />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="members" className="m-0">
-          <MembersTab
-            projectId={project.id}
-            currentUserGlobalRole={user.role}
-            currentUserId={user.id}
-          />
-        </TabsContent>
-
         <TabsContent value="environments" className="m-0">
-          <EnvironmentsTab 
+          <EnvironmentsTab
             projectId={project.id}
             currentUserId={user.id}
             currentUserGlobalRole={user.role}
@@ -345,6 +186,14 @@ export default function ProjectWorkspacePage({
                   : currentProject
               )
             }
+          />
+        </TabsContent>
+
+        <TabsContent value="members" className="m-0">
+          <MembersTab
+            projectId={project.id}
+            currentUserGlobalRole={user.role}
+            currentUserId={user.id}
           />
         </TabsContent>
 

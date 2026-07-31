@@ -106,6 +106,7 @@ export async function GET(request: Request) {
           environment: {
             select: {
               name: true,
+              projectId: true,
               project: { select: { name: true } },
             },
           },
@@ -243,6 +244,8 @@ export async function GET(request: Request) {
       recentDeployments: recentDeployments.map((deployment) => ({
         id: deployment.id,
         status: deployment.status,
+        projectId: deployment.environment.projectId,
+        environmentId: deployment.environmentId,
         projectName: deployment.environment.project.name,
         environmentName: deployment.environment.name,
         workerNodeName: deployment.workerNode?.name ?? null,
