@@ -2,7 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Layers, LayoutDashboard, Rocket, Users, Server, ShieldAlert, Triangle } from 'lucide-react'
+import {
+  Layers,
+  LayoutDashboard,
+  Rocket,
+  Server,
+  ShieldAlert,
+  Triangle,
+  Users,
+} from 'lucide-react'
 import { useAuthStore } from '@/store/useAuthStore'
 
 import {
@@ -41,30 +49,33 @@ export function DashboardSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="flex h-12 flex-row items-center gap-0 border-b border-sidebar-border px-3 py-0 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-        <div className="flex items-center gap-2 font-medium text-sidebar-foreground">
-          <Triangle className="size-4 fill-current" aria-hidden />
-          <span className="text-sm tracking-tight group-data-[collapsible=icon]:hidden">
-            Deploy
-          </span>
-        </div>
+      <SidebarHeader className="flex h-12 flex-row items-center border-b border-sidebar-border p-2">
+        <Link
+          href="/console"
+          className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-sm font-medium text-sidebar-foreground outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:p-2! group-data-[collapsible=icon]:px-0"
+        >
+          <Triangle className="size-4 shrink-0 fill-current" aria-hidden />
+          <span className="truncate group-data-[collapsible=icon]:hidden">Deploy</span>
+        </Link>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-3">
-        <SidebarGroup className="space-y-1">
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarContent className="gap-2 py-2 group-data-[collapsible=icon]:overflow-visible">
+        <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={item.url === '/console' ? pathname === item.url : pathname.startsWith(item.url)}
+                    isActive={
+                      item.url === '/console'
+                        ? pathname === item.url
+                        : pathname.startsWith(item.url)
+                    }
                     tooltip={item.title}
-                    className="h-8 px-2 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
                   >
                     <Link href={item.url}>
-                      <item.icon aria-hidden className="size-4 shrink-0 stroke-[1.5]" />
+                      <item.icon aria-hidden />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -74,8 +85,8 @@ export function DashboardSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {user?.role === 'SYSADMIN' && (
-          <SidebarGroup className="space-y-1">
+        {user?.role === 'SYSADMIN' ? (
+          <SidebarGroup>
             <SidebarGroupLabel>Admin</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -84,10 +95,9 @@ export function DashboardSidebar() {
                     asChild
                     isActive={pathname.startsWith('/console/admin/users')}
                     tooltip="Users"
-                    className="h-8 px-2 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
                   >
                     <Link href="/console/admin/users">
-                      <Users aria-hidden className="size-4 shrink-0 stroke-[1.5]" />
+                      <Users aria-hidden />
                       <span>Users</span>
                     </Link>
                   </SidebarMenuButton>
@@ -98,10 +108,9 @@ export function DashboardSidebar() {
                     asChild
                     isActive={pathname.startsWith('/console/admin/infrastructure')}
                     tooltip="Infrastructure"
-                    className="h-8 px-2 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
                   >
                     <Link href="/console/admin/infrastructure">
-                      <Server aria-hidden className="size-4 shrink-0 stroke-[1.5]" />
+                      <Server aria-hidden />
                       <span>Infrastructure</span>
                     </Link>
                   </SidebarMenuButton>
@@ -112,10 +121,9 @@ export function DashboardSidebar() {
                     asChild
                     isActive={pathname.startsWith('/console/admin/system-logs')}
                     tooltip="Audit Logs"
-                    className="h-8 px-2 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0!"
                   >
                     <Link href="/console/admin/system-logs">
-                      <ShieldAlert aria-hidden className="size-4 shrink-0 stroke-[1.5]" />
+                      <ShieldAlert aria-hidden />
                       <span>Audit Logs</span>
                     </Link>
                   </SidebarMenuButton>
@@ -123,7 +131,7 @@ export function DashboardSidebar() {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        )}
+        ) : null}
       </SidebarContent>
     </Sidebar>
   )
