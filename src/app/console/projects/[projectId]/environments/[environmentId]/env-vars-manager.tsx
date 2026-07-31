@@ -134,7 +134,7 @@ export function EnvVarsManager({
           <KeyRound className="size-4" /> Environment Variables
         </CardTitle>
         <CardDescription>
-          Variables available at build and runtime.
+          Variables injected at container runtime on the next deploy.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">

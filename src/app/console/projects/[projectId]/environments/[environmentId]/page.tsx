@@ -16,6 +16,7 @@ import { DeploymentLogDialog } from '@/components/deployment-log-dialog'
 import { DeploymentStatusBadge } from '@/components/deployment-status-badge'
 import { RedeployButton } from '@/components/redeploy-button'
 import { RollbackButton } from '@/components/rollback-button'
+import { RuntimeLogsPanel } from '@/components/runtime-logs-panel'
 import { ConsoleEmptyState } from '@/components/layout/console-empty-state'
 import { formatDeployRef } from '@/lib/git-ref'
 import { resolveVisitTarget } from '@/lib/visit-url'
@@ -288,6 +289,12 @@ export default async function EnvironmentDashboardPage({
           </CardContent>
         </Card>
       </div>
+
+      <RuntimeLogsPanel
+        projectId={projectId}
+        environmentId={environmentId}
+        enabled={hasSuccessfulDeploy}
+      />
 
       <EnvVarsManager
         projectId={projectId}

@@ -21,7 +21,7 @@ export default async function GlobalDeploymentsPage() {
   const auth = await requireAuth(dummyRequest)
 
   if (!auth.session) {
-    redirect('/auth/login')
+    redirect('/login')
   }
 
   const { userId, role } = auth.session

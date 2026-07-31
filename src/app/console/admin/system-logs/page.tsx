@@ -43,7 +43,7 @@ export default async function SystemLogsPage({
   const dummyRequest = new Request('http://localhost', { headers: headersList })
   const auth = await requireAuth(dummyRequest)
 
-  if (!auth.session) redirect('/auth/login')
+  if (!auth.session) redirect('/login')
   if (auth.session.role !== GlobalRole.SYSADMIN) redirect('/console')
 
   const resolvedParams = await searchParams
