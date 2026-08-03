@@ -14,6 +14,10 @@ import { DeploymentLogDialog } from '@/components/deployment-log-dialog'
 import { DeploymentStatusBadge } from '@/components/deployment-status-badge'
 import { CancelDeployButton } from '@/components/cancel-deploy-button'
 import { Button } from '@/components/ui/button'
+import {
+  buildDeployStatusFingerprint,
+  hasLiveDeployments,
+} from '@/lib/deploy-status-fingerprint'
 
 export default async function GlobalDeploymentsPage() {
   const headersList = await headers()
@@ -67,9 +71,8 @@ export default async function GlobalDeploymentsPage() {
     }
   )
 
-  const hasLiveDeployments = deployments.some(
-    (deployment) => deployment.status === 'PENDING' || deployment.status === 'BUILDING'
-  )
+  const hasLiveDeploymentsFlag = hasLiveDeployments(deployments)
+  const activityStatusFingerprint = buildDeployStatusFingerprint(deployments)
 
   return (
     <div className="space-y-4">
@@ -158,7 +161,11 @@ export default async function GlobalDeploymentsPage() {
         )}
       </div>
 
-      <AutoRefresh isActive={hasLiveDeployments} />
+      <AutoRefresh
+        isActive={hasLiveDeploymentsFlag}
+        statusUrl="/api/console/activity-status"
+        initialFingerprint={activityStatusFingerprint}
+      />
     </div>
   )
 }

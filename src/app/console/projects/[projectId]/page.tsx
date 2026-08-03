@@ -60,15 +60,26 @@ export default function ProjectWorkspacePage({
       setIsLoading(true)
 
       try {
-        const res = await fetch('/api/projects')
-        if (!res.ok) throw new Error('Failed to load project details')
-
-        const data = await res.json()
-        const projects = data.projects as ProjectWithDetails[]
-        const foundProject = projects.find((item) => item.id === projectId)
+        const res = await fetch(`/api/projects/${projectId}`)
+        const data = await res.json().catch(() => ({}))
 
         if (!isActive) return
 
+        if (res.status === 404 || res.status === 403) {
+          toast.error(
+            typeof data.error === 'string' ? data.error : 'Project not found'
+          )
+          router.push('/console/projects')
+          return
+        }
+
+        if (!res.ok) {
+          throw new Error(
+            typeof data.error === 'string' ? data.error : 'Failed to load project details'
+          )
+        }
+
+        const foundProject = data.project as ProjectWithDetails | undefined
         if (!foundProject) {
           toast.error('Project not found')
           router.push('/console/projects')

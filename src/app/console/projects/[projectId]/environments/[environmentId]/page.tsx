@@ -21,6 +21,10 @@ import { ConsoleEmptyState } from '@/components/layout/console-empty-state'
 import { formatDeployRef } from '@/lib/git-ref'
 import { mapVariablesForUse } from '@/lib/crypto/sealed-secrets'
 import { resolveVisitTarget } from '@/lib/visit-url'
+import {
+  buildDeployStatusFingerprint,
+  hasLiveDeployments,
+} from '@/lib/deploy-status-fingerprint'
 
 export default async function EnvironmentDashboardPage({
   params,
@@ -51,17 +55,13 @@ export default async function EnvironmentDashboardPage({
     },
   })
 
-  const activeDeployment = deployments.find(
-    (d) => d.status === DeployStatus.PENDING || d.status === DeployStatus.BUILDING
-  )
-
   const lastSuccessDeploy = await prisma.deployment.findFirst({
     where: { environmentId, status: DeployStatus.SUCCESS },
     orderBy: { createdAt: 'desc' },
     include: { workerNode: true },
   })
 
-  const isBuilding = !!activeDeployment
+  const isBuilding = hasLiveDeployments(deployments)
   const hasSuccessfulDeploy = !!lastSuccessDeploy
   const visitTarget = resolveVisitTarget({
     domain: environment.domain,
@@ -69,6 +69,7 @@ export default async function EnvironmentDashboardPage({
     workerIpAddress: lastSuccessDeploy?.workerNode?.ipAddress,
     deploymentPort: lastSuccessDeploy?.assignedPort,
   })
+  const deployStatusFingerprint = buildDeployStatusFingerprint(deployments)
 
   return (
     <div className="space-y-4">
@@ -302,7 +303,11 @@ export default async function EnvironmentDashboardPage({
         environmentId={environmentId}
         initialVars={mapVariablesForUse(environment.variables)}
       />
-      <AutoRefresh isActive={isBuilding} />
+      <AutoRefresh
+        isActive={isBuilding}
+        statusUrl={`/api/projects/${projectId}/environments/${environmentId}/deploy-status`}
+        initialFingerprint={deployStatusFingerprint}
+      />
     </div>
   )
 }

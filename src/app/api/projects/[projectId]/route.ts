@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { GlobalRole, ProjectRoleType } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
+import { assertProjectAccess } from '@/lib/project-access'
 import { enqueueProjectDeleteJob } from '@/lib/queue/teardown-queue'
 
 async function checkProjectAuthorization(
@@ -37,6 +38,81 @@ async function checkProjectAuthorization(
     }
 
     return { project, error: null };
+}
+
+/** Single-project detail for workspace — avoids loading the full projects list. */
+export async function GET(
+    request: NextRequest,
+    ctx: RouteContext<'/api/projects/[projectId]'>
+) {
+    try {
+        const auth = await requireAuth(request)
+        if (auth.response || !auth.session) return auth.response
+
+        const { projectId } = await ctx.params
+        const access = await assertProjectAccess({
+            userId: auth.session.userId,
+            globalRole: auth.session.role,
+            projectId,
+            minimumRole: 'VIEWER',
+        })
+        if (!access.ok) return access.response
+
+        const project = await prisma.project.findFirst({
+            where: { id: projectId, deletedAt: null },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                repoUrl: true,
+                createdAt: true,
+                updatedAt: true,
+                members: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                firstName: true,
+                                lastName: true,
+                                email: true,
+                            },
+                        },
+                    },
+                },
+                environments: {
+                    where: { deletedAt: null },
+                    select: {
+                        id: true,
+                        name: true,
+                        tier: true,
+                    },
+                    orderBy: [
+                        { tier: 'asc' },
+                        { name: 'asc' },
+                    ],
+                },
+                _count: {
+                    select: {
+                        environments: {
+                            where: { deletedAt: null },
+                        },
+                    },
+                },
+            },
+        })
+
+        if (!project) {
+            return NextResponse.json(
+                { error: 'Project not found or has been deleted.' },
+                { status: 404 }
+            )
+        }
+
+        return NextResponse.json({ project }, { status: 200 })
+    } catch (error) {
+        console.error('Fetch project error:', error)
+        return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
+    }
 }
 
 export async function PATCH(
