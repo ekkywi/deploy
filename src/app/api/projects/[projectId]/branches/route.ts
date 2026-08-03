@@ -4,6 +4,11 @@ import { spawn } from 'child_process'
 import prisma from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth'
 import { assertProjectAccess } from '@/lib/project-access'
+import {
+  buildAuthenticatedHttpsRepoUrl,
+  isHttpsOrHttpRepoUrl,
+} from '@/lib/git/authenticated-url'
+import { revealGitHttpsToken } from '@/lib/git/project-git-credential'
 
 function isSafeGitRemoteUrl(repoUrl: string) {
   try {
@@ -16,9 +21,17 @@ function isSafeGitRemoteUrl(repoUrl: string) {
 
 function listRemoteHeads(repoUrl: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const proc = spawn('git', ['ls-remote', '--heads', repoUrl], {
-      shell: false,
-    })
+    const proc = spawn(
+      'git',
+      ['-c', 'credential.helper=', 'ls-remote', '--heads', repoUrl],
+      {
+        shell: false,
+        env: {
+          ...process.env,
+          GIT_TERMINAL_PROMPT: '0',
+        },
+      }
+    )
     let stdout = ''
     let stderr = ''
 
@@ -55,7 +68,7 @@ export async function GET(
 
     const project = await prisma.project.findFirst({
       where: { id: projectId, deletedAt: null },
-      select: { repoUrl: true },
+      select: { repoUrl: true, gitHttpsToken: true },
     })
 
     if (!project?.repoUrl) {
@@ -72,7 +85,22 @@ export async function GET(
       )
     }
 
-    const stdout = await listRemoteHeads(project.repoUrl)
+    let remoteUrl = project.repoUrl
+    const token = revealGitHttpsToken(project.gitHttpsToken)
+    if (token) {
+      if (!isHttpsOrHttpRepoUrl(project.repoUrl)) {
+        return NextResponse.json(
+          {
+            error:
+              'A git HTTPS token is configured, but the repository URL is not HTTP(S). Update the repo URL or clear the token.',
+          },
+          { status: 400 }
+        )
+      }
+      remoteUrl = buildAuthenticatedHttpsRepoUrl(project.repoUrl, token)
+    }
+
+    const stdout = await listRemoteHeads(remoteUrl)
 
     const branches = stdout
       .split('\n')

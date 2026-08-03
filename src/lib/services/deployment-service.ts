@@ -6,6 +6,7 @@ import {
   mapVariablesForUse,
   revealWorkerAuthToken,
 } from '@/lib/crypto/sealed-secrets'
+import { revealGitHttpsToken } from '@/lib/git/project-git-credential'
 import {
   deploymentBlockedMessage,
   isDeploymentBlockedByLifecycle,
@@ -170,10 +171,12 @@ export async function executeDeploymentService(
     })
 
     const agentUrl = `http://${selectedWorker.ipAddress}:4000/api/deploy`
+    const gitHttpsToken = revealGitHttpsToken(environment.project.gitHttpsToken)
     const payload = {
       deploymentId: newDeployment.id,
       environmentId: environmentId,
       repoUrl: environment.project.repoUrl,
+      ...(gitHttpsToken ? { gitHttpsToken } : {}),
       stackType: environment.stackType,
       nodeVersion: environment.nodeVersion,
       environmentName: environment.name,

@@ -48,6 +48,8 @@ model Project {
   updatedAt     DateTime      @updatedAt
 
   webhookSecret String?
+  /// AES-GCM sealed HTTPS PAT / fine-grained token for private repos (optional).
+  gitHttpsToken String?
 
   environments  Environment[]
   members       ProjectRole[]

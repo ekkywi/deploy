@@ -7,11 +7,13 @@ import {
   Copy,
   Eye,
   EyeOff,
+  GitBranch,
   KeyRound,
   Link2,
   Loader2,
   RefreshCw,
   ShieldAlert,
+  Trash2,
 } from 'lucide-react'
 import {
   AlertDialog,
@@ -23,8 +25,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface SettingsTabProps {
@@ -49,11 +53,21 @@ export function SettingsTab({
   const [isRotatingSecret, setIsRotatingSecret] = useState(false)
   const [webhookUrl, setWebhookUrl] = useState('')
 
+  const [gitTokenConfigured, setGitTokenConfigured] = useState(false)
+  const [gitRepoSupportsHttpsToken, setGitRepoSupportsHttpsToken] = useState(true)
+  const [isGitCredentialLoading, setIsGitCredentialLoading] = useState(false)
+  const [gitTokenInput, setGitTokenInput] = useState('')
+  const [isSavingGitToken, setIsSavingGitToken] = useState(false)
+  const [isClearGitDialogOpen, setIsClearGitDialogOpen] = useState(false)
+  const [isClearingGitToken, setIsClearingGitToken] = useState(false)
+
   const projectMembership = projectMembers.find((member) => member.userId === currentUserId)
-  const canManageWebhookSecret =
+  const canManageSecrets =
     currentUserGlobalRole === 'SYSADMIN' ||
     projectMembership?.role === 'OWNER' ||
     projectMembership?.role === 'EDITOR'
+  const canManageWebhookSecret = canManageSecrets
+  const canManageGitCredential = canManageSecrets
   const maskedSecret = webhookSecret
     ? `${webhookSecret.slice(0, 8)}${'*'.repeat(24)}${webhookSecret.slice(-8)}`
     : ''
@@ -98,6 +112,40 @@ export function SettingsTab({
       isActive = false
     }
   }, [canManageWebhookSecret, projectId, webhookSecret])
+
+  useEffect(() => {
+    let isActive = true
+
+    const fetchGitCredential = async () => {
+      setIsGitCredentialLoading(true)
+      try {
+        const res = await fetch(`/api/projects/${projectId}/git-credential`)
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Failed to load git credential status')
+
+        if (isActive) {
+          setGitTokenConfigured(Boolean(data.configured))
+          setGitRepoSupportsHttpsToken(data.repoSupportsHttpsToken !== false)
+        }
+      } catch (error: unknown) {
+        if (isActive) {
+          toast.error(
+            error instanceof Error ? error.message : 'Failed to load git credential status'
+          )
+        }
+      } finally {
+        if (isActive) {
+          setIsGitCredentialLoading(false)
+        }
+      }
+    }
+
+    void fetchGitCredential()
+
+    return () => {
+      isActive = false
+    }
+  }, [projectId])
 
   const handleCopyWebhookSecret = async () => {
     if (!webhookSecret) return
@@ -145,8 +193,154 @@ export function SettingsTab({
     }
   }
 
+  const handleSaveGitToken = async () => {
+    const token = gitTokenInput.trim()
+    if (token.length < 8) {
+      toast.error('Token must be at least 8 characters')
+      return
+    }
+
+    setIsSavingGitToken(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/git-credential`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save git token')
+
+      setGitTokenConfigured(true)
+      setGitTokenInput('')
+      toast.success(data.message || 'Git HTTPS token saved')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save git token')
+    } finally {
+      setIsSavingGitToken(false)
+    }
+  }
+
+  const handleClearGitToken = async () => {
+    setIsClearingGitToken(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/git-credential`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to clear git token')
+
+      setGitTokenConfigured(false)
+      setGitTokenInput('')
+      setIsClearGitDialogOpen(false)
+      toast.success(data.message || 'Git HTTPS token removed')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to clear git token')
+    } finally {
+      setIsClearingGitToken(false)
+    }
+  }
+
   return (
-    <>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle className="text-sm font-medium">Private Git access</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-5">
+          <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <GitBranch className="size-4 text-muted-foreground" />
+                  <h3 className="text-[14px] font-medium tracking-[-0.01em]">HTTPS token</h3>
+                  {isGitCredentialLoading ? (
+                    <Badge variant="outline" className="gap-1.5 font-normal">
+                      <Loader2 className="size-3 animate-spin" />
+                      Checking…
+                    </Badge>
+                  ) : gitTokenConfigured ? (
+                    <Badge variant="secondary" className="font-normal">
+                      Configured
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="font-normal text-muted-foreground">
+                      Not set
+                    </Badge>
+                  )}
+                </div>
+                <p className="max-w-2xl text-[13px] leading-5 text-muted-foreground/85">
+                  Store a personal access token (or fine-grained PAT) for private{' '}
+                  <code className="text-[12px]">https://</code> repositories. The token is
+                  encrypted at rest and used when listing branches and cloning on the worker. It
+                  is never shown again after save.
+                </p>
+                {!gitRepoSupportsHttpsToken ? (
+                  <p className="max-w-2xl text-[13px] leading-5 text-amber-700 dark:text-amber-400">
+                    This project&apos;s repository URL is not HTTP(S). Switch to an{' '}
+                    <code className="text-[12px]">https://</code> URL to use a token (SSH deploy
+                    keys come in a later phase).
+                  </p>
+                ) : null}
+              </div>
+
+              {canManageGitCredential && gitTokenConfigured ? (
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 sm:w-fit"
+                  onClick={() => setIsClearGitDialogOpen(true)}
+                  disabled={isClearingGitToken || isSavingGitToken}
+                >
+                  <Trash2 className="size-4" />
+                  Clear token
+                </Button>
+              ) : null}
+            </div>
+
+            {canManageGitCredential ? (
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Input
+                  type="password"
+                  autoComplete="off"
+                  placeholder={
+                    gitTokenConfigured
+                      ? 'Enter a new token to replace the existing one'
+                      : 'ghp_… or fine-grained PAT'
+                  }
+                  value={gitTokenInput}
+                  onChange={(event) => setGitTokenInput(event.target.value)}
+                  disabled={
+                    isSavingGitToken || isClearingGitToken || !gitRepoSupportsHttpsToken
+                  }
+                  className="h-10 flex-1 font-mono text-[12px]"
+                />
+                <Button
+                  className="w-full gap-2 sm:w-fit"
+                  onClick={() => void handleSaveGitToken()}
+                  disabled={
+                    isSavingGitToken ||
+                    isClearingGitToken ||
+                    !gitRepoSupportsHttpsToken ||
+                    gitTokenInput.trim().length < 8
+                  }
+                >
+                  {isSavingGitToken ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <KeyRound className="size-4" />
+                  )}
+                  {gitTokenConfigured ? 'Replace token' : 'Save token'}
+                </Button>
+              </div>
+            ) : (
+              <div className="mt-5 flex items-start gap-3 rounded-xl border border-border/70 bg-background/55 p-4 text-[13px] leading-5 text-muted-foreground">
+                <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+                <p>
+                  Git token controls are available to project owners, editors, and system admins.
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader className="border-b">
           <CardTitle className="text-sm font-medium">Webhook</CardTitle>
@@ -312,6 +506,25 @@ export function SettingsTab({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+
+      <AlertDialog open={isClearGitDialogOpen} onOpenChange={setIsClearGitDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear git HTTPS token?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Branch listing and deploys for private repositories will fail until a new token is
+              saved (or the repo is made public).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isClearingGitToken}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearGitToken} disabled={isClearingGitToken}>
+              {isClearingGitToken && <Loader2 className="mr-2 size-4 animate-spin" />}
+              Clear token
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   )
 }

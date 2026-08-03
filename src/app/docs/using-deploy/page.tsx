@@ -35,7 +35,14 @@ export default function UsingDeployDocsPage() {
         <li>
           Open <Link href="/console/projects">Projects</Link> and create a project.
         </li>
-        <li>Set a name and a Git repository URL the worker agent can clone.</li>
+        <li>
+          Set a name and an <code>https://</code> Git repository URL the worker agent can
+          clone.
+        </li>
+        <li>
+          For private repos, open the project Settings tab and save a Git HTTPS token
+          (PAT). The token is encrypted at rest and used for branch listing and clone.
+        </li>
         <li>
           Optionally invite teammates from Members. They must already have an account
           on this instance.
@@ -144,7 +151,10 @@ export default function UsingDeployDocsPage() {
       <ol>
         <li>At least one active Docker worker with a matching tier</li>
         <li>Docker installed on the worker; agent reachable at <code>http://&lt;worker-ip&gt;:4000</code></li>
-        <li>Project repo URL cloneable from the worker</li>
+        <li>
+          Project repo URL cloneable from the worker (private HTTPS repos need a token in
+          Settings)
+        </li>
         <li>Environment variables set for the app</li>
         <li>Teardown worker running if you plan to delete projects later</li>
       </ol>
