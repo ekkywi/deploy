@@ -1,3 +1,5 @@
+import { revealWorkerAuthToken } from '@/lib/crypto/sealed-secrets'
+
 const AGENT_PORT = 4000
 const HEALTH_TIMEOUT_MS = 3000
 
@@ -30,7 +32,7 @@ export async function probeWorkerHealth(
       {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${worker.authToken}`,
+          Authorization: `Bearer ${revealWorkerAuthToken(worker)}`,
           Accept: 'application/json',
         },
         signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS),

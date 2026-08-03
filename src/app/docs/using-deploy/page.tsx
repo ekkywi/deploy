@@ -45,8 +45,10 @@ export default function UsingDeployDocsPage() {
       <h2>3. Environments</h2>
       <p>
         Environments live under a project (for example <code>development</code>,{' '}
-        <code>staging</code>, <code>production</code>). Every environment is deployed
-        as a Docker container. For each environment configure:
+        <code>staging</code>, <code>production</code>). You can also browse all of them
+        from <Link href="/console/environments">Environments</Link> in the console
+        sidebar. Every environment is deployed as a Docker container. For each
+        environment configure:
       </p>
       <ul>
         <li>
@@ -97,6 +99,16 @@ export default function UsingDeployDocsPage() {
           recorded commit SHA, pin and redeploy that commit. Older rows without a SHA
           cannot be rolled back until a new successful deploy records one. Rollback does
           not restore historical env vars.
+        </li>
+        <li>
+          Deploy picks a worker that is <strong>Enabled</strong> and currently{' '}
+          <strong>Online</strong> (health check). Sticky preference still applies among
+          reachable workers.
+        </li>
+        <li>
+          Builds stuck in <code>PENDING</code>/<code>BUILDING</code> longer than the
+          deploy timeout (default 45 minutes) are marked <code>FAILED</code> automatically
+          so the environment is not locked forever.
         </li>
       </ul>
 

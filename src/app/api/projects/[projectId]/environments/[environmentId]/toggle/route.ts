@@ -4,6 +4,7 @@ import { GlobalRole, ProjectRoleType, LifeCycleStatus } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import { isRuntimeMutationBlockedByLifecycle } from '@/lib/services/environment-lifecycle';
+import { revealWorkerAuthToken } from '@/lib/crypto/sealed-secrets';
 
 export async function POST(
     request: NextRequest,
@@ -54,7 +55,7 @@ export async function POST(
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${worker.authToken}`
+                'Authorization': `Bearer ${revealWorkerAuthToken(worker)}`
             },
             body: JSON.stringify({ environmentId, action }),
             signal: AbortSignal.timeout(5000)

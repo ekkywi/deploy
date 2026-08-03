@@ -114,10 +114,16 @@ export default function ArchitectureDocsPage() {
           Browser sessions are JWT-based (<code>JWT_SECRET</code>).
         </li>
         <li>
-          Control plane → agent uses per-worker <code>authToken</code>.
+          Secret env vars and worker agent tokens are encrypted at rest with{' '}
+          <code>ENCRYPTION_KEY</code>.
         </li>
         <li>
-          Env var values live in Postgres today — treat database access as sensitive.
+          Control plane → agent uses per-worker <code>authToken</code> over HTTP on a
+          private network (do not expose port 4000 publicly).
+        </li>
+        <li>
+          Scheduling prefers workers that pass <code>/api/health</code>. Stuck builds past{' '}
+          <code>DEPLOY_TIMEOUT_MINUTES</code> are marked failed automatically.
         </li>
       </ul>
 

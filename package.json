@@ -13,7 +13,8 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:push": "prisma db push",
-    "test": "env DATABASE_URL=postgres://user:pass@127.0.0.1:5432/deploy-test JWT_SECRET=test-secret node --import tsx src/run-tests.ts"
+    "secrets:migrate": "tsx scripts/migrate-sealed-secrets.ts",
+    "test": "env DATABASE_URL=postgres://user:pass@127.0.0.1:5432/deploy-test JWT_SECRET=test-secret ENCRYPTION_KEY=test-encryption-key-please-change node --import tsx src/run-tests.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

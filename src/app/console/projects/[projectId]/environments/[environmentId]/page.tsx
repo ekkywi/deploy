@@ -19,6 +19,7 @@ import { RollbackButton } from '@/components/rollback-button'
 import { RuntimeLogsPanel } from '@/components/runtime-logs-panel'
 import { ConsoleEmptyState } from '@/components/layout/console-empty-state'
 import { formatDeployRef } from '@/lib/git-ref'
+import { mapVariablesForUse } from '@/lib/crypto/sealed-secrets'
 import { resolveVisitTarget } from '@/lib/visit-url'
 
 export default async function EnvironmentDashboardPage({
@@ -299,7 +300,7 @@ export default async function EnvironmentDashboardPage({
       <EnvVarsManager
         projectId={projectId}
         environmentId={environmentId}
-        initialVars={environment.variables}
+        initialVars={mapVariablesForUse(environment.variables)}
       />
       <AutoRefresh isActive={isBuilding} />
     </div>

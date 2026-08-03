@@ -53,7 +53,7 @@ export default function SelfHostingDocsPage() {
         <code>{`git clone <your-repo-url> deploy
 cd deploy
 cp .env.example .env
-# set JWT_SECRET and change SEED_ADMIN_PASSWORD
+# set JWT_SECRET, ENCRYPTION_KEY, and change SEED_ADMIN_PASSWORD
 docker compose up -d --build`}</code>
       </pre>
       <p>
@@ -82,6 +82,23 @@ docker compose up -d --build`}</code>
             </td>
             <td>yes</td>
             <td>Signs auth cookies/tokens</td>
+          </tr>
+          <tr>
+            <td>
+              <code>ENCRYPTION_KEY</code>
+            </td>
+            <td>yes</td>
+            <td>Encrypts secret env vars and worker tokens at rest</td>
+          </tr>
+          <tr>
+            <td>
+              <code>DEPLOY_TIMEOUT_MINUTES</code>
+            </td>
+            <td>no</td>
+            <td>
+              Fail stuck <code>PENDING</code>/<code>BUILDING</code> deploys after N minutes
+              (default <code>45</code>)
+            </td>
           </tr>
           <tr>
             <td>
@@ -137,9 +154,10 @@ docker compose up -d --build`}</code>
         </li>
       </ol>
       <p>
-        The control plane must reach <code>http://&lt;worker-ip&gt;:4000</code>. Inside
-        Docker, <code>127.0.0.1</code> is not the host — use a LAN IP or your
-        platform&apos;s host gateway.
+        The control plane must reach <code>http://&lt;worker-ip&gt;:4000</code>. Keep
+        port <code>4000</code> on a private network (or VPN) — do not expose the agent
+        publicly. Inside Docker, <code>127.0.0.1</code> is not the host — use a LAN IP
+        or your platform&apos;s host gateway.
       </p>
 
       <h2>4. First deploy checklist</h2>
@@ -157,11 +175,16 @@ docker compose up -d --build`}</code>
       <h2>5. Upgrades</h2>
       <pre>
         <code>{`git pull
-docker compose up -d --build`}</code>
+docker compose up -d --build
+# if upgrading to encryption-at-rest for the first time:
+# npm run secrets:migrate`}</code>
       </pre>
       <p>
         <code>web</code> runs <code>prisma migrate deploy</code> on start. Back up
-        Postgres before upgrading production.
+        Postgres before upgrading production. When adding{' '}
+        <code>ENCRYPTION_KEY</code> for the first time, run{' '}
+        <code>npm run secrets:migrate</code> once to seal existing secret env vars and
+        worker tokens.
       </p>
 
       <h2>6. Backups</h2>

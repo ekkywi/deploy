@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  Box,
   Layers,
   LayoutDashboard,
   Rocket,
@@ -35,6 +36,11 @@ const navItems = [
     title: 'Projects',
     url: '/console/projects',
     icon: Layers,
+  },
+  {
+    title: 'Environments',
+    url: '/console/environments',
+    icon: Box,
   },
   {
     title: 'Activity',

@@ -6,6 +6,7 @@ import {
   assertProjectAccess,
   requireEnvironmentInProject,
 } from '@/lib/project-access'
+import { revealWorkerAuthToken } from '@/lib/crypto/sealed-secrets'
 
 export async function GET(
   request: NextRequest,
@@ -45,7 +46,7 @@ export async function GET(
 
     const agentResponse = await fetch(agentUrl, {
       headers: {
-        Authorization: `Bearer ${worker.authToken}`,
+        Authorization: `Bearer ${revealWorkerAuthToken(worker)}`,
         Accept: 'text/event-stream',
       },
     })

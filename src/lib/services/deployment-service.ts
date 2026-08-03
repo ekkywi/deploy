@@ -3,9 +3,15 @@ import { DeployStatus } from '@prisma/client'
 import { logAudit } from '@/lib/audit-logger'
 import { isGitCommitSha } from '@/lib/git-ref'
 import {
+  mapVariablesForUse,
+  revealWorkerAuthToken,
+} from '@/lib/crypto/sealed-secrets'
+import {
   deploymentBlockedMessage,
   isDeploymentBlockedByLifecycle,
 } from '@/lib/services/environment-lifecycle'
+import { reconcileStuckDeployments } from '@/lib/services/stuck-deploy-reconcile'
+import { probeWorkersHealth } from '@/lib/services/worker-health'
 
 export type DeployAuditAction =
   | 'TRIGGER_DEPLOYMENT'
@@ -52,6 +58,9 @@ export async function executeDeploymentService(
       throw new Error(deploymentBlockedMessage(environment.lifecycle))
     }
 
+    // Clear timed-out in-flight deploys so a zombie PENDING/BUILDING cannot lock forever.
+    await reconcileStuckDeployments({ environmentId, limit: 10 })
+
     const inFlight = await prisma.deployment.findFirst({
       where: {
         environmentId,
@@ -85,6 +94,20 @@ export async function executeDeploymentService(
       )
     }
 
+    const healthResults = await probeWorkersHealth(candidateWorkers)
+    const onlineIds = new Set(
+      healthResults
+        .filter((result) => result.status === 'online')
+        .map((result) => result.workerId)
+    )
+    const onlineWorkers = candidateWorkers.filter((worker) => onlineIds.has(worker.id))
+
+    if (onlineWorkers.length === 0) {
+      throw new Error(
+        `No reachable (online) worker nodes are available for the ${environment.tier} tier. Check agent health in Infrastructure.`
+      )
+    }
+
     const lastSuccessful = await prisma.deployment.findFirst({
       where: {
         environmentId,
@@ -97,12 +120,12 @@ export async function executeDeploymentService(
 
     const preferredWorker =
       lastSuccessful?.workerNodeId != null
-        ? candidateWorkers.find((worker) => worker.id === lastSuccessful.workerNodeId)
+        ? onlineWorkers.find((worker) => worker.id === lastSuccessful.workerNodeId)
         : undefined
 
     const selectedWorker =
       preferredWorker ??
-      candidateWorkers.sort((a, b) => a._count.deployments - b._count.deployments)[0]
+      [...onlineWorkers].sort((a, b) => a._count.deployments - b._count.deployments)[0]
 
     let targetPort = environment.assignedPort
     if (!targetPort) {
@@ -156,14 +179,17 @@ export async function executeDeploymentService(
       environmentName: environment.name,
       branch: ref,
       targetPort: targetPort,
-      envVars: environment.variables.map((v) => ({ key: v.key, value: v.value })),
+      envVars: mapVariablesForUse(environment.variables).map((v) => ({
+        key: v.key,
+        value: v.value,
+      })),
     }
 
     const agentResponse = await fetch(agentUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${selectedWorker.authToken}`,
+        Authorization: `Bearer ${revealWorkerAuthToken(selectedWorker)}`,
       },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(15_000),

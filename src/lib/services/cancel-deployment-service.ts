@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma'
 import { DeployStatus } from '@prisma/client'
 import { logAudit } from '@/lib/audit-logger'
+import { revealWorkerAuthToken } from '@/lib/crypto/sealed-secrets'
 
 type CancelResult =
   | { success: true; deployment: { id: string; status: DeployStatus } }
@@ -56,7 +57,7 @@ export async function cancelDeploymentService(
       const agentResponse = await fetch(agentUrl, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${deployment.workerNode.authToken}`,
+          Authorization: `Bearer ${revealWorkerAuthToken(deployment.workerNode)}`,
         },
         signal: AbortSignal.timeout(10_000),
       })

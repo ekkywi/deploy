@@ -7,6 +7,7 @@ import {
   requireEnvironmentInProject,
 } from '@/lib/project-access'
 import { DeployStatus } from '@prisma/client'
+import { revealWorkerAuthToken } from '@/lib/crypto/sealed-secrets'
 
 export async function GET(
   request: NextRequest,
@@ -55,7 +56,7 @@ export async function GET(
 
     const agentResponse = await fetch(agentUrl, {
       headers: {
-        Authorization: `Bearer ${worker.authToken}`,
+        Authorization: `Bearer ${revealWorkerAuthToken(worker)}`,
         Accept: follow ? 'text/event-stream' : 'application/json',
       },
       signal: follow ? undefined : AbortSignal.timeout(15_000),

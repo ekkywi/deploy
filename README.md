@@ -19,7 +19,7 @@ Requirements: Docker Engine + Docker Compose v2.
 
 ```bash
 cp .env.example .env
-# set a strong JWT_SECRET (and change SEED_ADMIN_PASSWORD)
+# set a strong JWT_SECRET and ENCRYPTION_KEY (and change SEED_ADMIN_PASSWORD)
 docker compose up -d --build
 ```
 

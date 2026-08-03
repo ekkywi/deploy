@@ -6,6 +6,7 @@ import {
   assertProjectAccess,
   requireEnvironmentInProject,
 } from '@/lib/project-access'
+import { sealEnvVarValue } from '@/lib/crypto/sealed-secrets'
 
 export async function POST(
   request: NextRequest,
@@ -33,6 +34,7 @@ export async function POST(
 
     const normalizedKey = typeof key === 'string' ? key.trim() : ''
     const normalizedValue = typeof value === 'string' ? value.trim() : ''
+    const secret = Boolean(isSecret)
 
     if (!normalizedKey || !normalizedValue) {
       return NextResponse.json(
@@ -52,17 +54,25 @@ export async function POST(
       )
     }
 
+    const storedValue = sealEnvVarValue(normalizedValue, secret)
+
     const newVar = await prisma.environmentVariable.create({
       data: {
         environmentId,
         key: normalizedKey.toUpperCase(),
-        value: normalizedValue,
-        isSecret: Boolean(isSecret),
+        value: storedValue,
+        isSecret: secret,
       },
     })
 
     return NextResponse.json(
-      { message: 'Variable added successfully.', variable: newVar },
+      {
+        message: 'Variable added successfully.',
+        variable: {
+          ...newVar,
+          value: normalizedValue,
+        },
+      },
       { status: 201 }
     )
   } catch (error: unknown) {
@@ -80,6 +90,10 @@ export async function POST(
         { error: 'This key already exists in this environment.' },
         { status: 409 }
       )
+    }
+    const message = error instanceof Error ? error.message : 'Internal server error.'
+    if (message.includes('ENCRYPTION_KEY')) {
+      return NextResponse.json({ error: message }, { status: 500 })
     }
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
   }

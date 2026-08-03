@@ -4,6 +4,10 @@ import crypto from 'crypto';
 import prisma from '@/lib/prisma';
 import { requireAuth } from "@/lib/auth";
 import { logAudit } from '@/lib/audit-logger';
+import {
+    prepareWorkerTokenForStorage,
+    revealWorkerAuthToken,
+} from '@/lib/crypto/sealed-secrets';
 
 export async function GET(request: Request) {
     try {
@@ -27,13 +31,22 @@ export async function GET(request: Request) {
             }
         });
 
+        const workersForClient = workers.map((worker) => ({
+            ...worker,
+            authToken: revealWorkerAuthToken(worker),
+        }));
+
         return NextResponse.json(
-            { workers },
+            { workers: workersForClient },
             { status: 200 }
         );
 
     } catch (error) {
         console.error('Fetch workers error:', error);
+        const message = error instanceof Error ? error.message : 'Internal server error.';
+        if (message.includes('ENCRYPTION_KEY')) {
+            return NextResponse.json({ error: message }, { status: 500 });
+        }
         return NextResponse.json(
             { error: 'Internal server error.' },
             { status: 500 }
@@ -93,12 +106,14 @@ export async function POST(request: Request) {
         }
 
         const generatedToken = crypto.randomBytes(32).toString('hex');
+        const sealedToken = prepareWorkerTokenForStorage(generatedToken);
 
         const newWorker = await prisma.workerNode.create({
             data: {
                 name: sanitizedName,
                 ipAddress: ipAddress,
-                authToken: generatedToken,
+                authToken: sealedToken.authToken,
+                authTokenHash: sealedToken.authTokenHash,
                 isActive: true,
                 supportedTiers: supportedTiers as EnvironmentTier[]
             }
@@ -113,12 +128,22 @@ export async function POST(request: Request) {
         });
 
         return NextResponse.json(
-            { message: 'Worker node registered successfully.', worker: newWorker },
+            {
+                message: 'Worker node registered successfully.',
+                worker: {
+                    ...newWorker,
+                    authToken: generatedToken,
+                },
+            },
             { status: 201 }
         );
 
     } catch (error) {
         console.error('Create worker error:', error);
+        const message = error instanceof Error ? error.message : 'Internal server error.';
+        if (message.includes('ENCRYPTION_KEY')) {
+            return NextResponse.json({ error: message }, { status: 500 });
+        }
         return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
     }
 }

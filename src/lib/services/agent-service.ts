@@ -1,3 +1,5 @@
+import { revealWorkerAuthToken } from '@/lib/crypto/sealed-secrets';
+
 const AGENT_PORT = 4000;
 const DEFAULT_TIMEOUT_MS = 10_000;
 
@@ -34,7 +36,7 @@ async function agentRequest<T>(
     const response = await fetch(`http://${worker.ipAddress}:${AGENT_PORT}${path}`, {
         ...init,
         headers: {
-            Authorization: `Bearer ${worker.authToken}`,
+            Authorization: `Bearer ${revealWorkerAuthToken(worker)}`,
             ...(init?.headers || {}),
         },
         signal: init?.signal ?? AbortSignal.timeout(DEFAULT_TIMEOUT_MS),

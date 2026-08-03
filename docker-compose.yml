@@ -44,6 +44,7 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-deploy}:${POSTGRES_PASSWORD:-deploy}@postgres:5432/${POSTGRES_DB:-deploy}?schema=public
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?Set ENCRYPTION_KEY in .env}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
@@ -72,6 +73,9 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-deploy}:${POSTGRES_PASSWORD:-deploy}@postgres:5432/${POSTGRES_DB:-deploy}?schema=public
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?Set ENCRYPTION_KEY in .env}
+      DEPLOY_TIMEOUT_MINUTES: ${DEPLOY_TIMEOUT_MINUTES:-45}
+      STUCK_DEPLOY_SWEEP_INTERVAL_MS: ${STUCK_DEPLOY_SWEEP_INTERVAL_MS:-60000}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}

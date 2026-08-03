@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { DeployStatus } from '@prisma/client'
+import { findWorkerByAgentToken } from '@/lib/crypto/sealed-secrets'
 
 const TERMINAL_STATUSES = new Set<DeployStatus>([
   DeployStatus.SUCCESS,
@@ -32,9 +33,7 @@ export async function POST(request: Request) {
 
     const token = authHeader.split(' ')[1]
 
-    const worker = await prisma.workerNode.findFirst({
-      where: { authToken: token, isActive: true },
-    })
+    const worker = await findWorkerByAgentToken(token, true)
 
     if (!worker) {
       return NextResponse.json(

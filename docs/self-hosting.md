@@ -30,8 +30,9 @@ cp .env.example .env
 Edit `.env` before the first start:
 
 1. Set a long random `JWT_SECRET`.
-2. Change `SEED_ADMIN_PASSWORD` (and ideally `SEED_ADMIN_EMAIL`).
-3. Optionally change Postgres credentials (`POSTGRES_*`).
+2. Set a long random `ENCRYPTION_KEY` (encrypts secret env vars and worker tokens at rest).
+3. Change `SEED_ADMIN_PASSWORD` (and ideally `SEED_ADMIN_EMAIL`).
+4. Optionally change Postgres credentials (`POSTGRES_*`).
 
 Then:
 
@@ -55,6 +56,9 @@ After the first successful boot, set `SEED_ON_START=false`. Re-running seed will
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `JWT_SECRET` | yes | Signs auth cookies/tokens |
+| `ENCRYPTION_KEY` | yes | Encrypts secret env vars and worker auth tokens at rest |
+| `DEPLOY_TIMEOUT_MINUTES` | no | Fail stuck PENDING/BUILDING deploys after N minutes (default `45`) |
+| `STUCK_DEPLOY_SWEEP_INTERVAL_MS` | no | How often the worker sweeps stuck deploys (default `60000`) |
 | `DATABASE_URL` | yes (local) | Prisma connection string |
 | `POSTGRES_USER` / `PASSWORD` / `DB` | compose | Used to build `DATABASE_URL` inside Compose |
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | yes | BullMQ / teardown queue |
@@ -74,8 +78,17 @@ After the first successful boot, set `SEED_ON_START=false`. Re-running seed will
 Networking notes:
 
 - The control plane must reach `http://<worker-ip>:4000`.
+- Keep agent port **4000** on a private network (or VPN). Do not expose it to the public internet; plane↔agent HTTPS is optional/advanced.
 - If the control plane runs in Docker on the same machine as an agent on the host, `127.0.0.1` inside the container is **not** the host. Use the host LAN IP, or a Docker host gateway address your platform provides.
 - Agents must reach your git remotes (and any private registry) themselves.
+
+### Existing installs (encryption upgrade)
+
+After pulling a release that adds `ENCRYPTION_KEY`:
+
+1. Add `ENCRYPTION_KEY` to `.env` (and Compose).
+2. Run `npx prisma migrate deploy`.
+3. Run `npm run secrets:migrate` once to seal existing secret env vars and worker tokens.
 
 ## 4. First project deploy checklist
 

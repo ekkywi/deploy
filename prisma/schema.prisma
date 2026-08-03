@@ -78,7 +78,9 @@ model WorkerNode {
   id              String            @id @default(uuid())
   name            String            @unique
   ipAddress       String            @unique
-  authToken       String   
+  authToken       String
+  /// SHA-256 hex of the plaintext agent token (for inbound Bearer lookup).
+  authTokenHash   String?           @unique
   isActive        Boolean           @default(true)
   supportedTiers  EnvironmentTier[] @default([DEVELOPMENT, STAGING, PRODUCTION])
   createdAt       DateTime          @default(now())

@@ -53,5 +53,7 @@ The control plane selects a worker by active flag + supported tier, then POSTs t
 ## Trust boundaries
 
 - Browser sessions are JWT-based (`JWT_SECRET`).
-- Control plane → agent uses per-worker `authToken` (`Authorization: Bearer …`).
-- Env var “secrets” are currently stored in Postgres; treat DB access as sensitive (encryption-at-rest is a planned hardening step).
+- Secret environment variables and worker agent tokens are encrypted at rest with `ENCRYPTION_KEY` (AES-256-GCM). Plaintext is only held in memory when deploying or revealing in the console.
+- Control plane → agent uses per-worker `authToken` (`Authorization: Bearer …`) over HTTP. Keep agents on a private network (or VPN); do not expose port `4000` to the public internet. HTTPS between plane and agent is optional/advanced.
+- Deploy scheduling probes worker `/api/health` and only assigns **online** agents. Stuck `PENDING`/`BUILDING` deployments older than `DEPLOY_TIMEOUT_MINUTES` (default 45) are marked `FAILED` by the teardown worker sweep (and again just before a new deploy).
+- Treat DB access and `ENCRYPTION_KEY` as highly sensitive.
