@@ -46,6 +46,7 @@ export function ThemeToggle({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
+          type="button"
           variant="ghost"
           size="icon"
           className={cn(
@@ -64,7 +65,7 @@ export function ThemeToggle({
           return (
             <DropdownMenuItem
               key={item.value}
-              onClick={() => setTheme(item.value)}
+              onSelect={() => setTheme(item.value)}
               className="cursor-pointer gap-2"
             >
               <Icon className="size-3.5" />
