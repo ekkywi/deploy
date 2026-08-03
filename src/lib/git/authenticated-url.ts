@@ -48,3 +48,41 @@ export function isHttpsOrHttpRepoUrl(repoUrl: string): boolean {
     return false
   }
 }
+
+export function isSshGitRepoUrl(repoUrl: string): boolean {
+  if (/^git@[\w.-]+:/.test(repoUrl)) return true
+  try {
+    const parsed = new URL(repoUrl)
+    return parsed.protocol === 'ssh:'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Convert an HTTP(S) git remote into an SSH remote when possible.
+ * Example: https://github.com/acme/app.git → git@github.com:acme/app.git
+ */
+export function resolveSshCloneUrl(repoUrl: string): string {
+  if (isSshGitRepoUrl(repoUrl)) {
+    if (repoUrl.startsWith('ssh://')) {
+      const parsed = new URL(repoUrl)
+      const host = parsed.hostname
+      const path = parsed.pathname.replace(/^\/+/, '').replace(/\.git$/, '')
+      return `git@${host}:${path}.git`
+    }
+    return repoUrl
+  }
+
+  if (!isHttpsOrHttpRepoUrl(repoUrl)) {
+    throw new Error('Cannot derive an SSH clone URL from this repository URL.')
+  }
+
+  const parsed = new URL(repoUrl)
+  const path = parsed.pathname.replace(/^\/+/, '').replace(/\.git$/, '')
+  if (!path.includes('/')) {
+    throw new Error('Repository path is too short to convert to an SSH URL.')
+  }
+
+  return `git@${parsed.hostname}:${path}.git`
+}

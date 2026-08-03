@@ -55,11 +55,18 @@ export function SettingsTab({
 
   const [gitTokenConfigured, setGitTokenConfigured] = useState(false)
   const [gitRepoSupportsHttpsToken, setGitRepoSupportsHttpsToken] = useState(true)
+  const [gitRepoSupportsSshDeployKey, setGitRepoSupportsSshDeployKey] = useState(true)
+  const [sshConfigured, setSshConfigured] = useState(false)
+  const [sshPublicKey, setSshPublicKey] = useState<string | null>(null)
   const [isGitCredentialLoading, setIsGitCredentialLoading] = useState(false)
   const [gitTokenInput, setGitTokenInput] = useState('')
   const [isSavingGitToken, setIsSavingGitToken] = useState(false)
   const [isClearGitDialogOpen, setIsClearGitDialogOpen] = useState(false)
   const [isClearingGitToken, setIsClearingGitToken] = useState(false)
+  const [isGeneratingSshKey, setIsGeneratingSshKey] = useState(false)
+  const [isClearSshDialogOpen, setIsClearSshDialogOpen] = useState(false)
+  const [isClearingSshKey, setIsClearingSshKey] = useState(false)
+  const [isSshKeyCopied, setIsSshKeyCopied] = useState(false)
 
   const projectMembership = projectMembers.find((member) => member.userId === currentUserId)
   const canManageSecrets =
@@ -124,8 +131,13 @@ export function SettingsTab({
         if (!res.ok) throw new Error(data.error || 'Failed to load git credential status')
 
         if (isActive) {
-          setGitTokenConfigured(Boolean(data.configured))
+          setGitTokenConfigured(Boolean(data.httpsConfigured ?? data.configured))
+          setSshConfigured(Boolean(data.sshConfigured))
+          setSshPublicKey(
+            typeof data.sshPublicKey === 'string' ? data.sshPublicKey : null
+          )
           setGitRepoSupportsHttpsToken(data.repoSupportsHttpsToken !== false)
+          setGitRepoSupportsSshDeployKey(data.repoSupportsSshDeployKey !== false)
         }
       } catch (error: unknown) {
         if (isActive) {
@@ -238,6 +250,57 @@ export function SettingsTab({
     }
   }
 
+  const handleGenerateSshKey = async () => {
+    setIsGeneratingSshKey(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/git-credential/ssh`, {
+        method: 'POST',
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to generate SSH deploy key')
+
+      setSshConfigured(true)
+      setSshPublicKey(typeof data.sshPublicKey === 'string' ? data.sshPublicKey : null)
+      toast.success(data.message || 'SSH deploy key generated')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to generate SSH deploy key')
+    } finally {
+      setIsGeneratingSshKey(false)
+    }
+  }
+
+  const handleClearSshKey = async () => {
+    setIsClearingSshKey(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/git-credential/ssh`, {
+        method: 'DELETE',
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to clear SSH deploy key')
+
+      setSshConfigured(false)
+      setSshPublicKey(null)
+      setIsClearSshDialogOpen(false)
+      toast.success(data.message || 'SSH deploy key removed')
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Failed to clear SSH deploy key')
+    } finally {
+      setIsClearingSshKey(false)
+    }
+  }
+
+  const handleCopySshPublicKey = async () => {
+    if (!sshPublicKey) return
+    try {
+      await navigator.clipboard.writeText(sshPublicKey)
+      setIsSshKeyCopied(true)
+      toast.success('Public key copied')
+      window.setTimeout(() => setIsSshKeyCopied(false), 3000)
+    } catch {
+      toast.error('Failed to copy public key')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -274,9 +337,8 @@ export function SettingsTab({
                 </p>
                 {!gitRepoSupportsHttpsToken ? (
                   <p className="max-w-2xl text-[13px] leading-5 text-amber-700 dark:text-amber-400">
-                    This project&apos;s repository URL is not HTTP(S). Switch to an{' '}
-                    <code className="text-[12px]">https://</code> URL to use a token (SSH deploy
-                    keys come in a later phase).
+                    This project&apos;s repository URL is not HTTP(S). Use an SSH deploy key below,
+                    or switch the repo URL to <code className="text-[12px]">https://</code>.
                   </p>
                 ) : null}
               </div>
@@ -337,6 +399,105 @@ export function SettingsTab({
                 </p>
               </div>
             )}
+          </div>
+
+          <div className="rounded-lg border border-border/70 bg-muted/18 p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <KeyRound className="size-4 text-muted-foreground" />
+                  <h3 className="text-[14px] font-medium tracking-[-0.01em]">SSH deploy key</h3>
+                  {isGitCredentialLoading ? (
+                    <Badge variant="outline" className="gap-1.5 font-normal">
+                      <Loader2 className="size-3 animate-spin" />
+                      Checking…
+                    </Badge>
+                  ) : sshConfigured ? (
+                    <Badge variant="secondary" className="font-normal">
+                      Configured
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="font-normal text-muted-foreground">
+                      Not set
+                    </Badge>
+                  )}
+                </div>
+                <p className="max-w-2xl text-[13px] leading-5 text-muted-foreground/85">
+                  Generate a read-only deploy key, then add the public key in your git host
+                  (GitHub → Settings → Deploy keys). The private key is encrypted at rest. If both
+                  HTTPS token and SSH key exist, HTTPS is preferred for{' '}
+                  <code className="text-[12px]">https://</code> remotes.
+                </p>
+                {!gitRepoSupportsSshDeployKey ? (
+                  <p className="max-w-2xl text-[13px] leading-5 text-amber-700 dark:text-amber-400">
+                    This repository URL format is not supported for SSH deploy keys.
+                  </p>
+                ) : null}
+              </div>
+
+              {canManageGitCredential ? (
+                <div className="flex w-full flex-col gap-2 sm:w-fit sm:flex-row">
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 sm:w-fit"
+                    onClick={() => void handleGenerateSshKey()}
+                    disabled={
+                      isGeneratingSshKey ||
+                      isClearingSshKey ||
+                      !gitRepoSupportsSshDeployKey
+                    }
+                  >
+                    {isGeneratingSshKey ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="size-4" />
+                    )}
+                    {sshConfigured ? 'Rotate key' : 'Generate key'}
+                  </Button>
+                  {sshConfigured ? (
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2 sm:w-fit"
+                      onClick={() => setIsClearSshDialogOpen(true)}
+                      disabled={isClearingSshKey || isGeneratingSshKey}
+                    >
+                      <Trash2 className="size-4" />
+                      Clear key
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
+            {canManageGitCredential && sshPublicKey ? (
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-start">
+                <code className="min-h-10 max-h-28 flex-1 overflow-auto break-all rounded-lg border border-border/70 bg-background/70 px-3 py-2 font-mono text-[11px] leading-5 text-muted-foreground">
+                  {sshPublicKey}
+                </code>
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 sm:w-fit"
+                  onClick={() => void handleCopySshPublicKey()}
+                >
+                  {isSshKeyCopied ? (
+                    <CheckCircle2 className="size-4 text-emerald-500" />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}
+                  Copy
+                </Button>
+              </div>
+            ) : null}
+
+            {!canManageGitCredential ? (
+              <div className="mt-5 flex items-start gap-3 rounded-xl border border-border/70 bg-background/55 p-4 text-[13px] leading-5 text-muted-foreground">
+                <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+                <p>
+                  SSH deploy key controls are available to project owners, editors, and system
+                  admins.
+                </p>
+              </div>
+            ) : null}
           </div>
         </CardContent>
       </Card>
@@ -512,8 +673,8 @@ export function SettingsTab({
           <AlertDialogHeader>
             <AlertDialogTitle>Clear git HTTPS token?</AlertDialogTitle>
             <AlertDialogDescription>
-              Branch listing and deploys for private repositories will fail until a new token is
-              saved (or the repo is made public).
+              Branch listing and deploys for private HTTPS repositories will fail until a new
+              token is saved (unless an SSH deploy key is configured).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -521,6 +682,25 @@ export function SettingsTab({
             <AlertDialogAction onClick={handleClearGitToken} disabled={isClearingGitToken}>
               {isClearingGitToken && <Loader2 className="mr-2 size-4 animate-spin" />}
               Clear token
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isClearSshDialogOpen} onOpenChange={setIsClearSshDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear SSH deploy key?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove the deploy key from this project. Also delete the matching public key from
+              your git host if it is no longer needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isClearingSshKey}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearSshKey} disabled={isClearingSshKey}>
+              {isClearingSshKey && <Loader2 className="mr-2 size-4 animate-spin" />}
+              Clear key
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

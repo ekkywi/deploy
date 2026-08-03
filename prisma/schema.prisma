@@ -50,6 +50,10 @@ model Project {
   webhookSecret String?
   /// AES-GCM sealed HTTPS PAT / fine-grained token for private repos (optional).
   gitHttpsToken String?
+  /// AES-GCM sealed OpenSSH private key for deploy-key auth (optional).
+  gitSshPrivateKey String?
+  /// Public OpenSSH key shown in Settings for GitHub/GitLab deploy keys.
+  gitSshPublicKey  String?
 
   environments  Environment[]
   members       ProjectRole[]

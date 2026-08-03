@@ -10,6 +10,37 @@ type OverviewAlert = {
   description: string
 }
 
+/** Count envs whose most recent deployment is FAILED — without loading every environment. */
+async function countEnvironmentsWithFailedLatestDeploy(
+  environmentWhere: Prisma.EnvironmentWhereInput
+) {
+  const latestByEnvironment = await prisma.deployment.groupBy({
+    by: ['environmentId'],
+    where: { environment: environmentWhere },
+    _max: { createdAt: true },
+  })
+
+  const latestPairs = latestByEnvironment.flatMap((row) =>
+    row._max.createdAt
+      ? [{ environmentId: row.environmentId, createdAt: row._max.createdAt }]
+      : []
+  )
+
+  if (latestPairs.length === 0) {
+    return 0
+  }
+
+  return prisma.deployment.count({
+    where: {
+      status: DeployStatus.FAILED,
+      OR: latestPairs.map((pair) => ({
+        environmentId: pair.environmentId,
+        createdAt: pair.createdAt,
+      })),
+    },
+  })
+}
+
 export async function GET(request: Request) {
   try {
     const auth = await requireAuth(request)
@@ -78,7 +109,8 @@ export async function GET(request: Request) {
       activeWorkerCount,
       deploymentBreakdown,
       recentDeployments,
-      environments,
+      environmentsWithoutDeployments,
+      environmentsWithFailedLatestDeploy,
     ] = await Promise.all([
       prisma.project.count({
         where: projectWhere,
@@ -115,28 +147,13 @@ export async function GET(request: Request) {
           },
         },
       }),
-      prisma.environment.findMany({
-        where: environmentWhere,
-        select: {
-          id: true,
-          name: true,
-          tier: true,
-          project: {
-            select: { name: true },
-          },
-          _count: {
-            select: { deployments: true },
-          },
-          deployments: {
-            orderBy: { createdAt: 'desc' },
-            take: 1,
-            select: {
-              status: true,
-              createdAt: true,
-            },
-          },
+      prisma.environment.count({
+        where: {
+          ...environmentWhere,
+          deployments: { none: {} },
         },
       }),
+      countEnvironmentsWithFailedLatestDeploy(environmentWhere),
     ])
 
     const statusCounts = deploymentBreakdown.reduce<Record<DeployStatus, number>>(
@@ -162,14 +179,6 @@ export async function GET(request: Request) {
       deploymentCount > 0
         ? Math.round((successfulDeployments / deploymentCount) * 100)
         : null
-
-    const environmentsWithoutDeployments = environments.filter(
-      (environment) => environment._count.deployments === 0
-    ).length
-
-    const environmentsWithFailedLatestDeploy = environments.filter(
-      (environment) => environment.deployments[0]?.status === 'FAILED'
-    ).length
 
     const latestDeployment = recentDeployments[0] ?? null
 

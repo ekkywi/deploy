@@ -5,9 +5,9 @@ import { requireAuth } from '@/lib/auth'
 import { assertProjectAccess } from '@/lib/project-access'
 import { logAudit } from '@/lib/audit-logger'
 import { sealGitHttpsToken } from '@/lib/git/project-git-credential'
-import { isHttpsOrHttpRepoUrl } from '@/lib/git/authenticated-url'
+import { isHttpsOrHttpRepoUrl, isSshGitRepoUrl } from '@/lib/git/authenticated-url'
 
-/** Status only — never returns the token value. */
+/** Status only — never returns private credentials. */
 export async function GET(
   request: NextRequest,
   ctx: RouteContext<'/api/projects/[projectId]/git-credential'>
@@ -27,18 +27,37 @@ export async function GET(
 
     const project = await prisma.project.findFirst({
       where: { id: projectId, deletedAt: null },
-      select: { gitHttpsToken: true, repoUrl: true },
+      select: {
+        gitHttpsToken: true,
+        gitSshPrivateKey: true,
+        gitSshPublicKey: true,
+        repoUrl: true,
+      },
     })
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found.' }, { status: 404 })
     }
 
+    const httpsConfigured = Boolean(project.gitHttpsToken)
+    const sshConfigured = Boolean(project.gitSshPrivateKey && project.gitSshPublicKey)
+
+    let authType: 'HTTPS_TOKEN' | 'SSH_DEPLOY_KEY' | 'BOTH' | null = null
+    if (httpsConfigured && sshConfigured) authType = 'BOTH'
+    else if (httpsConfigured) authType = 'HTTPS_TOKEN'
+    else if (sshConfigured) authType = 'SSH_DEPLOY_KEY'
+
     return NextResponse.json({
-      configured: Boolean(project.gitHttpsToken),
-      authType: project.gitHttpsToken ? 'HTTPS_TOKEN' : null,
+      configured: httpsConfigured || sshConfigured,
+      authType,
+      httpsConfigured,
+      sshConfigured,
+      sshPublicKey: project.gitSshPublicKey,
       repoSupportsHttpsToken: project.repoUrl
         ? isHttpsOrHttpRepoUrl(project.repoUrl)
+        : false,
+      repoSupportsSshDeployKey: project.repoUrl
+        ? isHttpsOrHttpRepoUrl(project.repoUrl) || isSshGitRepoUrl(project.repoUrl)
         : false,
     })
   } catch (error) {
@@ -77,7 +96,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error:
-            'This project uses a non-HTTP(S) repository URL. Use an https:// repo URL to attach an HTTPS token.',
+            'This project uses a non-HTTP(S) repository URL. Use an https:// repo URL to attach an HTTPS token, or use an SSH deploy key instead.',
         },
         { status: 400 }
       )
@@ -108,6 +127,7 @@ export async function PUT(
     return NextResponse.json({
       message: 'Git HTTPS token saved.',
       configured: true,
+      httpsConfigured: true,
       authType: 'HTTPS_TOKEN',
     })
   } catch (error: unknown) {
@@ -120,7 +140,7 @@ export async function PUT(
   }
 }
 
-/** Remove the stored HTTPS git token. */
+/** Remove the stored HTTPS git token (SSH deploy key is left untouched). */
 export async function DELETE(
   request: NextRequest,
   ctx: RouteContext<'/api/projects/[projectId]/git-credential'>
@@ -161,8 +181,7 @@ export async function DELETE(
 
     return NextResponse.json({
       message: 'Git HTTPS token removed.',
-      configured: false,
-      authType: null,
+      httpsConfigured: false,
     })
   } catch (error) {
     console.error('Git credential DELETE error:', error)
